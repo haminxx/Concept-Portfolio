@@ -21,6 +21,10 @@
   box-sizing: border-box;
 }
 
+.pre-landing--hello {
+  cursor: pointer;
+}
+
 .pre-landing--exiting-fade.pre-landing {
   opacity: 0;
   pointer-events: none;
@@ -29,12 +33,17 @@
 .pre-landing__bg {
   position: absolute;
   inset: 0;
-  background: #1a1a1e;
-  background-image: url('/os-background.svg');
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
+  background: #0a0a0a;
   filter: blur(36px);
+  transform: scale(1.06);
   transition: filter 1.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pre-landing__bg-fallback {
+  position: absolute;
+  inset: 0;
+  background: #1a1a1a;
 }
 
 .pre-landing--exiting-fade .pre-landing__bg {
@@ -51,7 +60,7 @@
   gap: 1.5rem;
   padding: clamp(1rem, 4vmin, 2rem);
   width: min(100%, calc(100vw - 24px));
-  max-width: 640px;
+  max-width: min(56rem, calc(100vw - 24px));
   min-height: 0;
   flex: 1;
   box-sizing: border-box;
@@ -62,133 +71,10 @@
   opacity: 0;
 }
 
-/* Name step — liquid glass pill (aligned with legacy Welcome overlay) */
-.pre-landing__name-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.125rem;
-  width: min(380px, 90vw);
-}
-
-.pre-landing__glass-prompt {
-  margin: 0;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'SF Pro Text',
-    system-ui,
-    sans-serif;
-  font-size: clamp(0.9375rem, 2.6vw, 1.0625rem);
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.86);
-  text-align: center;
-  letter-spacing: 0.02em;
-  text-wrap: balance;
-}
-
-.pre-landing__glass {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  width: 100%;
-  height: 56px;
-  padding: 0 6px 0 clamp(18px, 4vw, 24px);
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-  transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
-}
-
-.pre-landing__glass:focus-within {
-  border-color: rgba(255, 255, 255, 0.32);
-  box-shadow:
-    0 8px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 3px rgba(255, 255, 255, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-}
-
-.pre-landing__glass-input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  outline: none;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: clamp(16px, 3.8vw, 18px);
-  font-weight: 400;
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'SF Pro Text',
-    system-ui,
-    sans-serif;
-  letter-spacing: 0.01em;
-}
-
-.pre-landing__glass-input::placeholder {
-  color: rgba(255, 255, 255, 0.28);
-  font-weight: 300;
-}
-
-.pre-landing__glass-arrow {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.85);
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    transform 0.15s,
-    opacity 0.2s;
-}
-
-.pre-landing__glass-arrow:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.06);
-}
-
-.pre-landing__glass-arrow:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-.pre-landing__glass-arrow:disabled {
-  opacity: 0.25;
-  cursor: default;
-}
-
-.pre-landing__tegaki-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: min(280px, 38dvh);
-  width: 100%;
-}
-
-.pre-landing__tegaki {
-  text-align: center;
-  letter-spacing: 0.02em;
-  padding: 0.5rem clamp(0.5rem, 2vw, 0.75rem);
-  max-width: 100%;
-}
-
-/* Reinforce Tangerine labeling for overlays; strokes come from tegaki/fonts/tangerine bundle. */
-.pre-landing__tegaki--tangerine {
-  font-family: 'Tangerine', 'Tangerine Tegaki 3dc76002', cursive;
-  font-display: swap;
+.pre-landing__hello {
+  width: auto;
+  max-width: min(100vw - 2rem, 56rem);
+  color: rgba(255, 255, 255, 0.96);
+  filter: drop-shadow(0 2px 24px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
 }
