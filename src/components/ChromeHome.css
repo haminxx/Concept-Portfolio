@@ -3,13 +3,82 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
   min-height: 100%;
   width: 100%;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.chrome-home__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.chrome-home__bg--loading {
+  background: linear-gradient(165deg, #9eb8d4 0%, #c8d8ea 45%, #e8eef5 100%);
+}
+
+.chrome-home__bg--sunrise {
+  background: linear-gradient(
+    180deg,
+    #ff7e5f 0%,
+    #feb47b 22%,
+    #ffd89b 42%,
+    #87b8e8 68%,
+    #b8d9f5 100%
+  );
+}
+
+.chrome-home__bg--day {
+  background: linear-gradient(
+    180deg,
+    #3d8bfd 0%,
+    #6eb5ff 28%,
+    #a8d4ff 55%,
+    #dceefb 85%,
+    #f0f7fc 100%
+  );
+}
+
+.chrome-home__bg--evening {
+  background: radial-gradient(ellipse at 50% 120%, #2a1f3d 0%, #0d0d12 70%);
+}
+
+.chrome-home__bg--night,
+.chrome-home__bg--stars.chrome-home__bg--night {
+  background: radial-gradient(ellipse at 50% 120%, #1a1a2e 0%, #000 75%) !important;
+}
+
+.chrome-home__bg--overcast:not(.chrome-home__bg--stars) {
+  background: linear-gradient(
+    180deg,
+    #5c6b7a 0%,
+    #8a98a8 40%,
+    #b8c4d0 75%,
+    #d4dce4 100%
+  );
+}
+
+.chrome-home__bg--stars.chrome-home__bg--overcast {
+  background: radial-gradient(ellipse at 50% 100%, #3a4250 0%, #12141a 80%) !important;
+}
+
+.chrome-home__content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
   padding: clamp(32px, 6vh, 56px) 24px clamp(24px, 4vh, 40px);
-  background: #fff;
+  box-sizing: border-box;
 }
 
 .chrome-home__search-wrap {
@@ -28,6 +97,10 @@
   pointer-events: none;
 }
 
+.chrome-home--dark .chrome-home__search-icon {
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .chrome-home__search {
   width: 100%;
   height: 44px;
@@ -36,13 +109,28 @@
   border: 1px solid #dadce0;
   border-radius: 24px;
   outline: none;
-  transition: box-shadow 0.2s;
+  background: rgba(255, 255, 255, 0.92);
+  color: #202124;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.chrome-home--dark .chrome-home__search {
+  background: rgba(32, 33, 36, 0.55);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #e8eaed;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .chrome-home__search:hover,
 .chrome-home__search:focus {
   box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
   border-color: transparent;
+}
+
+.chrome-home--dark .chrome-home__search:hover,
+.chrome-home--dark .chrome-home__search:focus {
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
 .chrome-home__shortcuts {
@@ -71,8 +159,16 @@
   color: #202124;
 }
 
+.chrome-home--dark .chrome-home__shortcut {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .chrome-home__shortcut:hover {
   background: rgba(0, 0, 0, 0.06);
+}
+
+.chrome-home--dark .chrome-home__shortcut:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chrome-home__shortcut-icon {
@@ -81,12 +177,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f3f4;
+  background: rgba(241, 243, 244, 0.9);
   border-radius: 50%;
+  backdrop-filter: blur(8px);
+}
+
+.chrome-home--dark .chrome-home__shortcut-icon {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .chrome-home__shortcut:hover .chrome-home__shortcut-icon {
   background: #e8eaed;
+}
+
+.chrome-home--dark .chrome-home__shortcut:hover .chrome-home__shortcut-icon {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .chrome-home__shortcut-label {

@@ -65,12 +65,10 @@ export default function ChromeFrame({
       </div>
       <div className="chrome-frame__row chrome-frame__row--toolbar">
         <AddressBar
-          domain={currentDomain}
           onGoHome={onGoHome}
           onBack={onBack}
           onForward={onForward}
           onRefresh={onRefresh}
-          onNavigate={onNavigate}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
         />
