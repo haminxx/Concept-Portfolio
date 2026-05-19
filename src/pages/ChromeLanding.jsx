@@ -51,11 +51,8 @@ import {
 } from 'lucide-react'
 import {
   isDocumentFullscreen,
-  requestDocumentFullscreen,
-  requestDocumentFullscreenFromGesture,
   toggleDocumentFullscreen,
-  shouldRequestFullscreenAfterBoot,
-  clearFullscreenAfterBoot,
+  runBootFullscreenSequence,
 } from '../utils/fullscreen'
 import './ChromeLanding.css'
 
@@ -102,7 +99,11 @@ function getUrlForTab(tab) {
   return app?.url ?? null
 }
 
-export default function ChromeLanding({ onReboot }) {
+export default function ChromeLanding({
+  onReboot,
+  desktopRevealed = true,
+  bootRevealDelayMs = 0,
+}) {
   const [tabs, setTabs] = useState([HOME_TAB])
   const [activeTabId, setActiveTabId] = useState('home')
   const [chromeMaximized, setChromeMaximized] = useState(false)
@@ -391,37 +392,11 @@ export default function ChromeLanding({ onReboot }) {
     }
   }, [])
 
-  /** Once after pre-landing boot: try fullscreen on mount; retry on first trusted pointer if blocked. */
+  /** After pre-landing: fullscreen once home blur reveal finishes (or immediately on F11 skip). */
   useEffect(() => {
-    if (!shouldRequestFullscreenAfterBoot()) return
-
-    const finish = () => {
-      if (isDocumentFullscreen()) clearFullscreenAfterBoot()
-    }
-
-    if (isDocumentFullscreen()) {
-      finish()
-      return
-    }
-
-    requestDocumentFullscreen().then(finish)
-
-    const onFirstPointer = (e) => {
-      requestDocumentFullscreenFromGesture(e).then(finish)
-      window.removeEventListener('pointerdown', onFirstPointer)
-    }
-    window.addEventListener('pointerdown', onFirstPointer, { capture: true, passive: true })
-
-    const onFsChange = () => finish()
-    document.addEventListener('fullscreenchange', onFsChange)
-    document.addEventListener('webkitfullscreenchange', onFsChange)
-
-    return () => {
-      window.removeEventListener('pointerdown', onFirstPointer, { capture: true })
-      document.removeEventListener('fullscreenchange', onFsChange)
-      document.removeEventListener('webkitfullscreenchange', onFsChange)
-    }
-  }, [])
+    if (!desktopRevealed) return undefined
+    return runBootFullscreenSequence({ revealDelayMs: bootRevealDelayMs })
+  }, [desktopRevealed, bootRevealDelayMs])
 
   const handleFullScreenToggle = useCallback(() => {
     toggleDocumentFullscreen()

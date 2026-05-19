@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { BOOT_REVEAL_TRANSITION_MS } from '../utils/fullscreen'
 import PreLanding from '../pages/PreLanding'
 import ChromeLanding from '../pages/ChromeLanding'
 import iPhoneMobileLanding from '../pages/iPhoneMobileLanding'
@@ -54,7 +55,14 @@ export default function LandingWrapper() {
           className={`landing-transition__desktop ${desktopRevealed ? 'landing-transition__desktop--revealed' : 'landing-transition__desktop--pre-reveal'}`}
           aria-hidden={!desktopRevealed}
         >
-          <ChromeLanding />
+          <ChromeLanding
+            desktopRevealed={desktopRevealed}
+            bootRevealDelayMs={
+              desktopRevealed && enteredViaBlurTransitionRef.current
+                ? BOOT_REVEAL_TRANSITION_MS
+                : 0
+            }
+          />
         </div>
       )}
       {showOverlay && (
