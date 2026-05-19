@@ -18,6 +18,7 @@ function markPortfolioWelcomeComplete() {
 }
 
 export default function LandingWrapper() {
+  const enteredViaBlurTransitionRef = useRef(false)
   const [view, setViewState] = useState(() => {
     if (typeof window === 'undefined') return 'boot'
     const saved = sessionStorage.getItem(VIEW_KEY)
@@ -31,6 +32,7 @@ export default function LandingWrapper() {
   }, [])
 
   const handleExitStart = useCallback(() => {
+    enteredViaBlurTransitionRef.current = true
     setViewState('transitioning')
   }, [])
 
