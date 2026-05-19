@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, RotateCw, Home } from 'lucide-react'
+import { ChevronLeft, ChevronRight, RotateCw, Home, Star, MoreVertical } from 'lucide-react'
 import './AddressBar.css'
 
 function isURL(str) {
@@ -18,6 +18,7 @@ export default function AddressBar({
 }) {
   const [editing, setEditing] = useState(false)
   const [inputValue, setInputValue] = useState(domain ?? '')
+  const [bookmarked, setBookmarked] = useState(false)
   const inputRef = useRef(null)
 
   // Sync input value when domain prop changes (e.g. tab switch)
@@ -101,6 +102,20 @@ export default function AddressBar({
           spellCheck={false}
           autoComplete="off"
         />
+      </div>
+      <div className="address-bar__actions">
+        <button
+          type="button"
+          className={`address-bar__btn address-bar__bookmark ${bookmarked ? 'address-bar__bookmark--saved' : ''}`}
+          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this page'}
+          aria-pressed={bookmarked}
+          onClick={() => setBookmarked((v) => !v)}
+        >
+          <Star size={16} strokeWidth={2} fill={bookmarked ? 'currentColor' : 'none'} />
+        </button>
+        <button type="button" className="address-bar__btn" aria-label="Chrome menu">
+          <MoreVertical size={18} strokeWidth={2} />
+        </button>
       </div>
     </div>
   )

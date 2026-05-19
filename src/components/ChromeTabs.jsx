@@ -104,7 +104,7 @@ export default function ChromeTabs({ tabs, activeTabId, onSelectTab, onCloseTab,
     setDragOverTabId(null)
   }, [])
 
-  const tabHeight = tabs.length <= 3 ? 40 : 32
+  const tabHeight = tabs.length <= 3 ? 36 : 32
   const isClosingAny = closingTabIds.size > 0
   return (
     <div

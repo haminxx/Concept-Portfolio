@@ -3,20 +3,21 @@
 }
 
 .voice-ai__trigger {
-  width: 36px;
-  height: 32px;
+  width: 32px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
-  color: #1d1d1f;
+  color: #bdc1c6;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 50%;
 }
 
 .voice-ai__trigger:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eaed;
 }
 
 .voice-ai__dropdown {

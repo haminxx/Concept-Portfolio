@@ -1,16 +1,18 @@
 .address-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 4px 6px;
+  gap: 6px;
+  height: 34px;
+  padding: 0;
   width: 100%;
+  min-width: 0;
 }
 
 .address-bar__nav {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
+  flex-shrink: 0;
 }
 
 .address-bar__btn {
@@ -21,13 +23,15 @@
   justify-content: center;
   border: none;
   background: transparent;
-  color: #1d1d1f;
+  color: #bdc1c6;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .address-bar__btn:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eaed;
 }
 
 .address-bar__btn:disabled {
@@ -42,27 +46,50 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  background: #fff;
-  border: 1px solid #c7c7cc;
-  border-radius: 8px;
+  background: #3b3b3b;
+  border: none;
+  border-radius: 15px;
   font-size: 13px;
-  color: #1d1d1f;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #e8eaed;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-[data-theme="dark"] .address-bar__btn {
-  color: #f2f2f7;
+.address-bar__url--editing {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(138, 180, 248, 0.45);
 }
 
-[data-theme="dark"] .address-bar__btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+.address-bar__input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+  padding: 0;
 }
 
-[data-theme="dark"] .address-bar__url {
-  background: #2c2c2e;
-  border-color: #48484a;
-  color: #f2f2f7;
-  box-shadow: none;
+.address-bar__input::selection {
+  background: rgba(138, 180, 248, 0.35);
+}
+
+.address-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.address-bar__bookmark {
+  color: #9aa0a6;
+}
+
+.address-bar__bookmark--saved {
+  color: #fdd663;
 }
 
 .address-bar__domain {

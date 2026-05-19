@@ -1,7 +1,7 @@
 import ChromeTabs from './ChromeTabs'
 import AddressBar from './AddressBar'
 import VoiceAIDropdown from './VoiceAIDropdown'
-import { MoreVertical, X, Minus, Maximize2, Square } from 'lucide-react'
+import { X, Minus, Maximize2, Square } from 'lucide-react'
 import './ChromeFrame.css'
 
 export default function ChromeFrame({
@@ -61,9 +61,6 @@ export default function ChromeFrame({
         <div className="chrome-frame__right">
           <VoiceAIDropdown />
           <div className="chrome-frame__profile" aria-label="Profile" />
-          <button type="button" className="chrome-frame__menu-btn" aria-label="Settings">
-            <MoreVertical size={18} strokeWidth={2} />
-          </button>
         </div>
       </div>
       <div className="chrome-frame__row chrome-frame__row--toolbar">
