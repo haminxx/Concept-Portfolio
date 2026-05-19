@@ -1,0 +1,18 @@
+@keyframes contact-bubble {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) translateX(calc(var(--bubble-x-offset, 1) * 10vw)) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.contact-section__bubble {
+  animation: contact-bubble var(--bubble-duration, 15s) ease-in-out infinite;
+  animation-fill-mode: forwards;
+}

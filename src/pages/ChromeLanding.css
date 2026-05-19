@@ -61,8 +61,13 @@
 }
 
 .chrome-landing__content:has(.chrome-home),
-.chrome-landing__content:has(.projects-page) {
+.chrome-landing__content:has(.projects-page),
+.chrome-landing__content:has(.contact-page) {
   background: #fff;
+}
+
+.chrome-landing__content:has(.contact-page) {
+  overflow: hidden;
 }
 
 .chrome-landing__empty {
