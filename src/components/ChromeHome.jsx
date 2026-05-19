@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, User, Folder, Mail, Newspaper } from 'lucide-react'
-import { StarsBackground } from '@/components/ui/stars-background'
+import { MagneticText } from '@/components/ui/morphing-cursor'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
-import { useWeatherTheme, WEATHER_THEMES } from '../hooks/useWeatherTheme'
 import './ChromeHome.css'
 
 const SHORTCUT_ICONS = {
@@ -15,7 +14,6 @@ const SHORTCUT_ICONS = {
 
 export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onSearch }) {
   const { t } = useLanguage()
-  const { theme, showStars, isDark } = useWeatherTheme()
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const menuRef = useRef(null)
@@ -36,21 +34,9 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onS
     onSearch?.(q)
   }
 
-  const themeClass = theme || WEATHER_THEMES.LOADING
-
-  const backgroundLayer = showStars ? (
-    <StarsBackground
-      className={`chrome-home__bg chrome-home__bg--stars chrome-home__bg--${themeClass}`}
-      speed={theme === WEATHER_THEMES.EVENING ? 70 : 50}
-      starColor={theme === WEATHER_THEMES.EVENING ? 'rgba(255, 220, 180, 0.9)' : '#fff'}
-    />
-  ) : (
-    <div className={`chrome-home__bg chrome-home__bg--${themeClass}`} aria-hidden="true" />
-  )
-
   return (
-    <div className={`chrome-home chrome-home--${themeClass}${isDark ? ' chrome-home--dark' : ''}`}>
-      {backgroundLayer}
+    <div className="chrome-home">
+      <div className="chrome-home__bg" aria-hidden="true" />
       <div className="chrome-home__content">
         <form className="chrome-home__search-wrap" onSubmit={handleSearch}>
           <Search size={20} className="chrome-home__search-icon" strokeWidth={2} />
@@ -67,6 +53,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onS
           {SHORTCUTS.map((s) => {
             const Icon = SHORTCUT_ICONS[s.icon] || Folder
             const label = t(`shortcuts.${s.type}`)
+            const hoverText = t('desktopContextMenu.open')
             return (
               <button
                 key={s.id}
@@ -84,7 +71,14 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onS
                 <span className="chrome-home__shortcut-icon">
                   <Icon size={28} strokeWidth={1.5} />
                 </span>
-                <span className="chrome-home__shortcut-label">{label}</span>
+                <MagneticText
+                  text={label}
+                  hoverText={hoverText}
+                  circleSize={56}
+                  textClassName="text-[13px] font-normal tracking-normal text-[#3c4043]"
+                  hoverTextClassName="text-[13px] font-normal tracking-normal text-white"
+                  circleClassName="bg-[#202124]"
+                />
               </button>
             )
           })}

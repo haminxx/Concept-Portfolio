@@ -8,12 +8,14 @@
   min-width: 0;
 }
 
-.address-bar--nav-only {
-  justify-content: flex-start;
-}
-
-.address-bar--nav-only .address-bar__nav {
-  margin-left: 2px;
+.address-bar__eyes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  pointer-events: none;
 }
 
 .address-bar__nav {
@@ -21,6 +23,7 @@
   align-items: center;
   gap: 0;
   flex-shrink: 0;
+  margin-left: 2px;
 }
 
 .address-bar__btn {
