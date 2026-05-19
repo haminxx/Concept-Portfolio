@@ -66,7 +66,8 @@
   background: #fff;
 }
 
-.chrome-landing__content:has(.contact-page) {
+.chrome-landing__content:has(.contact-page),
+.chrome-landing__content:has(.about-page) {
   overflow: hidden;
 }
 
