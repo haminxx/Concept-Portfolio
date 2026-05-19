@@ -56,3 +56,10 @@
 .projects-page .projects-hover-peek-content {
   z-index: 8;
 }
+
+/* Cursor-anchored preview: override Radix popper placement */
+.projects-page .projects-hover-peek-content--cursor {
+  position: fixed !important;
+  inset: auto !important;
+  margin: 0 !important;
+}

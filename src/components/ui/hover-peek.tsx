@@ -35,13 +35,17 @@ function usePreviewSource(
   }, [isStatic, staticImageSrc, url, width, height])
 }
 
-function useHoverState(followMouse: boolean) {
+function useHoverState(followMouse: boolean, positionAboveCursor: boolean) {
   const [isPeeking, setPeeking] = useState(false)
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const mouseX = useMotionValue(0)
   const followX = useSpring(mouseX, { stiffness: 120, damping: 20 })
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
+      if (positionAboveCursor) {
+        setCursorPos({ x: event.clientX, y: event.clientY })
+      }
       if (!followMouse) return
       const target = event.currentTarget
       const targetRect = target.getBoundingClientRect()
@@ -49,7 +53,7 @@ function useHoverState(followMouse: boolean) {
       const offsetFromCenter = (eventOffsetX - targetRect.width / 2) * 0.3
       mouseX.set(offsetFromCenter)
     },
-    [mouseX, followMouse]
+    [mouseX, followMouse, positionAboveCursor]
   )
 
   const handleOpenChange = useCallback(
@@ -62,7 +66,7 @@ function useHoverState(followMouse: boolean) {
     [mouseX]
   )
 
-  return { isPeeking, handleOpenChange, handlePointerMove, followX }
+  return { isPeeking, handleOpenChange, handlePointerMove, followX, cursorPos }
 }
 
 type HoverPeekBaseProps = {
@@ -77,6 +81,8 @@ type HoverPeekBaseProps = {
   lensSize?: number
   /** Portal target — keep hover card inside Chrome window bounds. */
   portalContainer?: HTMLElement | null
+  /** Pin preview above the pointer instead of beside the trigger. */
+  positionAboveCursor?: boolean
 }
 
 type HoverPeekProps = HoverPeekBaseProps &
@@ -107,8 +113,8 @@ export function HoverPeek({
     isStatic,
     imageSrc
   )
-  const { isPeeking, handleOpenChange, handlePointerMove, followX } =
-    useHoverState(enableMouseFollow)
+  const { isPeeking, handleOpenChange, handlePointerMove, followX, cursorPos } =
+    useHoverState(enableMouseFollow, positionAboveCursor)
 
   const [isHoveringLens, setIsHoveringLens] = useState(false)
   const [lensMousePosition, setLensMousePosition] = useState({ x: 0, y: 0 })
@@ -187,11 +193,25 @@ export function HoverPeek({
 
       <RdxHoverCard.Portal container={portalContainer ?? undefined}>
         <RdxHoverCard.Content
-          className="projects-hover-peek-content [perspective:800px] [--radix-hover-card-content-transform-origin:center_center] z-[8]"
+          className={cn(
+            'projects-hover-peek-content [perspective:800px] [--radix-hover-card-content-transform-origin:center_center] z-[8]',
+            positionAboveCursor && 'projects-hover-peek-content--cursor'
+          )}
           side="top"
           align="center"
-          sideOffset={12}
-          style={{ pointerEvents: enableLensEffect ? 'none' : 'auto' }}
+          sideOffset={positionAboveCursor ? 0 : 12}
+          avoidCollisions={!positionAboveCursor}
+          style={{
+            pointerEvents: enableLensEffect ? 'none' : 'auto',
+            ...(positionAboveCursor && isPeeking
+              ? {
+                  position: 'fixed',
+                  left: cursorPos.x,
+                  top: cursorPos.y - peekHeight - 14,
+                  transform: 'translateX(-50%)',
+                }
+              : undefined),
+          }}
         >
           <AnimatePresence>
             {isPeeking && (
@@ -201,7 +221,7 @@ export function HoverPeek({
                 animate="animate"
                 exit="exit"
                 style={{
-                  x: enableMouseFollow ? followX : 0,
+                  x: enableMouseFollow && !positionAboveCursor ? followX : 0,
                   pointerEvents: 'auto',
                 }}
               >

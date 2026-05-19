@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, User, Folder, Mail, Newspaper } from 'lucide-react'
+import { User, Folder, Mail, Newspaper } from 'lucide-react'
 import { MagneticText } from '@/components/ui/morphing-cursor'
+import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
@@ -12,11 +13,11 @@ const SHORTCUT_ICONS = {
   newspaper: Newspaper,
 }
 
-export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onSearch }) {
+export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   const { t } = useLanguage()
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const menuRef = useRef(null)
+  const contentRef = useRef(null)
 
   useEffect(() => {
     if (!shortcutContextMenu) return
@@ -27,28 +28,13 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onS
     return () => document.removeEventListener('click', handleClickOutside)
   }, [shortcutContextMenu])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    const q = searchQuery.trim()
-    if (!q) return
-    onSearch?.(q)
-  }
-
   return (
     <div className="chrome-home">
       <div className="chrome-home__bg" aria-hidden="true" />
-      <div className="chrome-home__content">
-        <form className="chrome-home__search-wrap" onSubmit={handleSearch}>
-          <Search size={20} className="chrome-home__search-icon" strokeWidth={2} />
-          <input
-            type="text"
-            className="chrome-home__search"
-            placeholder={t('chrome.searchPlaceholder')}
-            aria-label="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </form>
+      <div ref={contentRef} className="chrome-home__content">
+        <div className="chrome-home__eyes" aria-hidden="true">
+          <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} />
+        </div>
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
             const Icon = SHORTCUT_ICONS[s.icon] || Folder
@@ -78,6 +64,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onS
                   textClassName="text-[13px] font-normal tracking-normal text-[#3c4043]"
                   hoverTextClassName="text-[13px] font-normal tracking-normal text-white"
                   circleClassName="bg-[#202124]"
+                  className="chrome-home__magnetic-label"
                 />
               </button>
             )

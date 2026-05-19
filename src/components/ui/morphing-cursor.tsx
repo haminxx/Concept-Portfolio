@@ -107,14 +107,17 @@ export function MagneticText({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={cn('relative inline-flex cursor-none select-none items-center justify-center', className)}
+      className={cn(
+        'relative z-[1] inline-flex cursor-none select-none items-center justify-center overflow-visible',
+        className,
+      )}
     >
       {baseContent}
 
       <div
         ref={circleRef}
         className={cn(
-          'pointer-events-none absolute top-0 left-0 overflow-hidden rounded-full bg-foreground',
+          'pointer-events-none absolute top-0 left-0 z-[2] overflow-hidden rounded-full bg-foreground',
           circleClassName,
         )}
         style={{

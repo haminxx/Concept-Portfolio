@@ -69,8 +69,9 @@ export function ProjectShowcase({
             url={project.link}
             isStatic
             imageSrc={project.image}
-            peekWidth={280}
-            peekHeight={180}
+            peekWidth={200}
+            peekHeight={130}
+            positionAboveCursor
             portalContainer={portalContainer}
           >
             <a

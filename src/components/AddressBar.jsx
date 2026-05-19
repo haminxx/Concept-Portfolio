@@ -1,5 +1,4 @@
 import { ChevronLeft, ChevronRight, RotateCw, Home } from 'lucide-react'
-import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import './AddressBar.css'
 
 export default function AddressBar({
@@ -39,9 +38,6 @@ export default function AddressBar({
         <button type="button" className="address-bar__btn" aria-label="Home" onClick={onGoHome}>
           <Home size={16} strokeWidth={2.5} />
         </button>
-      </div>
-      <div className="address-bar__eyes">
-        <MouseFollowingEyes trackWindow />
       </div>
     </div>
   )

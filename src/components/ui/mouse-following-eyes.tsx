@@ -3,33 +3,51 @@ import { cn } from '@/lib/utils'
 
 interface MouseFollowingEyesProps {
   className?: string
-  /** Track pointer on the whole window (better for narrow toolbar). */
+  /** Track pointer on the whole window (toolbar). When false, uses trackingRoot or the eyes container. */
   trackWindow?: boolean
+  /** Element to listen for pointer moves (e.g. Chrome home content area). */
+  trackingRoot?: RefObject<HTMLElement | null>
 }
 
-export function MouseFollowingEyes({ className, trackWindow = true }: MouseFollowingEyesProps) {
+export function MouseFollowingEyes({
+  className,
+  trackWindow = true,
+  trackingRoot,
+}: MouseFollowingEyesProps) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
   const eye1Ref = useRef<HTMLDivElement>(null)
   const eye2Ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!trackWindow) return
+    if (trackWindow) {
+      const handleMouseMove = (e: MouseEvent) => {
+        setMousePos({ x: e.clientX, y: e.clientY })
+      }
+      window.addEventListener('mousemove', handleMouseMove)
+      return () => window.removeEventListener('mousemove', handleMouseMove)
+    }
+
+    const root = trackingRoot?.current ?? containerRef.current
+    if (!root) return
+
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY })
     }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [trackWindow])
+    root.addEventListener('mousemove', handleMouseMove)
+    return () => root.removeEventListener('mousemove', handleMouseMove)
+  }, [trackWindow, trackingRoot])
 
   const handleLocalMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
-    if (trackWindow) return
+    if (trackWindow || trackingRoot) return
     setMousePos({ x: e.clientX, y: e.clientY })
   }
 
   return (
     <div
+      ref={containerRef}
       className={cn('flex h-full w-full items-center justify-center', className)}
-      onMouseMove={trackWindow ? undefined : handleLocalMouseMove}
+      onMouseMove={trackWindow || trackingRoot ? undefined : handleLocalMouseMove}
       aria-hidden="true"
     >
       <div className="flex items-center gap-2">

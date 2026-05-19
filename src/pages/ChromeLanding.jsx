@@ -554,7 +554,7 @@ export default function ChromeLanding({
                   </div>
                 )}
                 {activeTab.type === 'home' ? (
-                  <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} onSearch={handleChromeSearch} />
+                  <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
                 ) : activeTab.type === 'about' ? (
                   <Suspense fallback={null}>
                     <LazyAboutPage />
