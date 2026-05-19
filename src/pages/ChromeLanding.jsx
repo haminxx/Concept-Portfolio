@@ -142,6 +142,7 @@ export default function ChromeLanding({
     new Map([['home', { entries: [{ type: 'home', title: 'Home' }], index: 0 }]]),
   )
   const chromeNavReplayRef = useRef(false)
+  const closingLastTabRef = useRef(false)
 
   const pushChromeNav = useCallback((tabId, type, title) => {
     if (chromeNavReplayRef.current) return
@@ -271,24 +272,38 @@ export default function ChromeLanding({
   const reorderTabs = useCallback((newTabs) => {
     setTabs(newTabs)
   }, [])
+
+  const resetChromeTabsToHome = useCallback(() => {
+    chromeNavStacksRef.current.clear()
+    chromeNavStacksRef.current.set('home', {
+      entries: [{ type: 'home', title: 'Home' }],
+      index: 0,
+    })
+    setTabs([HOME_TAB])
+    setActiveTabId('home')
+  }, [])
+
   const closeTab = useCallback((id) => {
     chromeNavStacksRef.current.delete(id)
-    const willBeEmpty = tabs.filter((t) => t.id !== id).length === 0
+
     setTabs((prev) => {
-      const next = prev.filter((t) => t.id !== id)
-      if (!next.length) {
-        chromeNavStacksRef.current.clear()
-        chromeNavStacksRef.current.set('home', {
-          entries: [{ type: 'home', title: 'Home' }],
-          index: 0,
-        })
+      const closedIndex = prev.findIndex((t) => t.id === id)
+      if (closedIndex < 0) return prev
+
+      if (prev.length === 1) {
+        closingLastTabRef.current = true
+        queueMicrotask(() => setChromeMinimizing(true))
+        return []
       }
-      if (activeTabId === id && next.length) setActiveTabId(next[0].id)
-      else if (activeTabId === id && !next.length) setActiveTabId('home')
-      return next.length ? next : [HOME_TAB]
+
+      const next = prev.filter((t) => t.id !== id)
+      if (activeTabId === id) {
+        const newActiveIndex = Math.max(0, closedIndex - 1)
+        queueMicrotask(() => setActiveTabId(next[newActiveIndex].id))
+      }
+      return next
     })
-    if (willBeEmpty) setChromeMinimized(true)
-  }, [activeTabId, tabs])
+  }, [activeTabId])
 
   const goHome = useCallback(() => {
     const id = activeTabId
@@ -375,7 +390,11 @@ export default function ChromeLanding({
   const handleChromeMinimizeComplete = useCallback(() => {
     setChromeMinimized(true)
     setChromeMinimizing(false)
-  }, [])
+    if (closingLastTabRef.current) {
+      closingLastTabRef.current = false
+      resetChromeTabsToHome()
+    }
+  }, [resetChromeTabsToHome])
 
   const handleChromeOpeningComplete = useCallback(() => {
     setChromeOpening(false)
