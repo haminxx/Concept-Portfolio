@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react'
 import { AppleHelloEnglishEffect } from '@/components/ui/apple-hello-effect'
 import { DesktopBackgroundProvider, useDesktopBackground } from '../context/DesktopBackgroundContext'
+import { requestDocumentFullscreenFromGesture } from '../utils/fullscreen'
 import './PreLanding.css'
 
 const DesktopShaderBackground = lazy(() => import('../components/ui/DesktopShaderBackground'))
@@ -25,7 +26,8 @@ function PreLandingContent({ onEnterDesktop }) {
   const phase = PHASES[phaseIndex]
   const isExiting = phase === 'exiting'
 
-  const startExit = useCallback(() => {
+  const startExit = useCallback((e) => {
+    requestDocumentFullscreenFromGesture(e)
     setPhaseIndex((current) => (current >= 1 ? current : 1))
   }, [])
 
@@ -58,13 +60,14 @@ function PreLandingContent({ onEnterDesktop }) {
     const handleKeyDown = (e) => {
       if (e.key === 'F11') {
         e.preventDefault()
+        requestDocumentFullscreenFromGesture(e)
         onEnterDesktop?.()
         return
       }
       if (e.key === 'Enter' || e.key === ' ') {
         if (phase !== 'hello') return
         e.preventDefault()
-        startExit()
+        startExit(e)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -74,13 +77,13 @@ function PreLandingContent({ onEnterDesktop }) {
   return (
     <div
       className={`pre-landing pre-landing--${phase} ${isExiting ? 'pre-landing--exiting-fade' : ''}`}
-      onClick={phase === 'hello' ? startExit : undefined}
+      onClick={phase === 'hello' ? (e) => startExit(e) : undefined}
       onKeyDown={
         phase === 'hello'
           ? (e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
-                startExit()
+                startExit(e)
               }
             }
           : undefined

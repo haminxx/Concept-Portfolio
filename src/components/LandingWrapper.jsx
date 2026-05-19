@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import PreLanding from '../pages/PreLanding'
 import ChromeLanding from '../pages/ChromeLanding'
 import iPhoneMobileLanding from '../pages/iPhoneMobileLanding'
+import { markFullscreenAfterBoot } from '../utils/fullscreen'
 
 const VIEW_KEY = 'portfolio-view' // sessionStorage key
 
@@ -29,6 +30,7 @@ export default function LandingWrapper() {
 
   const handleEnterDesktop = useCallback(() => {
     markPortfolioWelcomeComplete()
+    markFullscreenAfterBoot()
     setView('desktop')
   }, [setView])
 

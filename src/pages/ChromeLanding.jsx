@@ -48,6 +48,14 @@ import {
   StickyNote,
   LayoutGrid,
 } from 'lucide-react'
+import {
+  isDocumentFullscreen,
+  requestDocumentFullscreen,
+  requestDocumentFullscreenFromGesture,
+  toggleDocumentFullscreen,
+  shouldRequestFullscreenAfterBoot,
+  clearFullscreenAfterBoot,
+} from '../utils/fullscreen'
 import './ChromeLanding.css'
 
 const APP_ICONS = {
@@ -371,8 +379,7 @@ export default function ChromeLanding({ onReboot }) {
   }, [])
 
   useEffect(() => {
-    const handler = () =>
-      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement))
+    const handler = () => setIsFullscreen(isDocumentFullscreen())
     document.addEventListener('fullscreenchange', handler)
     document.addEventListener('webkitfullscreenchange', handler)
     handler()
@@ -382,45 +389,40 @@ export default function ChromeLanding({ onReboot }) {
     }
   }, [])
 
-  /**
-   * Fullscreen may only run inside a user gesture (otherwise Chrome logs a warning and rejects).
-   * Enter on first trusted pointerdown; no load/timeout calls.
-   */
+  /** Once after pre-landing boot: try fullscreen on mount; retry on first trusted pointer if blocked. */
   useEffect(() => {
-    const el = document.documentElement
-    const tryFullscreen = (e) => {
-      if (document.fullscreenElement || document.webkitFullscreenElement) return
-      if (e && !e.isTrusted) return
-      try {
-        const p = el.requestFullscreen?.()
-        if (p && typeof p.catch === 'function') p.catch(() => {})
-      } catch {
-        // ignore
-      }
-      try {
-        if (typeof el.webkitRequestFullscreen === 'function') el.webkitRequestFullscreen()
-      } catch {
-        // ignore
-      }
+    if (!shouldRequestFullscreenAfterBoot()) return
+
+    const finish = () => {
+      if (isDocumentFullscreen()) clearFullscreenAfterBoot()
     }
+
+    if (isDocumentFullscreen()) {
+      finish()
+      return
+    }
+
+    requestDocumentFullscreen().then(finish)
+
     const onFirstPointer = (e) => {
-      tryFullscreen(e)
+      requestDocumentFullscreenFromGesture(e).then(finish)
       window.removeEventListener('pointerdown', onFirstPointer)
     }
     window.addEventListener('pointerdown', onFirstPointer, { capture: true, passive: true })
-    return () => window.removeEventListener('pointerdown', onFirstPointer, { capture: true })
+
+    const onFsChange = () => finish()
+    document.addEventListener('fullscreenchange', onFsChange)
+    document.addEventListener('webkitfullscreenchange', onFsChange)
+
+    return () => {
+      window.removeEventListener('pointerdown', onFirstPointer, { capture: true })
+      document.removeEventListener('fullscreenchange', onFsChange)
+      document.removeEventListener('webkitfullscreenchange', onFsChange)
+    }
   }, [])
 
   const handleFullScreenToggle = useCallback(() => {
-    const doc = document
-    const el = doc.documentElement
-    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
-      doc.exitFullscreen?.()
-      doc.webkitExitFullscreen?.()
-    } else {
-      el.requestFullscreen?.()
-      el.webkitRequestFullscreen?.()
-    }
+    toggleDocumentFullscreen()
   }, [])
 
   const handleTurnOff = useCallback(() => {
