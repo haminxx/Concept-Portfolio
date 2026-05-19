@@ -60,7 +60,8 @@
   background: #f8f9fa;
 }
 
-.chrome-landing__content:has(.chrome-home) {
+.chrome-landing__content:has(.chrome-home),
+.chrome-landing__content:has(.projects-page) {
   background: #fff;
 }
 

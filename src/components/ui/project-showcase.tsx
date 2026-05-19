@@ -4,7 +4,7 @@ import type React from 'react'
 import { useState, useRef, useEffect } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 
-interface Project {
+export interface Project {
   title: string
   description: string
   year: string
@@ -12,7 +12,7 @@ interface Project {
   image: string
 }
 
-const projects: Project[] = [
+export const DEFAULT_PROJECTS: Project[] = [
   {
     title: 'Portfolio OS',
     description: 'Chrome-style portfolio with dock, windows, shaders, and lazy-loaded apps.',
@@ -47,7 +47,13 @@ const projects: Project[] = [
   },
 ]
 
-export function ProjectShowcase() {
+type ProjectShowcaseProps = {
+  projects?: Project[]
+}
+
+export function ProjectShowcase({ projects: projectsProp }: ProjectShowcaseProps) {
+  const projects = projectsProp?.length ? projectsProp : DEFAULT_PROJECTS
+
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 })
@@ -93,23 +99,21 @@ export function ProjectShowcase() {
     setIsVisible(false)
   }
 
-  const containerRect = containerRef.current?.getBoundingClientRect()
-
   return (
     <section
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative mx-auto w-full max-w-2xl rounded-xl bg-background px-6 py-16 text-foreground shadow-sm"
+      className="project-showcase relative w-full px-6 py-12 text-foreground sm:px-10 sm:py-16"
     >
       <h2 className="mb-8 text-sm font-medium uppercase tracking-wide text-muted-foreground">
         Selected work
       </h2>
 
       <div
-        className="pointer-events-none fixed z-50 overflow-hidden rounded-xl shadow-2xl"
+        className="pointer-events-none absolute z-50 overflow-hidden rounded-xl shadow-2xl"
         style={{
-          left: containerRect?.left ?? 0,
-          top: containerRect?.top ?? 0,
+          left: 0,
+          top: 0,
           transform: `translate3d(${smoothPosition.x + 20}px, ${smoothPosition.y - 100}px, 0)`,
           opacity: isVisible ? 1 : 0,
           transition:
