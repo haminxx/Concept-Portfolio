@@ -3,6 +3,7 @@ import PreLanding from './PreLanding'
 import ChromeLanding from './ChromeLanding'
 import iPhoneMobileLanding from './iPhoneMobileLanding'
 import { markFullscreenAfterBoot } from '../utils/fullscreen'
+import '../components/LandingTransition.css'
 
 const STORAGE_KEY = 'portfolio-view'
 
@@ -36,6 +37,10 @@ function markPortfolioWelcomeComplete() {
 export default function LandingWrapper() {
   const [view, setView] = useState(() => getStoredView() || 'boot')
 
+  const handleExitStart = useCallback(() => {
+    setView('transitioning')
+  }, [])
+
   const handleEnterDesktop = useCallback(() => {
     markPortfolioWelcomeComplete()
     markFullscreenAfterBoot()
@@ -43,13 +48,29 @@ export default function LandingWrapper() {
     setStoredView('desktop')
   }, [])
 
-  if (view === 'boot') {
-    return <PreLanding onEnterDesktop={handleEnterDesktop} />
-  }
-
   if (view === 'mobile') {
     return <iPhoneMobileLanding />
   }
 
-  return <ChromeLanding />
+  const showDesktop = view === 'transitioning' || view === 'desktop'
+  const showOverlay = view === 'boot' || view === 'transitioning'
+  const desktopRevealed = view === 'desktop'
+
+  return (
+    <div className="landing-transition">
+      {showDesktop && (
+        <div
+          className={`landing-transition__desktop ${desktopRevealed ? 'landing-transition__desktop--revealed' : 'landing-transition__desktop--pre-reveal'}`}
+          aria-hidden={!desktopRevealed}
+        >
+          <ChromeLanding />
+        </div>
+      )}
+      {showOverlay && (
+        <div className="landing-transition__overlay">
+          <PreLanding onExitStart={handleExitStart} onEnterDesktop={handleEnterDesktop} />
+        </div>
+      )}
+    </div>
+  )
 }

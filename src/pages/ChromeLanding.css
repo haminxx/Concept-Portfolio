@@ -26,6 +26,8 @@
 .chrome-landing__content {
   flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   overflow-y: auto;
 }
@@ -53,9 +55,13 @@
   to { transform: rotate(360deg); }
 }
 
-/* Chrome content area - no gradient */
+/* Chrome content area - home tab uses full white fill */
 .chrome-landing__content {
   background: #f8f9fa;
+}
+
+.chrome-landing__content:has(.chrome-home) {
+  background: #fff;
 }
 
 .chrome-landing__empty {

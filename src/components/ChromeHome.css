@@ -5,7 +5,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 48px 24px;
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(32px, 6vh, 56px) 24px clamp(24px, 4vh, 40px);
   background: #fff;
 }
 
@@ -43,12 +46,16 @@
 }
 
 .chrome-home__shortcuts {
+  flex: 1;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-content: center;
   justify-content: center;
-  gap: 24px;
-  max-width: 100%;
+  gap: clamp(16px, 3vw, 32px);
+  width: 100%;
+  max-width: min(720px, 100%);
+  margin: 0 auto;
 }
 
 .chrome-home__shortcut {

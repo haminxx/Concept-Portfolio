@@ -18,7 +18,7 @@ function PreLandingBackground() {
   )
 }
 
-function PreLandingContent({ onEnterDesktop }) {
+function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const exitingTimerRef = useRef(null)
   const pauseTimerRef = useRef(null)
@@ -28,8 +28,12 @@ function PreLandingContent({ onEnterDesktop }) {
 
   const startExit = useCallback((e) => {
     requestDocumentFullscreenFromGesture(e)
-    setPhaseIndex((current) => (current >= 1 ? current : 1))
-  }, [])
+    setPhaseIndex((current) => {
+      if (current >= 1) return current
+      onExitStart?.()
+      return 1
+    })
+  }, [onExitStart])
 
   const handleAnimationComplete = useCallback(() => {
     if (pauseTimerRef.current != null) window.clearTimeout(pauseTimerRef.current)
@@ -108,10 +112,10 @@ function PreLandingContent({ onEnterDesktop }) {
   )
 }
 
-export default function PreLanding({ onEnterDesktop }) {
+export default function PreLanding({ onEnterDesktop, onExitStart }) {
   return (
     <DesktopBackgroundProvider>
-      <PreLandingContent onEnterDesktop={onEnterDesktop} />
+      <PreLandingContent onEnterDesktop={onEnterDesktop} onExitStart={onExitStart} />
     </DesktopBackgroundProvider>
   )
 }
