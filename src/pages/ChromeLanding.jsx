@@ -12,6 +12,7 @@ import {
   LazyAboutPage,
   LazyProjectPage,
   LazyContactPage,
+  LazyNewsletterPage,
   LazyMapWindow,
   LazyDoomWindow,
   LazyDadNMeWindow,
@@ -86,6 +87,7 @@ function getDomainForTab(tab) {
   const shortcut = SHORTCUTS.find((s) => s.type === tab.type)
   if (shortcut) {
     if (tab.type === 'about') return 'portfolio.local/about'
+    if (tab.type === 'newsletter') return 'portfolio.local/newsletter'
     if (tab.type === 'project') return 'portfolio.local/project'
     if (tab.type === 'contact') return 'portfolio.local/contact'
     return `${tab.type}.local`
@@ -562,6 +564,10 @@ export default function ChromeLanding({ onReboot }) {
                 ) : activeTab.type === 'about' ? (
                   <Suspense fallback={null}>
                     <LazyAboutPage />
+                  </Suspense>
+                ) : activeTab.type === 'newsletter' ? (
+                  <Suspense fallback={null}>
+                    <LazyNewsletterPage />
                   </Suspense>
                 ) : activeTab.type === 'project' ? (
                   <Suspense fallback={null}>

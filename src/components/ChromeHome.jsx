@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, User, Folder, Mail } from 'lucide-react'
+import { Search, User, Folder, Mail, Newspaper } from 'lucide-react'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
@@ -8,6 +8,7 @@ const SHORTCUT_ICONS = {
   user: User,
   folder: Folder,
   mail: Mail,
+  newspaper: Newspaper,
 }
 
 export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab, onSearch }) {

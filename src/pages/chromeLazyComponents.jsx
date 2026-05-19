@@ -5,6 +5,7 @@ export const LazyInstagramWindow = lazy(() => import('../components/InstagramWin
 export const LazyAboutPage = lazy(() => import('../components/AboutPage'))
 export const LazyProjectPage = lazy(() => import('../components/ProjectPage'))
 export const LazyContactPage = lazy(() => import('../components/ContactPage'))
+export const LazyNewsletterPage = lazy(() => import('../components/NewsletterPage'))
 export const LazyMapWindow = lazy(() => import('../components/MapWindow'))
 export const LazyDoomWindow = lazy(() => import('../components/DoomWindow'))
 export const LazyDadNMeWindow = lazy(() => import('../components/DadNMeWindow'))

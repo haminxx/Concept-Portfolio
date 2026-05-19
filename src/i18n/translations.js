@@ -49,6 +49,7 @@ export const translations = {
     },
     shortcuts: {
       about: 'About',
+      newsletter: 'Newsletter',
       project: 'Project',
       contact: 'Contact',
       linkedin: 'LinkedIn',
@@ -241,6 +242,7 @@ export const translations = {
     },
     shortcuts: {
       about: '소개',
+      newsletter: '뉴스레터',
       project: '프로젝트',
       contact: '연락처',
       linkedin: 'LinkedIn',
@@ -336,6 +338,7 @@ export const translations = {
     },
     shortcuts: {
       about: 'Acerca de',
+      newsletter: 'Boletín',
       project: 'Proyecto',
       contact: 'Contacto',
       linkedin: 'LinkedIn',
@@ -427,6 +430,7 @@ export const translations = {
     },
     shortcuts: {
       about: '关于',
+      newsletter: '通讯',
       project: '项目',
       contact: '联系',
       linkedin: 'LinkedIn',
@@ -518,6 +522,7 @@ export const translations = {
     },
     shortcuts: {
       about: 'À propos',
+      newsletter: 'Newsletter',
       project: 'Projet',
       contact: 'Contact',
       linkedin: 'LinkedIn',
@@ -609,6 +614,7 @@ export const translations = {
     },
     shortcuts: {
       about: '概要',
+      newsletter: 'ニュースレター',
       project: 'プロジェクト',
       contact: 'お問い合わせ',
       linkedin: 'LinkedIn',
@@ -700,6 +706,7 @@ export const translations = {
     },
     shortcuts: {
       about: 'के बारे में',
+      newsletter: 'न्यूज़लेटर',
       project: 'प्रोजेक्ट',
       contact: 'संपर्क',
       linkedin: 'LinkedIn',
@@ -791,6 +798,7 @@ export const translations = {
     },
     shortcuts: {
       about: 'حول',
+      newsletter: 'النشرة',
       project: 'المشروع',
       contact: 'اتصل',
       linkedin: 'LinkedIn',
