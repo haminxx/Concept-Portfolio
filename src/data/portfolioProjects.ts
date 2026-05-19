@@ -26,11 +26,20 @@ export function getPortfolioProjects(): Project[] {
         ? p.image.trim()
         : (PROJECT_IMAGES[p.id] ?? PROJECT_IMAGES.clarte)
 
+    const link =
+      typeof (p as { url?: string; link?: string }).url === 'string' &&
+      (p as { url?: string }).url!.trim().length > 0
+        ? (p as { url: string }).url.trim()
+        : typeof (p as { link?: string }).link === 'string' &&
+            (p as { link?: string }).link!.trim().length > 0
+          ? (p as { link: string }).link.trim()
+          : DEFAULT_LINK
+
     return {
       title: p.title,
       description: p.description || p.subtitle,
       year: PROJECT_YEARS[p.id] ?? '2024',
-      link: DEFAULT_LINK,
+      link,
       image,
     }
   })

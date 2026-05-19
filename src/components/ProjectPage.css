@@ -4,6 +4,7 @@
 }
 
 .projects-page {
+  isolation: isolate;
   --background: #ffffff;
   --foreground: #202124;
   --muted: #dadce0;
@@ -49,4 +50,9 @@
   .projects-page__main {
     max-width: 48rem;
   }
+}
+
+/* Hover peek card: above list, below Chrome titlebar (z-index ~10 in landing content) */
+.projects-page .projects-hover-peek-content {
+  z-index: 8;
 }
