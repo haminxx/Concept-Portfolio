@@ -1,21 +1,24 @@
 .glass-segmented-control {
   --glass-segment-count: 3;
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-text: #e5e5e5;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-text: #5f6368;
+  --glass-text-active: #202124;
 
   position: relative;
   display: flex;
   align-items: stretch;
   width: 100%;
   max-width: 28rem;
-  border-radius: 1rem;
+  border-radius: 1.125rem;
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow:
-    inset 1px 1px 4px rgba(255, 255, 255, 0.2),
-    inset -1px -1px 6px rgba(0, 0, 0, 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.15);
+    inset 1px 1px 0 rgba(255, 255, 255, 0.65),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.25),
+    0 4px 24px rgba(60, 64, 67, 0.1),
+    0 0 32px rgba(255, 255, 255, 0.35);
   overflow: hidden;
 }
 
@@ -36,26 +39,26 @@
 
 .glass-segmented-control[data-active-index='0'] .glass-segmented-control__glider {
   transform: translateX(0%);
-  background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.55), rgba(224, 224, 224, 0.75));
   box-shadow:
-    0 0 18px rgba(192, 192, 192, 0.5),
-    0 0 10px rgba(255, 255, 255, 0.4) inset;
+    0 0 20px rgba(192, 192, 192, 0.45),
+    0 0 12px rgba(255, 255, 255, 0.55) inset;
 }
 
 .glass-segmented-control[data-active-index='1'] .glass-segmented-control__glider {
   transform: translateX(100%);
-  background: linear-gradient(135deg, #ffd70055, #ffcc00);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.45), rgba(255, 204, 0, 0.65));
   box-shadow:
-    0 0 18px rgba(255, 215, 0, 0.5),
-    0 0 10px rgba(255, 235, 150, 0.4) inset;
+    0 0 20px rgba(255, 215, 0, 0.4),
+    0 0 12px rgba(255, 235, 150, 0.5) inset;
 }
 
 .glass-segmented-control[data-active-index='2'] .glass-segmented-control__glider {
   transform: translateX(200%);
-  background: linear-gradient(135deg, #d0e7ff55, #a0d8ff);
+  background: linear-gradient(135deg, rgba(208, 231, 255, 0.55), rgba(160, 216, 255, 0.7));
   box-shadow:
-    0 0 18px rgba(160, 216, 255, 0.5),
-    0 0 10px rgba(200, 240, 255, 0.4) inset;
+    0 0 20px rgba(160, 216, 255, 0.45),
+    0 0 12px rgba(200, 240, 255, 0.5) inset;
 }
 
 .glass-segmented-control__option {
@@ -87,15 +90,15 @@
 }
 
 .glass-segmented-control__label:hover {
-  color: #ffffff;
+  color: var(--glass-text-active);
 }
 
 .glass-segmented-control__input:checked + .glass-segmented-control__label {
-  color: #ffffff;
+  color: var(--glass-text-active);
 }
 
 .glass-segmented-control__input:focus-visible + .glass-segmented-control__label {
-  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline: 2px solid rgba(26, 115, 232, 0.45);
   outline-offset: 2px;
 }
 

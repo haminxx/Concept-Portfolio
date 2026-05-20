@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { GlassSegmentedControl } from '@/components/ui/glass-segmented-control'
 import { ProjectShowcase } from '@/components/ui/project-showcase'
@@ -71,7 +71,6 @@ function useSmoothedScroll(scrollRef) {
 }
 
 export default function ProjectPage() {
-  const pageRef = useRef(null)
   const scrollRef = useRef(null)
   /** @type {[ProjectFilter, import('react').Dispatch<import('react').SetStateAction<ProjectFilter>>]} */
   const [filter, setFilter] = useState('all')
@@ -80,34 +79,20 @@ export default function ProjectPage() {
 
   useSmoothedScroll(scrollRef)
 
-  const resolvePortalContainer = useCallback(() => {
-    const pageEl = pageRef.current
-    if (!pageEl) return null
-    return pageEl.closest('.chrome-landing') ?? document.body
-  }, [])
-
   return (
-    <div ref={pageRef} className="projects-page">
+    <div className="projects-page">
       <div ref={scrollRef} className="projects-page__scroll">
-        <div className="projects-page__main">
-          <div className="projects-page__filters">
-            <div className="projects-page__filters-glass">
-              <GlassSegmentedControl
-                options={FILTER_OPTIONS}
-                value={filter}
-                onChange={setFilter}
-                name="project-category"
-                aria-label="Filter projects by category"
-              />
-            </div>
-          </div>
-
-          <ProjectShowcase
-            projects={projects}
-            filterKey={filter}
-            portalContainer={resolvePortalContainer}
+        <div className="projects-page__filters">
+          <GlassSegmentedControl
+            options={FILTER_OPTIONS}
+            value={filter}
+            onChange={setFilter}
+            name="project-category"
+            aria-label="Filter projects by category"
           />
         </div>
+
+        <ProjectShowcase projects={projects} filterKey={filter} />
       </div>
     </div>
   )

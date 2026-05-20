@@ -46,17 +46,14 @@
   display: none;
 }
 
-.projects-page__main {
-  width: 100%;
-  min-height: 100%;
-  max-width: 42rem;
-  margin: 0 auto;
-}
-
 .projects-page__filters {
   position: sticky;
   top: 0;
   z-index: 2;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
   padding: 1.25rem 1.5rem 0.75rem;
   background: linear-gradient(
     to bottom,
@@ -65,49 +62,22 @@
   );
 }
 
-.projects-page__filters-glass {
-  width: fit-content;
-  max-width: 100%;
-  padding: 0.35rem;
-  border-radius: 1.125rem;
-  background: #1a1a1a;
+.projects-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
 }
 
 @media (min-width: 640px) {
   .projects-page__filters {
-    padding: 1.5rem 2.5rem 0.75rem;
+    padding: 1.5rem 2rem 0.75rem;
   }
-}
 
-@media (min-width: 640px) {
-  .projects-page__main {
-    max-width: 48rem;
+  .projects-page__list {
+    padding: 0 2rem 4rem;
   }
-}
-
-.projects-page__filters {
-  padding: 1.25rem 1.5rem 0;
-}
-
-@media (min-width: 640px) {
-  .projects-page__filters {
-    padding: 1.5rem 2.5rem 0;
-  }
-}
-
-/* Hover peek card: above list, below Chrome titlebar (z-index ~10 in landing content) */
-.projects-page .projects-hover-peek-content,
-.chrome-landing .projects-hover-peek-content {
-  z-index: 20;
-  pointer-events: none;
-}
-
-/* Cursor-anchored preview: override Radix popper placement */
-.projects-page .projects-hover-peek-content--cursor,
-.chrome-landing__content .projects-hover-peek-content--cursor {
-  position: fixed !important;
-  inset: auto !important;
-  margin: 0 !important;
-  transform: translateX(-50%) !important;
-  will-change: left, top;
 }

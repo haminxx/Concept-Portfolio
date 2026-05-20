@@ -82,8 +82,15 @@
   background: #fff;
 }
 
-.chrome-landing__content:has(.projects-page) .projects-hover-peek-content--cursor {
-  z-index: 12;
+.chrome-landing__content:has(.newsletter-page) .newsletter-page__scroll,
+.chrome-landing__content:has(.newsletter-page) .newsletter-page__article {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chrome-landing__content:has(.newsletter-page) .newsletter-page__scroll::-webkit-scrollbar,
+.chrome-landing__content:has(.newsletter-page) .newsletter-page__article::-webkit-scrollbar {
+  display: none;
 }
 
 .chrome-landing__content:has(.chrome-home),
