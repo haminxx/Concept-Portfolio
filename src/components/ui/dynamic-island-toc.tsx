@@ -63,6 +63,95 @@ function getScrollContainer(ref?: RefObject<HTMLElement | null>): HTMLElement | 
   return ref?.current ?? window
 }
 
+const TOC_TREE_COL_WIDTH = 14
+
+type TocTreeMeta = {
+  depth: number
+  ancestorLines: boolean[]
+  isLastSibling: boolean
+}
+
+function computeTocTreeMeta(headings: HeadingData[], minLevel: number): TocTreeMeta[] {
+  return headings.map((h, index) => {
+    const depth = Math.max(0, h.level - minLevel)
+    const ancestorLines: boolean[] = []
+
+    for (let d = 0; d < depth; d++) {
+      let showLine = false
+      for (let j = index + 1; j < headings.length; j++) {
+        if (headings[j].level <= minLevel + d) break
+        showLine = true
+        break
+      }
+      ancestorLines.push(showLine)
+    }
+
+    let isLastSibling = true
+    for (let j = index + 1; j < headings.length; j++) {
+      if (headings[j].level < h.level) break
+      if (headings[j].level === h.level) {
+        isLastSibling = false
+        break
+      }
+    }
+
+    return { depth, ancestorLines, isLastSibling }
+  })
+}
+
+function TocTreeGuide({
+  depth,
+  ancestorLines,
+  isLastSibling,
+  emphasized,
+}: TocTreeMeta & { emphasized: boolean }) {
+  const lineClass = cn(
+    'bg-foreground/20 transition-colors duration-300',
+    emphasized && 'bg-foreground/40',
+  )
+
+  if (depth === 0) {
+    return (
+      <div
+        className="flex shrink-0 items-center justify-center"
+        style={{ width: TOC_TREE_COL_WIDTH }}
+        aria-hidden
+      >
+        <div
+          className={cn(
+            'h-1.5 w-1.5 rounded-full bg-foreground/25 transition-colors duration-300',
+            emphasized && 'bg-foreground/55',
+          )}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex shrink-0 self-stretch" aria-hidden>
+      {ancestorLines.map((showLine, i) => (
+        <div key={`ancestor-${i}`} className="relative shrink-0" style={{ width: TOC_TREE_COL_WIDTH }}>
+          {showLine && (
+            <div
+              className={cn('absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2', lineClass)}
+            />
+          )}
+        </div>
+      ))}
+      <div className="relative shrink-0 self-stretch" style={{ width: TOC_TREE_COL_WIDTH }}>
+        <div
+          className={cn(
+            'absolute left-1/2 top-0 w-px -translate-x-1/2',
+            lineClass,
+            isLastSibling ? 'h-1/2' : 'h-full',
+          )}
+        />
+        <div className={cn('absolute left-1/2 top-1/2 h-px w-1/2', lineClass)} />
+      </div>
+    </div>
+  )
+}
+
 export function DynamicIslandTOC({
   children,
   selector = 'article h1, article h2, article h3, article h4, .prose h1, .prose h2, .prose h3, .prose h4, [data-toc]',
@@ -169,6 +258,11 @@ export function DynamicIslandTOC({
     if (headings.length === 0) return 1
     return Math.min(...headings.map((h) => h.level))
   }, [headings])
+
+  const tocTreeMeta = useMemo(
+    () => computeTocTreeMeta(headings, minLevel),
+    [headings, minLevel],
+  )
 
   const scrollToHeading = (element: HTMLElement) => {
     const container = getScrollContainer(scrollContainerRef)
@@ -290,11 +384,11 @@ export function DynamicIslandTOC({
 
             <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4" data-lenis-prevent="true">
               <div className="flex flex-col gap-0.5">
-                {headings.map((h) => {
+                {headings.map((h, index) => {
                   const isActive = activeId === h.id
                   const isHovered = hoveredId === h.id
-                  const indentLevel = Math.max(0, h.level - minLevel)
-                  const paddingLeft = indentLevel * 14 + 12
+                  const emphasized = isActive || isHovered
+                  const tree = tocTreeMeta[index]
 
                   return (
                     <button
@@ -307,15 +401,16 @@ export function DynamicIslandTOC({
                         scrollToHeading(h.element)
                         setIsExpanded(false)
                       }}
-                      style={{ paddingLeft: `${paddingLeft}px` }}
                       className={cn(
-                        'group flex w-full shrink-0 cursor-pointer items-center rounded-lg border-none py-2 pr-3 text-left text-sm transition-all duration-300 ease-out',
+                        'group flex w-full shrink-0 cursor-pointer items-stretch gap-1.5 rounded-lg border-none py-2 pl-2 pr-3 text-left text-sm transition-all duration-300 ease-out',
                         isActive && 'bg-foreground/10 font-medium text-foreground',
                         !isActive && isHovered && 'bg-foreground/5 text-foreground/85',
                         !isActive && !isHovered && 'bg-transparent text-foreground/45',
                       )}
                     >
-                      <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap transition-transform duration-300 group-hover:translate-x-1">
+                      <TocTreeGuide {...tree} emphasized={emphasized} />
+
+                      <span className="min-w-0 flex-1 self-center overflow-hidden text-ellipsis whitespace-nowrap transition-transform duration-300 group-hover:translate-x-0.5">
                         {h.text}
                       </span>
 
@@ -323,7 +418,7 @@ export function DynamicIslandTOC({
                         initial={false}
                         animate={{ scale: isActive ? 1 : 0, opacity: isActive ? 1 : 0 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="ml-3 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground"
+                        className="ml-1 h-1.5 w-1.5 shrink-0 self-center rounded-full bg-foreground"
                       />
                     </button>
                   )
