@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils'
 
 interface MouseFollowingEyesProps {
   className?: string
+  /** Eye diameter in px (default 40). Pupil and movement scale proportionally. */
+  eyeSize?: number
   /** Track pointer on the whole window (toolbar). When false, uses trackingRoot or the eyes container. */
   trackWindow?: boolean
   /** Element to listen for pointer moves (e.g. Chrome home content area). */
@@ -11,6 +13,7 @@ interface MouseFollowingEyesProps {
 
 export function MouseFollowingEyes({
   className,
+  eyeSize = 40,
   trackWindow = true,
   trackingRoot,
 }: MouseFollowingEyesProps) {
@@ -50,16 +53,18 @@ export function MouseFollowingEyes({
       onMouseMove={trackWindow || trackingRoot ? undefined : handleLocalMouseMove}
       aria-hidden="true"
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center" style={{ gap: eyeSize * 0.2 }}>
         <Eye
           mouseX={mousePos.x}
           mouseY={mousePos.y}
+          eyeSize={eyeSize}
           selfRef={eye1Ref}
           otherRef={eye2Ref}
         />
         <Eye
           mouseX={mousePos.x}
           mouseY={mousePos.y}
+          eyeSize={eyeSize}
           selfRef={eye2Ref}
           otherRef={eye1Ref}
         />
@@ -71,11 +76,16 @@ export function MouseFollowingEyes({
 interface EyeProps {
   mouseX: number
   mouseY: number
+  eyeSize: number
   selfRef: RefObject<HTMLDivElement | null>
   otherRef: RefObject<HTMLDivElement | null>
 }
 
-const Eye = ({ mouseX, mouseY, selfRef, otherRef }: EyeProps) => {
+const Eye = ({ mouseX, mouseY, eyeSize, selfRef, otherRef }: EyeProps) => {
+  const pupilSize = eyeSize * 0.35
+  const maxMove = eyeSize * 0.2
+  const highlightSize = eyeSize * 0.1
+  const highlightOffset = eyeSize * 0.05
   const pupilRef = useRef<HTMLDivElement>(null)
   const [center, setCenter] = useState({ x: 0, y: 0 })
 
@@ -114,25 +124,34 @@ const Eye = ({ mouseX, mouseY, selfRef, otherRef }: EyeProps) => {
     const dy = mouseY - center.y
     const angle = Math.atan2(dy, dx)
 
-    const maxMove = 8
     const pupilX = Math.cos(angle) * maxMove
     const pupilY = Math.sin(angle) * maxMove
 
     if (pupilRef.current) {
       pupilRef.current.style.transform = `translate(${pupilX}px, ${pupilY}px)`
     }
-  }, [mouseX, mouseY, center.x, center.y, selfRef, otherRef])
+  }, [mouseX, mouseY, center.x, center.y, selfRef, otherRef, maxMove])
 
   return (
     <div
       ref={selfRef}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 bg-white"
+      className="relative flex items-center justify-center rounded-full border-2 border-white/30 bg-white"
+      style={{ width: eyeSize, height: eyeSize }}
     >
       <div
         ref={pupilRef}
-        className="absolute h-3.5 w-3.5 rounded-full bg-black transition-all duration-[5ms]"
+        className="absolute rounded-full bg-black transition-all duration-[5ms]"
+        style={{ width: pupilSize, height: pupilSize }}
       >
-        <div className="absolute bottom-0.5 right-0.5 h-1 w-1 rounded-full bg-white" />
+        <div
+          className="absolute rounded-full bg-white"
+          style={{
+            width: highlightSize,
+            height: highlightSize,
+            bottom: highlightOffset,
+            right: highlightOffset,
+          }}
+        />
       </div>
     </div>
   )

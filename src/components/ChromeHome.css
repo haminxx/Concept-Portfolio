@@ -30,7 +30,7 @@
   justify-content: center;
   width: 100%;
   padding: 24px;
-  gap: clamp(16px, 3vh, 32px);
+  gap: clamp(12px, 2vh, 24px);
   box-sizing: border-box;
   overflow: visible;
 }
@@ -42,7 +42,9 @@
   justify-content: center;
   width: 100%;
   max-width: 584px;
-  min-height: 72px;
+  min-height: 96px;
+  margin-bottom: -8px;
+  transform: translateY(-24px);
   overflow: hidden;
   pointer-events: auto;
 }

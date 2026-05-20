@@ -32,7 +32,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
       <div className="chrome-home__bg" aria-hidden="true" />
       <div ref={contentRef} className="chrome-home__content">
         <div className="chrome-home__eyes" aria-hidden="true">
-          <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} />
+          <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} eyeSize={80} />
         </div>
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {

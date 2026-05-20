@@ -1,0 +1,33 @@
+﻿---
+description: Default GitHub push target and credential username (haminxx)
+alwaysApply: true
+---
+
+# GitHub Push Default
+
+Always push to **https://github.com/haminxx** using GitHub username **haminxx**.
+
+## Before push
+
+If credential username is not set, run:
+
+```bash
+git config --global credential.https://github.com.username haminxx
+```
+
+Verify with:
+
+```bash
+git config --get credential.https://github.com.username
+```
+
+Expected remote for this project: `https://github.com/haminxx/Portfolio.git` (`git remote get-url origin`).
+
+## Authentication
+
+A PAT or token is still required via **Windows Credential Manager**. Setting the GitHub credential username avoids account-picker confusion when multiple GitHub accounts are configured; it does not replace the token.
+
+## Do not
+
+- Store passwords or tokens in repository files
+- Change `user.name` or `user.email` unless explicitly requested
