@@ -13,8 +13,8 @@ import { cn } from '@/lib/utils'
  */
 
 const INK = {
-  dark: 'rgba(0, 0, 0, 0.82)',
-  bright: 'rgba(255, 255, 255, 0.82)',
+  dark: 'rgba(0, 0, 0, 0.85)',
+  bright: 'rgba(255, 255, 255, 0.9)',
 } as const
 
 export type ThemeTogglerInkColor = keyof typeof INK
@@ -106,7 +106,7 @@ export function AnimatedThemeToggler({
     ? { duration: 0 }
     : { type: 'spring' as const, stiffness: 380, damping: 30 }
 
-  const resolvedInk = inkColor ?? (isDark ? 'bright' : 'dark')
+  const resolvedInk = inkColor ?? (isDark ? 'dark' : 'bright')
 
   return (
     <motion.button
