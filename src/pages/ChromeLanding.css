@@ -10,6 +10,14 @@
   box-sizing: border-box;
 }
 
+/* About tab: hide system cursor across entire Chrome window (tabs, toolbar, frame) */
+.chrome-landing--about-active .chrome-window,
+.chrome-landing--about-active .chrome-window *,
+.chrome-landing--about-active .chrome-window *::before,
+.chrome-landing--about-active .chrome-window *::after {
+  cursor: none !important;
+}
+
 /* daedalOS-style desktop layer: full viewport background behind Chrome window */
 .daedalos-desktop {
   position: fixed;
@@ -206,5 +214,14 @@
 @keyframes chrome-landing-shutdown-fade {
   to {
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chrome-landing--about-active .chrome-window,
+  .chrome-landing--about-active .chrome-window *,
+  .chrome-landing--about-active .chrome-window *::before,
+  .chrome-landing--about-active .chrome-window *::after {
+    cursor: auto !important;
   }
 }

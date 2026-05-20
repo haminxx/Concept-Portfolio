@@ -43,25 +43,11 @@
   display: none;
 }
 
-body.chrome-about-active,
-body.chrome-about-active * {
-  cursor: none !important;
-}
-
-body.chrome-about-active .about-theme-cursor__toggler {
-  pointer-events: auto;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .about-page,
   .about-page *,
   .about-page *::before,
   .about-page *::after {
-    cursor: auto !important;
-  }
-
-  body.chrome-about-active,
-  body.chrome-about-active * {
     cursor: auto !important;
   }
 

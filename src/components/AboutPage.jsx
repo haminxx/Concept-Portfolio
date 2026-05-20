@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { AboutThemeCursor } from '@/components/ui/about-theme-cursor'
 import { CursorRevealAbout } from '@/components/ui/cursor-reveal-about'
@@ -11,11 +11,6 @@ export default function AboutPage() {
 
   const handleToggleTheme = useCallback(() => {
     setIsDark((prev) => !prev)
-  }, [])
-
-  useEffect(() => {
-    document.body.classList.add('chrome-about-active')
-    return () => document.body.classList.remove('chrome-about-active')
   }, [])
 
   return (

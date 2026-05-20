@@ -451,7 +451,7 @@ export default function ChromeLanding({
   return (
     <MusicPlayerProvider>
     <DesktopBackgroundProvider>
-    <div className="chrome-landing">
+    <div className={`chrome-landing${activeTab?.type === 'about' ? ' chrome-landing--about-active' : ''}`}>
       <Desktop
         onOpenApp={openAppTab}
         sortBy={sortBy}
