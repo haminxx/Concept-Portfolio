@@ -9,12 +9,6 @@
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  cursor: none;
-}
-
-.chrome-home,
-.chrome-home * {
-  cursor: none !important;
 }
 
 .chrome-home__bg {
@@ -52,9 +46,11 @@
   pointer-events: auto;
 }
 
-.chrome-home__magnetic-label {
-  position: relative;
-  z-index: 1;
+.chrome-home__shortcut-label {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: #e8eaed;
 }
 
 .chrome-home__shortcuts {
