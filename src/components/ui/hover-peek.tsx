@@ -1,5 +1,5 @@
 import * as RdxHoverCard from '@radix-ui/react-hover-card'
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import {
   AnimatePresence,
   motion,
@@ -37,14 +37,20 @@ function usePreviewSource(
 
 function useHoverState(followMouse: boolean, positionAboveCursor: boolean) {
   const [isPeeking, setPeeking] = useState(false)
+  const cursorPosRef = useRef({ x: 0, y: 0 })
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const mouseX = useMotionValue(0)
   const followX = useSpring(mouseX, { stiffness: 120, damping: 20 })
 
+  const updateCursorPos = useCallback((x: number, y: number) => {
+    cursorPosRef.current = { x, y }
+    setCursorPos({ x, y })
+  }, [])
+
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
       if (positionAboveCursor) {
-        setCursorPos({ x: event.clientX, y: event.clientY })
+        updateCursorPos(event.clientX, event.clientY)
       }
       if (!followMouse) return
       const target = event.currentTarget
@@ -53,7 +59,15 @@ function useHoverState(followMouse: boolean, positionAboveCursor: boolean) {
       const offsetFromCenter = (eventOffsetX - targetRect.width / 2) * 0.3
       mouseX.set(offsetFromCenter)
     },
-    [mouseX, followMouse, positionAboveCursor]
+    [mouseX, followMouse, positionAboveCursor, updateCursorPos]
+  )
+
+  const handlePointerEnter = useCallback(
+    (event: React.PointerEvent<HTMLElement>) => {
+      if (!positionAboveCursor) return
+      updateCursorPos(event.clientX, event.clientY)
+    },
+    [positionAboveCursor, updateCursorPos]
   )
 
   const handleOpenChange = useCallback(
@@ -66,7 +80,15 @@ function useHoverState(followMouse: boolean, positionAboveCursor: boolean) {
     [mouseX]
   )
 
-  return { isPeeking, handleOpenChange, handlePointerMove, followX, cursorPos }
+  return {
+    isPeeking,
+    handleOpenChange,
+    handlePointerMove,
+    handlePointerEnter,
+    followX,
+    cursorPos,
+    cursorPosRef,
+  }
 }
 
 type HoverPeekBaseProps = {
@@ -114,8 +136,15 @@ export function HoverPeek({
     isStatic,
     imageSrc
   )
-  const { isPeeking, handleOpenChange, handlePointerMove, followX, cursorPos } =
-    useHoverState(enableMouseFollow, positionAboveCursor)
+  const {
+    isPeeking,
+    handleOpenChange,
+    handlePointerMove,
+    handlePointerEnter,
+    followX,
+    cursorPos,
+    cursorPosRef,
+  } = useHoverState(enableMouseFollow, positionAboveCursor)
 
   const [isHoveringLens, setIsHoveringLens] = useState(false)
   const [lensMousePosition, setLensMousePosition] = useState({ x: 0, y: 0 })
@@ -128,8 +157,19 @@ export function HoverPeek({
     if (!isPeeking) {
       setImageLoadFailed(false)
       setIsHoveringLens(false)
+      return undefined
     }
-  }, [isPeeking])
+
+    if (!positionAboveCursor) return undefined
+
+    const handleWindowPointerMove = (event: PointerEvent) => {
+      cursorPosRef.current = { x: event.clientX, y: event.clientY }
+      setCursorPos({ x: event.clientX, y: event.clientY })
+    }
+
+    window.addEventListener('pointermove', handleWindowPointerMove, { passive: true })
+    return () => window.removeEventListener('pointermove', handleWindowPointerMove)
+  }, [cursorPosRef, isPeeking, positionAboveCursor])
 
   const handleLensMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!enableLensEffect) return
@@ -164,25 +204,54 @@ export function HoverPeek({
     exit: { opacity: 0, scale: 0.7, transition: { duration: 0.2, ease: 'easeIn' } },
   }
 
+  const mergeTriggerHandlers = <E extends React.SyntheticEvent>(
+    childHandler: ((event: E) => void) | undefined,
+    nextHandler: (event: E) => void
+  ) => {
+    return (event: E) => {
+      nextHandler(event)
+      childHandler?.(event)
+    }
+  }
+
   const triggerChild = React.isValidElement(children)
     ? React.cloneElement(children as React.ReactElement<{ className?: string }>, {
         className: cn(
           (children.props as { className?: string }).className,
           className
         ),
-        onPointerMove: (e: React.PointerEvent<HTMLElement>) => {
-          handlePointerMove(e)
-          const childOnPointerMove = (
-            children.props as { onPointerMove?: (ev: React.PointerEvent<HTMLElement>) => void }
-          ).onPointerMove
-          childOnPointerMove?.(e)
-        },
+        onPointerMove: mergeTriggerHandlers(
+          (children.props as { onPointerMove?: (ev: React.PointerEvent<HTMLElement>) => void })
+            .onPointerMove,
+          handlePointerMove
+        ),
+        onPointerEnter: mergeTriggerHandlers(
+          (children.props as { onPointerEnter?: (ev: React.PointerEvent<HTMLElement>) => void })
+            .onPointerEnter,
+          handlePointerEnter
+        ),
       })
     : (
-        <span className={className} onPointerMove={handlePointerMove}>
+        <span
+          className={className}
+          onPointerMove={handlePointerMove}
+          onPointerEnter={handlePointerEnter}
+        >
           {children}
         </span>
       )
+
+  const cursorOffset = 14
+  const cursorStyle =
+    positionAboveCursor && isPeeking
+      ? {
+          position: 'fixed' as const,
+          left: cursorPos.x,
+          top: cursorPos.y - peekHeight - cursorOffset,
+          transform: 'translateX(-50%)',
+          margin: 0,
+        }
+      : undefined
 
   return (
     <RdxHoverCard.Root
@@ -202,16 +271,10 @@ export function HoverPeek({
           align="center"
           sideOffset={positionAboveCursor ? 0 : 12}
           avoidCollisions={!positionAboveCursor}
+          updatePositionStrategy={positionAboveCursor ? 'always' : 'optimized'}
           style={{
             pointerEvents: enableLensEffect ? 'none' : 'auto',
-            ...(positionAboveCursor && isPeeking
-              ? {
-                  position: 'fixed',
-                  left: cursorPos.x,
-                  top: cursorPos.y - peekHeight - 14,
-                  transform: 'translateX(-50%)',
-                }
-              : undefined),
+            ...cursorStyle,
           }}
         >
           <AnimatePresence>

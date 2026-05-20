@@ -46,20 +46,53 @@
   margin: 0 auto;
 }
 
+.projects-page__filters {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 1.25rem 1.5rem 0.75rem;
+  background: linear-gradient(
+    to bottom,
+    var(--background) 70%,
+    rgba(255, 255, 255, 0)
+  );
+}
+
+@media (min-width: 640px) {
+  .projects-page__filters {
+    padding: 1.5rem 2.5rem 0.75rem;
+  }
+}
+
 @media (min-width: 640px) {
   .projects-page__main {
     max-width: 48rem;
   }
 }
 
+.projects-page__filters {
+  padding: 1.25rem 1.5rem 0;
+}
+
+@media (min-width: 640px) {
+  .projects-page__filters {
+    padding: 1.5rem 2.5rem 0;
+  }
+}
+
 /* Hover peek card: above list, below Chrome titlebar (z-index ~10 in landing content) */
-.projects-page .projects-hover-peek-content {
-  z-index: 8;
+.projects-page .projects-hover-peek-content,
+.chrome-landing .projects-hover-peek-content {
+  z-index: 20;
+  pointer-events: none;
 }
 
 /* Cursor-anchored preview: override Radix popper placement */
-.projects-page .projects-hover-peek-content--cursor {
+.projects-page .projects-hover-peek-content--cursor,
+.chrome-landing__content .projects-hover-peek-content--cursor {
   position: fixed !important;
   inset: auto !important;
   margin: 0 !important;
+  transform: translateX(-50%) !important;
+  will-change: left, top;
 }

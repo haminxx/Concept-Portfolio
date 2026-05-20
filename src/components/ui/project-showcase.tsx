@@ -3,6 +3,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { HoverPeek } from '@/components/ui/hover-peek'
 
 export interface Project {
+  id?: string
   title: string
   description: string
   year: string
@@ -47,7 +48,8 @@ export const DEFAULT_PROJECTS: Project[] = [
 
 type ProjectShowcaseProps = {
   projects?: Project[]
-  portalContainer?: HTMLElement | null
+  /** Resolves portal mount target when the preview opens. */
+  portalContainer?: HTMLElement | null | (() => HTMLElement | null)
 }
 
 export function ProjectShowcase({
@@ -55,9 +57,11 @@ export function ProjectShowcase({
   portalContainer,
 }: ProjectShowcaseProps) {
   const projects = projectsProp?.length ? projectsProp : DEFAULT_PROJECTS
+  const portalTarget =
+    typeof portalContainer === 'function' ? portalContainer() : portalContainer
 
   return (
-    <section className="project-showcase relative w-full px-6 py-12 text-foreground sm:px-10 sm:py-16">
+    <section className="project-showcase relative w-full px-6 pb-12 pt-4 text-foreground sm:px-10 sm:pb-16 sm:pt-6">
       <h2 className="mb-8 text-sm font-medium uppercase tracking-wide text-muted-foreground">
         Selected work
       </h2>
@@ -65,14 +69,16 @@ export function ProjectShowcase({
       <div className="space-y-0">
         {projects.map((project) => (
           <HoverPeek
-            key={project.title}
+            key={project.id ?? project.title}
             url={project.link}
             isStatic
             imageSrc={project.image}
             peekWidth={200}
             peekHeight={130}
             positionAboveCursor
-            portalContainer={portalContainer}
+            enableMouseFollow={false}
+            enableLensEffect={false}
+            portalContainer={portalTarget}
           >
             <a
               href={project.link}

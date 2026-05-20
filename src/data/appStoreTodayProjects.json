@@ -1,23 +1,74 @@
 [
   {
+    "id": "clover",
+    "title": "Clover",
+    "subtitle": "Campus discovery & events",
+    "description": "A campus-first social layer for discovering clubs, events, and people nearby.",
+    "category": "side",
+    "image": ""
+  },
+  {
+    "id": "forma",
+    "title": "Forma",
+    "subtitle": "Generative form builder",
+    "description": "Rapid UI generation from natural language prompts for hackathon-speed iteration.",
+    "category": "hackathon",
+    "image": ""
+  },
+  {
+    "id": "quarte",
+    "title": "Quarte",
+    "subtitle": "Collaborative design canvas",
+    "description": "Real-time mood boards and component swaps for product teams.",
+    "category": "hackathon",
+    "image": ""
+  },
+  {
+    "id": "kine",
+    "title": "Kine",
+    "subtitle": "Motion capture toolkit",
+    "description": "Browser-based pose estimation and skeletal retargeting for indie animation.",
+    "category": "side",
+    "image": ""
+  },
+  {
+    "id": "akashic",
+    "title": "Akashic",
+    "subtitle": "Personal knowledge graph",
+    "description": "Link notes, sources, and timelines into a queryable memory graph.",
+    "category": "all",
+    "image": ""
+  },
+  {
+    "id": "stash",
+    "title": "Stash",
+    "subtitle": "Bookmark intelligence",
+    "description": "Save links with auto-tags, screenshots, and full-text recall.",
+    "category": "side",
+    "image": ""
+  },
+  {
+    "id": "los",
+    "title": "L.O.S (Latent Operating System)",
+    "subtitle": "Latent Operating System",
+    "description": "An experimental shell that treats latent embeddings as first-class files.",
+    "category": "side",
+    "image": ""
+  },
+  {
     "id": "clarte",
     "title": "Clarte",
     "subtitle": "Socratic Voice AI Agent",
-    "description": "A structured cognitive framework for guided dialogue—voice-first tutoring that asks the right next question, keeps context, and helps you think clearly without handing you the answer.",
+    "description": "A structured cognitive framework for guided dialogue—voice-first tutoring that asks the right next question.",
+    "category": "hackathon",
     "image": ""
   },
   {
     "id": "fitout",
     "title": "FITOUT",
     "subtitle": "Visual Search Fashion Social",
-    "description": "Identifying clothing items via image search and building a social layer around outfits—snap, match, and discover pieces with a clean visual-first flow.",
-    "image": ""
-  },
-  {
-    "id": "coro",
-    "title": "Coro",
-    "subtitle": "Biometric Tempo Sync",
-    "description": "Heart rate variability music syncing that adapts playback and rhythm to your physiological state—minimal UI, maximum immersion.",
+    "description": "Identifying clothing items via image search and building a social layer around outfits.",
+    "category": "side",
     "image": ""
   }
 ]

@@ -7,7 +7,6 @@ const DEFAULT_LINK = 'https://github.com/haminxx'
 const ICON_STYLES = {
   clarte: { from: '#1a1a2e', to: '#4a4e69' },
   fitout: { from: '#2d3436', to: '#636e72' },
-  coro: { from: '#0f0c29', to: '#302b63' },
 }
 
 function getProjectLink(project) {

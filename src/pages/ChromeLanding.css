@@ -71,10 +71,18 @@
   overflow: hidden;
 }
 
-.chrome-landing__content:has(.projects-page),
+.chrome-landing__content:has(.projects-page) {
+  background: #fff;
+  overflow: hidden;
+}
+
 .chrome-landing__content:has(.newsletter-page),
 .chrome-landing__content:has(.contact-page) {
   background: #fff;
+}
+
+.chrome-landing__content:has(.projects-page) .projects-hover-peek-content--cursor {
+  z-index: 12;
 }
 
 .chrome-landing__content:has(.chrome-home),
