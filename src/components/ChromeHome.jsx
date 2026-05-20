@@ -57,9 +57,14 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
       <div className="chrome-home__eyes" aria-hidden="true">
         <MouseFollowingEyes trackWindow={false} trackingRoot={homeRef} eyeSize={80} />
       </div>
-      <p className="chrome-home__scene-caption" aria-hidden="true">
+      <a
+        className="chrome-home__scene-caption"
+        href="https://www.youtube.com/watch?v=wxN1T1uxQ2g"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         Everything Everywhere All at Once (2022) Scene 1:36:00
-      </p>
+      </a>
       <div className="chrome-home__content">
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
