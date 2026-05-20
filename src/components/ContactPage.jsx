@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Mail, X } from 'lucide-react'
+import { ContactSection } from '@/components/ui/contact'
 import './ContactPage.css'
 
 const ICON_SIZE = 52
@@ -231,66 +232,82 @@ export default function ContactPage() {
     }
   }, [reducedMotion])
 
+  const handleContactSubmit = useCallback((data) => {
+    console.log('Contact form submitted:', data)
+  }, [])
+
   return (
     <div className="contact-page">
-      <div
-        ref={zoneRef}
-        className="contact-page__zone"
-        aria-label="Dropped messages"
-      >
-        {drops.length === 0 && (
-          <p className="contact-page__hint" aria-live="polite">
-            Type a message below and send it — it drops here as a note you can open.
-          </p>
-        )}
+      <div className="contact-page__physics">
+        <div
+          ref={zoneRef}
+          className="contact-page__zone"
+          aria-label="Dropped messages"
+        >
+          {drops.length === 0 && (
+            <p className="contact-page__hint" aria-live="polite">
+              Type a message below and send it — it drops here as a note you can open.
+            </p>
+          )}
 
-        {drops.map((drop) => (
-          <button
-            key={drop.id}
-            type="button"
-            className={`contact-page__icon${drop.settled ? ' contact-page__icon--settled' : ''}`}
-            style={{
-              width: ICON_SIZE,
-              height: ICON_SIZE,
-              transform: `translate3d(${drop.x}px, ${drop.y}px, 0) rotate(${drop.rotation}deg)`,
-            }}
-            onClick={() => setSelectedId(drop.id)}
-            aria-label={`Open message: ${drop.text.slice(0, 60)}${drop.text.length > 60 ? '…' : ''}`}
-          >
-            <Mail size={26} strokeWidth={1.75} aria-hidden />
-          </button>
-        ))}
+          {drops.map((drop) => (
+            <button
+              key={drop.id}
+              type="button"
+              className={`contact-page__icon${drop.settled ? ' contact-page__icon--settled' : ''}`}
+              style={{
+                width: ICON_SIZE,
+                height: ICON_SIZE,
+                transform: `translate3d(${drop.x}px, ${drop.y}px, 0) rotate(${drop.rotation}deg)`,
+              }}
+              onClick={() => setSelectedId(drop.id)}
+              aria-label={`Open message: ${drop.text.slice(0, 60)}${drop.text.length > 60 ? '…' : ''}`}
+            >
+              <Mail size={26} strokeWidth={1.75} aria-hidden />
+            </button>
+          ))}
+        </div>
+
+        <form
+          className="contact-page__composer"
+          onSubmit={submitMessage}
+          aria-label="Send a message"
+        >
+          <label htmlFor="contact-message" className="contact-page__label">
+            Your message
+          </label>
+          <div className="contact-page__composer-inner">
+            <input
+              id="contact-message"
+              type="text"
+              className="contact-page__input"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value.slice(0, MAX_TEXT))}
+              placeholder="Say something…"
+              autoComplete="off"
+              maxLength={MAX_TEXT}
+            />
+            <button
+              type="submit"
+              className="contact-page__send"
+              disabled={!draft.trim()}
+              aria-label="Drop message"
+            >
+              Send
+            </button>
+          </div>
+        </form>
       </div>
 
-      <form
-        className="contact-page__composer"
-        onSubmit={submitMessage}
-        aria-label="Send a message"
-      >
-        <label htmlFor="contact-message" className="contact-page__label">
-          Your message
-        </label>
-        <div className="contact-page__composer-inner">
-          <input
-            id="contact-message"
-            type="text"
-            className="contact-page__input"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value.slice(0, MAX_TEXT))}
-            placeholder="Say something…"
-            autoComplete="off"
-            maxLength={MAX_TEXT}
+      <div className="contact-page__form">
+        <div className="contact-page__form-scroll">
+          <ContactSection
+            embedded
+            contactEmail="hello@christianlee.com"
+            onSubmit={handleContactSubmit}
           />
-          <button
-            type="submit"
-            className="contact-page__send"
-            disabled={!draft.trim()}
-            aria-label="Drop message"
-          >
-            Send
-          </button>
         </div>
-      </form>
+      </div>
 
       <AnimatePresence>
         {selectedDrop && (

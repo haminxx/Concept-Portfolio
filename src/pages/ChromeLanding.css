@@ -110,6 +110,15 @@
   display: none;
 }
 
+.chrome-landing__content:has(.contact-page) .contact-page__form-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chrome-landing__content:has(.contact-page) .contact-page__form-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .chrome-landing__content:has(.chrome-home),
 .chrome-landing__content:has(.projects-page),
 .chrome-landing__content:has(.newsletter-page),

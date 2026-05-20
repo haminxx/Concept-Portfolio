@@ -16,3 +16,19 @@
   animation: contact-bubble var(--bubble-duration, 15s) ease-in-out infinite;
   animation-fill-mode: forwards;
 }
+
+.contact-section--embedded {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.contact-section__card--embedded {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  border-color: rgba(232, 234, 237, 0.95);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.75),
+    0 8px 28px rgba(60, 64, 67, 0.1);
+}
