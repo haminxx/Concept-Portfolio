@@ -38,7 +38,7 @@ export function RevealImageListItem({
     : 'relative h-16 w-16 scale-0 overflow-hidden rounded-md opacity-0 shadow-none transition-all delay-100 duration-500 group-hover/reveal:h-full group-hover/reveal:w-full group-hover/reveal:scale-100 group-hover/reveal:opacity-100 group-hover/reveal:shadow-xl'
 
   const titleClass = compact
-    ? 'text-left text-lg font-bold leading-snug text-foreground transition duration-500 group-hover/reveal:opacity-40'
+    ? 'text-left text-[0.9375rem] font-bold leading-snug text-foreground transition duration-500 group-hover/reveal:opacity-40'
     : 'text-7xl font-black text-foreground transition duration-500 group-hover/reveal:opacity-40'
 
   const Wrapper = onClick ? 'button' : 'div'

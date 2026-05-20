@@ -340,9 +340,9 @@ export default function NewsletterPage() {
 
   const activeEdition = editions.find((edition) => edition.id === activeEditionId) ?? editions[0]
 
-  const sidebarItems = editions.map((edition) => ({
+  const sidebarItems = editions.map((edition, index) => ({
     id: edition.id,
-    title: edition.title,
+    title: `#${index + 1} ${edition.title}`,
     dateLabel: edition.dateLabel,
     images: edition.images,
   }))
