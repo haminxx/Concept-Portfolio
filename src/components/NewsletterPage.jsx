@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DynamicIslandTOC } from '@/components/ui/dynamic-island-toc'
 import { MenuToggleIcon } from '@/components/ui/menu-toggle-icon'
 import { RevealImageList } from '@/components/ui/reveal-images'
@@ -333,10 +333,19 @@ function ArticleSection({ section }) {
   }
 }
 
-export default function NewsletterPage() {
+export default function NewsletterPage({
+  restoredEditionId = null,
+  onEditionNavigate,
+}) {
   const scrollRef = useRef(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeEditionId, setActiveEditionId] = useState(editions[0].id)
+
+  useEffect(() => {
+    if (restoredEditionId) {
+      setActiveEditionId(restoredEditionId)
+    }
+  }, [restoredEditionId])
 
   const activeEdition = editions.find((edition) => edition.id === activeEditionId) ?? editions[0]
 
@@ -348,9 +357,13 @@ export default function NewsletterPage() {
   }))
 
   const handleSelectEdition = (id) => {
+    const edition = editions.find((e) => e.id === id)
     setActiveEditionId(id)
     setSidebarOpen(false)
     scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    if (edition) {
+      onEditionNavigate?.(edition.headline, { editionId: edition.id })
+    }
   }
 
   return (

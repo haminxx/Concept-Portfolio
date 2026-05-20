@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo, Suspense } from 'react'
 import { useDockOrder } from '../hooks/useDockOrder'
 import { useDesktopItems } from '../hooks/useDesktopItems'
 import ChromeFrame from '../components/ChromeFrame'
@@ -31,7 +31,7 @@ import MenuBar from '../components/MenuBar'
 import AppErrorBoundary from '../components/AppErrorBoundary'
 import Dock from '../components/Dock'
 import AppWindow from '../components/AppWindow'
-import { APPS, getDomainForApp } from '../config/apps'
+import { APPS } from '../config/apps'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import { MusicPlayerProvider } from '../context/MusicPlayerContext'
@@ -54,6 +54,7 @@ import {
   toggleDocumentFullscreen,
   runBootFullscreenSequence,
 } from '../utils/fullscreen'
+import { getAddressPathSegments } from '../utils/chromeAddressPath'
 import './ChromeLanding.css'
 
 const APP_ICONS = {
@@ -72,26 +73,6 @@ const APP_ICONS = {
 }
 
 const HOME_TAB = { id: 'home', title: 'Home', type: 'home' }
-function getDomainForTab(tab) {
-  if (tab.type === 'home') return 'portfolio.local'
-  if (tab.type === 'iframe' && tab.url) {
-    try {
-      return new URL(tab.url).hostname
-    } catch {
-      return tab.url
-    }
-  }
-  const shortcut = SHORTCUTS.find((s) => s.type === tab.type)
-  if (shortcut) {
-    if (tab.type === 'about') return 'portfolio.local/about'
-    if (tab.type === 'newsletter') return 'portfolio.local/newsletter'
-    if (tab.type === 'project') return 'portfolio.local/project'
-    if (tab.type === 'contact') return 'portfolio.local/contact'
-    return `${tab.type}.local`
-  }
-  return getDomainForApp(tab.type)
-}
-
 function getUrlForTab(tab) {
   const shortcut = SHORTCUTS.find((s) => s.type === tab.type)
   if (shortcut?.url) return shortcut.url
@@ -142,27 +123,36 @@ export default function ChromeLanding({
     new Map([['home', { entries: [{ type: 'home', title: 'Home' }], index: 0 }]]),
   )
   const chromeNavReplayRef = useRef(false)
+  const [chromeNavTick, setChromeNavTick] = useState(0)
   const closingLastTabRef = useRef(false)
   const chromeCursorContainerRef = useRef(null)
 
-  const pushChromeNav = useCallback((tabId, type, title) => {
+  const pushChromeNav = useCallback((tabId, type, title, meta) => {
     if (chromeNavReplayRef.current) return
     let state = chromeNavStacksRef.current.get(tabId)
     if (!state) {
-      chromeNavStacksRef.current.set(tabId, { entries: [{ type, title }], index: 0 })
+      chromeNavStacksRef.current.set(tabId, { entries: [{ type, title, meta }], index: 0 })
+      setChromeNavTick((n) => n + 1)
       return
     }
     const { entries, index } = state
     const last = entries[index]
-    if (last && last.type === type && last.title === title) return
+    if (
+      last &&
+      last.type === type &&
+      last.title === title &&
+      JSON.stringify(last.meta ?? null) === JSON.stringify(meta ?? null)
+    ) {
+      return
+    }
     const nextEntries = entries.slice(0, index + 1)
-    nextEntries.push({ type, title })
+    nextEntries.push({ type, title, meta })
     state.entries = nextEntries
     state.index = nextEntries.length - 1
+    setChromeNavTick((n) => n + 1)
   }, [])
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0]
-  const currentDomain = activeTab ? getDomainForTab(activeTab) : 'portfolio.local'
 
   useEffect(() => {
     const tab = tabs.find((t) => t.id === activeTabId)
@@ -178,6 +168,38 @@ export default function ChromeLanding({
   const chromeNavState = chromeNavStacksRef.current.get(activeTabId)
   const canGoBack = chromeNavState ? chromeNavState.index > 0 : false
   const canGoForward = chromeNavState ? chromeNavState.index < chromeNavState.entries.length - 1 : false
+  const pathSegments = useMemo(
+    () => getAddressPathSegments(chromeNavState),
+    // chromeNavTick: in-page pushes without tab state changes
+    [chromeNavState, chromeNavTick, activeTabId],
+  )
+  const currentNavEntry = chromeNavState?.entries[chromeNavState.index]
+  const restoredProjectId =
+    activeTab?.type === 'project' ? (currentNavEntry?.meta?.projectId ?? null) : null
+  const restoredEditionId =
+    activeTab?.type === 'newsletter' ? (currentNavEntry?.meta?.editionId ?? null) : null
+
+  const handleChromeInPageNav = useCallback(
+    (title, meta) => {
+      const tab = tabs.find((t) => t.id === activeTabId)
+      if (!tab) return
+      pushChromeNav(activeTabId, tab.type, title, meta)
+    },
+    [activeTabId, tabs, pushChromeNav],
+  )
+
+  const handleChromeInPageBack = useCallback(() => {
+    const state = chromeNavStacksRef.current.get(activeTabId)
+    if (!state || state.index <= 0) return
+    state.index -= 1
+    const { type, title } = state.entries[state.index]
+    chromeNavReplayRef.current = true
+    setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, type, title } : t)))
+    setChromeNavTick((n) => n + 1)
+    queueMicrotask(() => {
+      chromeNavReplayRef.current = false
+    })
+  }, [activeTabId])
 
   const openAppTab = useCallback((appKey) => {
     const app = APPS[appKey]
@@ -324,6 +346,7 @@ export default function ChromeLanding({
     const { type, title } = state.entries[state.index]
     chromeNavReplayRef.current = true
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
+    setChromeNavTick((n) => n + 1)
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -337,6 +360,7 @@ export default function ChromeLanding({
     const { type, title } = state.entries[state.index]
     chromeNavReplayRef.current = true
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
+    setChromeNavTick((n) => n + 1)
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -529,7 +553,7 @@ export default function ChromeLanding({
                 onCloseTab={closeTab}
                 onNewTab={openNewHomeTab}
                 onReorderTabs={reorderTabs}
-                currentDomain={currentDomain}
+                pathSegments={pathSegments}
                 onGoHome={goHome}
                 onBack={handleBack}
                 onForward={handleForward}
@@ -563,11 +587,19 @@ export default function ChromeLanding({
                   </Suspense>
                 ) : activeTab.type === 'newsletter' ? (
                   <Suspense fallback={null}>
-                    <LazyNewsletterPage />
+                    <LazyNewsletterPage
+                      restoredEditionId={restoredEditionId}
+                      onEditionNavigate={handleChromeInPageNav}
+                      onEditionBack={handleChromeInPageBack}
+                    />
                   </Suspense>
                 ) : activeTab.type === 'project' ? (
                   <Suspense fallback={null}>
-                    <LazyProjectPage />
+                    <LazyProjectPage
+                      restoredProjectId={restoredProjectId}
+                      onProjectNavigate={handleChromeInPageNav}
+                      onProjectBack={handleChromeInPageBack}
+                    />
                   </Suspense>
                 ) : activeTab.type === 'contact' ? (
                   <Suspense fallback={null}>

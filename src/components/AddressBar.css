@@ -98,3 +98,46 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.address-bar__path {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.address-bar__segment-wrap {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.address-bar__segment-wrap:last-child {
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.address-bar__segment {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.address-bar__segment--root {
+  color: #9aa0a6;
+  text-transform: lowercase;
+}
+
+.address-bar__sep {
+  color: #80868b;
+  flex-shrink: 0;
+  user-select: none;
+}

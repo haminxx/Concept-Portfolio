@@ -11,7 +11,7 @@ export default function ChromeFrame({
   onCloseTab,
   onNewTab,
   onReorderTabs,
-  currentDomain,
+  pathSegments,
   onGoHome,
   onBack,
   onForward,
@@ -65,6 +65,7 @@ export default function ChromeFrame({
       </div>
       <div className="chrome-frame__row chrome-frame__row--toolbar">
         <AddressBar
+          pathSegments={pathSegments}
           onGoHome={onGoHome}
           onBack={onBack}
           onForward={onForward}

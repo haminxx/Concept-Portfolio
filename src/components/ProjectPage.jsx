@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 
 import ProjectDetailPage from '@/components/ProjectDetailPage'
@@ -15,11 +15,19 @@ const FILTER_OPTIONS = [
 
 /** @typedef {'all' | 'hackathon' | 'side'} ProjectFilter */
 
-export default function ProjectPage() {
+export default function ProjectPage({
+  restoredProjectId = null,
+  onProjectNavigate,
+  onProjectBack,
+}) {
   const scrollRef = useRef(null)
   /** @type {[ProjectFilter, import('react').Dispatch<import('react').SetStateAction<ProjectFilter>>]} */
   const [filter, setFilter] = useState('all')
-  const [selectedProjectId, setSelectedProjectId] = useState(null)
+  const [selectedProjectId, setSelectedProjectId] = useState(restoredProjectId)
+
+  useEffect(() => {
+    setSelectedProjectId(restoredProjectId)
+  }, [restoredProjectId])
 
   const projects = useMemo(() => getProjectsByFilter(filter), [filter])
   const selectedProject = useMemo(
@@ -33,16 +41,21 @@ export default function ProjectPage() {
 
   const handleSelectProject = useCallback(
     (projectId) => {
+      const project = getChromeProjectById(projectId)
       setSelectedProjectId(projectId)
       resetScroll()
+      if (project) {
+        onProjectNavigate?.(project.title, { projectId })
+      }
     },
-    [resetScroll]
+    [resetScroll, onProjectNavigate]
   )
 
   const handleBack = useCallback(() => {
     setSelectedProjectId(null)
     resetScroll()
-  }, [resetScroll])
+    onProjectBack?.()
+  }, [resetScroll, onProjectBack])
 
   const handleFilterChange = useCallback(
     (nextFilter) => {
