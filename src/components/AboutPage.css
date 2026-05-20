@@ -27,7 +27,9 @@
 
 .about-page canvas,
 .about-page .cursor-reveal-about__veil,
-.about-page .cursor-reveal-about__content {
+.about-page .cursor-reveal-about__content,
+.about-page .cursor-reveal-about__hero,
+.about-page .cursor-reveal-about__bio {
   cursor: none !important;
 }
 

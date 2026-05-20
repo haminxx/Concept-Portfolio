@@ -4,14 +4,15 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
   type PointerEvent,
 } from 'react'
 import { motion } from 'motion/react'
 
 import './cursor-reveal-about.css'
 
-const STAMP_RADIUS = 56
-const STAMP_SOFT = 24
+const STAMP_RADIUS = 112
+const STAMP_SOFT = 44
 const MIN_DISTANCE = 8
 
 const VEIL_LIGHT = '#ffffff'
@@ -60,6 +61,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const hintRef = useRef<HTMLParagraphElement>(null)
     const hasMovedRef = useRef(false)
+    const [hasRevealed, setHasRevealed] = useState(false)
     const lastPointRef = useRef<{ x: number; y: number } | null>(null)
     const dprRef = useRef(1)
     const veilColor = isDark ? VEIL_DARK : VEIL_LIGHT
@@ -149,6 +151,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
 
         if (!hasMovedRef.current) {
           hasMovedRef.current = true
+          setHasRevealed(true)
           hintRef.current?.style.setProperty('opacity', '0')
         }
       },
@@ -165,6 +168,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
 
         if (!hasMovedRef.current) {
           hasMovedRef.current = true
+          setHasRevealed(true)
           hintRef.current?.style.setProperty('opacity', '0')
         }
       },
@@ -183,39 +187,30 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
           initial={false}
           animate={{
             backgroundColor: isDark ? '#f5f5f5' : '#0a0a0a',
-            color: isDark ? '#0a0a0a' : '#f5f5f5',
           }}
           transition={{ duration: 0.4, ease: 'easeInOut' }}
-        >
-          <p className="cursor-reveal-about__eyebrow">haminxx</p>
-          <h1 className="cursor-reveal-about__headline">Portfolio</h1>
-          <p className="cursor-reveal-about__intro">
-            Product designer and engineer building interfaces, systems, and
-            experiences — from hackathon prototypes to side-project tools people
-            actually use.
-          </p>
-
-          <div className="cursor-reveal-about__meta">
-            <div className="cursor-reveal-about__meta-block">
-              <span className="cursor-reveal-about__meta-label">Focus</span>
-              <p className="cursor-reveal-about__meta-value">
-                Visual design, interaction, full-stack development
-              </p>
-            </div>
-            <div className="cursor-reveal-about__meta-block">
-              <span className="cursor-reveal-about__meta-label">Currently</span>
-              <p className="cursor-reveal-about__meta-value">
-                Open to collaborations and freelance projects
-              </p>
-            </div>
-          </div>
-        </motion.div>
+          aria-hidden
+        />
 
         <canvas
           ref={canvasRef}
           className="cursor-reveal-about__veil"
           aria-hidden
         />
+
+        <header
+          className={`cursor-reveal-about__hero${hasRevealed ? ' cursor-reveal-about__hero--revealed' : ''}`}
+        >
+          <h1 className="cursor-reveal-about__question">Who am I?</h1>
+          <p className="cursor-reveal-about__name" aria-hidden={!hasRevealed}>
+            Christian Lee
+          </p>
+        </header>
+
+        <p className="cursor-reveal-about__bio">
+          Designer and developer crafting thoughtful digital experiences — from
+          concept to polished interfaces — based in the Pacific Northwest.
+        </p>
 
         <motion.p
           ref={hintRef}
