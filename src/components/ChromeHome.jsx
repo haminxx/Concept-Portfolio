@@ -5,7 +5,6 @@ import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
 
-// Replace PNGs in public/images/chrome-shortcuts/ with final shortcut icons when ready.
 const SHORTCUT_ICON_SRC = {
   about: '/images/chrome-shortcuts/about.png',
   newsletter: '/images/chrome-shortcuts/newsletter.png',
