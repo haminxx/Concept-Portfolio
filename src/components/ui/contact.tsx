@@ -136,7 +136,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   }
 
   return (
-    <section className="contact-page contact-section relative min-h-full h-full w-full overflow-hidden bg-background">
+    <section className="contact-section relative min-h-full w-full bg-background">
       <div
         className="absolute inset-0 bg-cover bg-center transition-all duration-500 ease-in-out"
         style={{ backgroundImage: `url(${backgroundImageSrc})` }}
@@ -160,7 +160,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         </div>
       </div>
 
-      <div className="relative z-10 flex h-full min-h-0 w-full flex-col items-center justify-between overflow-y-auto p-4 md:p-8 lg:p-12">
+      <div className="relative z-10 flex min-h-full w-full flex-col items-center p-4 pb-12 md:p-8 lg:p-12">
         {!hideNav ? (
           <nav className="mb-8 flex w-full max-w-7xl items-center justify-between rounded-lg bg-card/70 p-4 shadow-lg backdrop-blur-sm">
             <div className="flex items-center space-x-2">

@@ -23,13 +23,17 @@ function handleContactSubmit(data) {
 
 export default function ContactPage() {
   return (
-    <ContactSection
-      hideNav
-      title={PORTFOLIO_CONTACT.title}
-      mainMessage={PORTFOLIO_CONTACT.mainMessage}
-      contactEmail={PORTFOLIO_CONTACT.contactEmail}
-      socialLinks={PORTFOLIO_CONTACT.socialLinks}
-      onSubmit={handleContactSubmit}
-    />
+    <div className="contact-page">
+      <div className="contact-page__scroll">
+        <ContactSection
+          hideNav
+          title={PORTFOLIO_CONTACT.title}
+          mainMessage={PORTFOLIO_CONTACT.mainMessage}
+          contactEmail={PORTFOLIO_CONTACT.contactEmail}
+          socialLinks={PORTFOLIO_CONTACT.socialLinks}
+          onSubmit={handleContactSubmit}
+        />
+      </div>
+    </div>
   )
 }

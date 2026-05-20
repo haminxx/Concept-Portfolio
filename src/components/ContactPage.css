@@ -24,6 +24,7 @@
   --color-primary-foreground: #ffffff;
   --color-input: #e8eaed;
   --color-ring: rgba(26, 115, 232, 0.35);
+  --color-card: rgba(255, 255, 255, 0.85);
 
   position: relative;
   display: flex;
@@ -37,7 +38,15 @@
   overflow: hidden;
 }
 
-.contact-page .contact-section {
+.contact-page__scroll {
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.contact-page .contact-section {
+  min-height: 100%;
+  width: 100%;
 }

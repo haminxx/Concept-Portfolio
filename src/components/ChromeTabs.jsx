@@ -31,18 +31,16 @@ export default function ChromeTabs({ tabs, activeTabId, onSelectTab, onCloseTab,
   }, [tabs])
 
   const closedForTabRef = useRef(new Set())
-  const lastCloseTimeRef = useRef(0)
   const handleCloseTab = useCallback((e, tabId) => {
     e.stopPropagation()
     e.preventDefault()
-    lastCloseTimeRef.current = Date.now()
+    closedForTabRef.current.delete(tabId)
     setClosingTabIds((prev) => new Set([...prev, tabId]))
   }, [])
 
   const handleNewTabClick = useCallback(
     (e) => {
       e.stopPropagation()
-      if (Date.now() - lastCloseTimeRef.current < 450) return
       onNewTab?.()
     },
     [onNewTab]
@@ -51,18 +49,33 @@ export default function ChromeTabs({ tabs, activeTabId, onSelectTab, onCloseTab,
   const handleCloseAnimationEnd = useCallback(
     (e, tabId) => {
       if (e.propertyName !== 'opacity' && e.propertyName !== 'max-width') return
-      if (closingTabIds.has(tabId) && !closedForTabRef.current.has(tabId)) {
+      if (!closingTabIds.has(tabId)) return
+      if (!closedForTabRef.current.has(tabId)) {
         closedForTabRef.current.add(tabId)
         onCloseTab?.(tabId)
-        setClosingTabIds((prev) => {
-          const next = new Set(prev)
-          next.delete(tabId)
-          return next
-        })
       }
+      setClosingTabIds((prev) => {
+        const next = new Set(prev)
+        next.delete(tabId)
+        return next
+      })
     },
     [closingTabIds, onCloseTab]
   )
+
+  useEffect(() => {
+    const tabIds = new Set(tabs.map((t) => t.id))
+    for (const id of closedForTabRef.current) {
+      if (!tabIds.has(id)) closedForTabRef.current.delete(id)
+    }
+    setClosingTabIds((prev) => {
+      const stale = [...prev].filter((id) => !tabIds.has(id))
+      if (!stale.length) return prev
+      const next = new Set(prev)
+      stale.forEach((id) => next.delete(id))
+      return next
+    })
+  }, [tabs])
 
   const handleDragStart = useCallback((e, tabId) => {
     setDraggedTabId(tabId)

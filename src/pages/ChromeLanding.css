@@ -66,12 +66,20 @@
   background: #f8f9fa;
 }
 
-.chrome-landing__content:has(.chrome-home),
+.chrome-landing__content:has(.chrome-home) {
+  background: #000;
+  overflow: hidden;
+}
+
 .chrome-landing__content:has(.projects-page),
+.chrome-landing__content:has(.newsletter-page),
 .chrome-landing__content:has(.contact-page) {
   background: #fff;
 }
 
+.chrome-landing__content:has(.chrome-home),
+.chrome-landing__content:has(.projects-page),
+.chrome-landing__content:has(.newsletter-page),
 .chrome-landing__content:has(.contact-page),
 .chrome-landing__content:has(.about-page) {
   overflow: hidden;

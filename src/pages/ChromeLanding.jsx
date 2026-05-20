@@ -160,8 +160,8 @@ export default function ChromeLanding({
     state.index = nextEntries.length - 1
   }, [])
 
-  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0]
-  const currentDomain = getDomainForTab(activeTab)
+  const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0]
+  const currentDomain = activeTab ? getDomainForTab(activeTab) : 'portfolio.local'
 
   useEffect(() => {
     const tab = tabs.find((t) => t.id === activeTabId)
@@ -553,7 +553,7 @@ export default function ChromeLanding({
                     <div className="chrome-landing__refresh-spinner" />
                   </div>
                 )}
-                {activeTab.type === 'home' ? (
+                {!activeTab ? null : activeTab.type === 'home' ? (
                   <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
                 ) : activeTab.type === 'about' ? (
                   <Suspense fallback={null}>

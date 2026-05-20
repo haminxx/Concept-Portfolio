@@ -159,11 +159,6 @@
   color: #e8eaed;
 }
 
-.chrome-tabs--closing-tab .chrome-tabs__new {
-  pointer-events: none;
-  opacity: 0.45;
-}
-
 .chrome-tabs__new--animate {
   transition: transform 0.15s cubic-bezier(0.33, 1, 0.68, 1);
 }
