@@ -1,3 +1,10 @@
+.about-page,
+.about-page *,
+.about-page *::before,
+.about-page *::after {
+  cursor: none !important;
+}
+
 .about-page {
   position: relative;
   min-height: 100%;
@@ -7,7 +14,6 @@
   overflow: hidden;
   background: #ffffff;
   box-sizing: border-box;
-  cursor: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
   transition: background-color 0.4s ease;
@@ -22,8 +28,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .about-page,
+  .about-page *,
+  .about-page *::before,
+  .about-page *::after {
+    cursor: auto !important;
+  }
+
   .about-page {
-    cursor: auto;
     transition: none;
   }
 }

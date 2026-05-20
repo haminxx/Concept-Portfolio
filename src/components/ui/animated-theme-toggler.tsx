@@ -12,11 +12,22 @@ import { cn } from '@/lib/utils'
  * A soft switch-click sounds on toggle.
  */
 
+const INK = {
+  dark: 'rgba(0, 0, 0, 0.82)',
+  bright: 'rgba(255, 255, 255, 0.82)',
+} as const
+
+export type ThemeTogglerInkColor = keyof typeof INK
+
 export interface AnimatedThemeTogglerProps {
   isDark: boolean
   onToggle: () => void
   sound?: boolean
   className?: string
+  /** Icon ink opposite to veil for contrast. Defaults from `isDark`. */
+  inkColor?: ThemeTogglerInkColor
+  /** Hide the system cursor (About page custom cursor). */
+  hideSystemCursor?: boolean
 }
 
 let _ctx: AudioContext | null = null
@@ -72,6 +83,8 @@ export function AnimatedThemeToggler({
   onToggle,
   sound = true,
   className,
+  inkColor,
+  hideSystemCursor = false,
 }: AnimatedThemeTogglerProps) {
   const rawId = useId()
   const maskId = `att${rawId.replace(/:/g, '')}`
@@ -93,24 +106,27 @@ export function AnimatedThemeToggler({
     ? { duration: 0 }
     : { type: 'spring' as const, stiffness: 380, damping: 30 }
 
+  const resolvedInk = inkColor ?? (isDark ? 'bright' : 'dark')
+
   return (
     <motion.button
       type="button"
       className={cn('att-btn', className)}
       data-theme={isDark ? 'dark' : 'light'}
+      data-ink={resolvedInk}
       onClick={handleClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.86 }}
+      whileHover={hideSystemCursor ? undefined : { scale: 1.1 }}
+      whileTap={hideSystemCursor ? undefined : { scale: 0.86 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       style={{
         background: 'none',
         border: 'none',
-        cursor: 'pointer',
-        padding: 6,
+        cursor: hideSystemCursor ? 'none' : 'pointer',
+        padding: hideSystemCursor ? 0 : 6,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: isDark ? 'rgba(255, 255, 255, 0.82)' : 'rgba(0, 0, 0, 0.82)',
+        color: INK[resolvedInk],
         borderRadius: 8,
         outline: 'none',
         WebkitTapHighlightColor: 'transparent',

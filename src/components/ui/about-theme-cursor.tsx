@@ -3,7 +3,8 @@ import { motion, useMotionValue, useSpring } from 'motion/react'
 
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 
-const CURSOR_SIZE = 36
+const ICON_SIZE = 20
+const CURSOR_SIZE = ICON_SIZE
 const SPRING = { damping: 28, stiffness: 320, mass: 0.35 }
 
 type AboutThemeCursorProps = {
@@ -64,7 +65,9 @@ export function AboutThemeCursor({
       <AnimatedThemeToggler
         isDark={isDark}
         onToggle={onToggle}
-        className="about-theme-cursor__toggler pointer-events-auto scale-[0.9]"
+        inkColor={isDark ? 'bright' : 'dark'}
+        hideSystemCursor
+        className="about-theme-cursor__toggler pointer-events-auto"
       />
     </motion.div>
   )

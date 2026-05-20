@@ -1,3 +1,10 @@
+.cursor-reveal-about,
+.cursor-reveal-about *,
+.cursor-reveal-about *::before,
+.cursor-reveal-about *::after {
+  cursor: none !important;
+}
+
 .cursor-reveal-about {
   position: relative;
   width: 100%;
@@ -137,6 +144,7 @@
   height: 100%;
   pointer-events: none;
   touch-action: none;
+  cursor: none !important;
 }
 
 .about-theme-cursor {
@@ -151,7 +159,9 @@
 }
 
 .about-theme-cursor__toggler {
-  cursor: none;
+  cursor: none !important;
+  width: 100%;
+  height: 100%;
 }
 
 @media (max-width: 640px) {
@@ -162,6 +172,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cursor-reveal-about,
+  .cursor-reveal-about *,
+  .cursor-reveal-about *::before,
+  .cursor-reveal-about *::after {
+    cursor: auto !important;
+  }
+
   .cursor-reveal-about,
   .cursor-reveal-about__content,
   .cursor-reveal-about__eyebrow,
