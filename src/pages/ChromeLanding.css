@@ -10,18 +10,12 @@
   box-sizing: border-box;
 }
 
-/* About tab: hide system cursor across entire Chrome window (tabs, toolbar, frame) */
-.chrome-landing--about-active .chrome-window,
-.chrome-landing--about-active .chrome-window *,
-.chrome-landing--about-active .chrome-window *::before,
-.chrome-landing--about-active .chrome-window *::after,
+/* About tab: keep normal system cursors on chrome header (tabs, toolbar, address bar) */
 .chrome-landing--about-active .chrome-frame,
-.chrome-landing--about-active .chrome-frame *,
 .chrome-landing--about-active .chrome-tabs,
-.chrome-landing--about-active .chrome-tabs *,
 .chrome-landing--about-active .address-bar,
-.chrome-landing--about-active .address-bar * {
-  cursor: none !important;
+.chrome-landing--about-active .chrome-frame__row--toolbar {
+  cursor: auto;
 }
 
 .chrome-landing--about-active .chrome-window__inner {
@@ -231,11 +225,3 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .chrome-landing--about-active .chrome-window,
-  .chrome-landing--about-active .chrome-window *,
-  .chrome-landing--about-active .chrome-window *::before,
-  .chrome-landing--about-active .chrome-window *::after {
-    cursor: auto !important;
-  }
-}

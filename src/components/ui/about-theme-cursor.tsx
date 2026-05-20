@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useState, type RefObject } from 'react'
 import { motion, useMotionValue, useSpring } from 'motion/react'
 
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
@@ -8,16 +8,33 @@ const CURSOR_SIZE = ICON_SIZE
 const SPRING = { damping: 28, stiffness: 320, mass: 0.35 }
 
 type AboutThemeCursorProps = {
-  containerRef: RefObject<HTMLElement | null>
+  portalRef: RefObject<HTMLElement | null>
+  boundsRef: RefObject<HTMLElement | null>
   isDark: boolean
   onToggle: () => void
 }
 
+function isPointerInsideBounds(
+  clientX: number,
+  clientY: number,
+  bounds: HTMLElement
+): boolean {
+  const rect = bounds.getBoundingClientRect()
+  return (
+    clientX >= rect.left &&
+    clientX <= rect.right &&
+    clientY >= rect.top &&
+    clientY <= rect.bottom
+  )
+}
+
 export function AboutThemeCursor({
-  containerRef,
+  portalRef,
+  boundsRef,
   isDark,
   onToggle,
 }: AboutThemeCursorProps) {
+  const [isVisible, setIsVisible] = useState(false)
   const cursorX = useMotionValue(0)
   const cursorY = useMotionValue(0)
   const smoothX = useSpring(cursorX, SPRING)
@@ -25,10 +42,10 @@ export function AboutThemeCursor({
 
   const updatePosition = useCallback(
     (clientX: number, clientY: number) => {
-      const container = containerRef.current
-      if (!container) return
+      const portal = portalRef.current
+      if (!portal) return
 
-      const rect = container.getBoundingClientRect()
+      const rect = portal.getBoundingClientRect()
       const half = CURSOR_SIZE / 2
       const x = clientX - rect.left - half
       const y = clientY - rect.top - half
@@ -36,26 +53,40 @@ export function AboutThemeCursor({
       cursorX.set(Math.max(-half, Math.min(rect.width - half, x)))
       cursorY.set(Math.max(-half, Math.min(rect.height - half, y)))
     },
-    [containerRef, cursorX, cursorY]
+    [portalRef, cursorX, cursorY]
   )
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
     const handlePointerMove = (event: PointerEvent) => {
-      const hovered = document.elementFromPoint(event.clientX, event.clientY)
-      if (!hovered || !container.contains(hovered)) return
+      const bounds = boundsRef.current
+      if (!bounds) {
+        setIsVisible(false)
+        return
+      }
+
+      const inside =
+        isPointerInsideBounds(event.clientX, event.clientY, bounds) &&
+        (() => {
+          const hovered = document.elementFromPoint(event.clientX, event.clientY)
+          return hovered != null && bounds.contains(hovered)
+        })()
+
+      if (!inside) {
+        setIsVisible(false)
+        return
+      }
+
+      setIsVisible(true)
       updatePosition(event.clientX, event.clientY)
     }
 
     document.addEventListener('pointermove', handlePointerMove, { passive: true })
     return () => document.removeEventListener('pointermove', handlePointerMove)
-  }, [containerRef, updatePosition])
+  }, [boundsRef, updatePosition])
 
   return (
     <motion.div
-      className="about-theme-cursor"
+      className={`about-theme-cursor${isVisible ? '' : ' about-theme-cursor--hidden'}`}
       style={{
         width: CURSOR_SIZE,
         height: CURSOR_SIZE,

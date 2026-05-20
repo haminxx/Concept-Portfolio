@@ -19,10 +19,11 @@ export default function AboutPage({ cursorContainerRef }) {
     setCursorHost(cursorContainerRef?.current ?? null)
   }, [cursorContainerRef])
 
-  const trackingRef = cursorHost ? cursorContainerRef : pageRef
+  const portalRef = cursorHost ? cursorContainerRef : pageRef
   const themeCursor = (
     <AboutThemeCursor
-      containerRef={trackingRef}
+      portalRef={portalRef}
+      boundsRef={pageRef}
       isDark={isDark}
       onToggle={handleToggleTheme}
     />
