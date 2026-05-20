@@ -13,7 +13,7 @@
   background-color: #1a1a1a;
   background-image: url('/images/chrome-home-desert.png');
   background-size: cover;
-  background-position: 60% center;
+  background-position: 62% center;
   background-repeat: no-repeat;
 }
 
@@ -47,8 +47,8 @@
 
 .chrome-home__eyes {
   position: absolute;
-  left: clamp(65%, 72%, 76%);
-  top: clamp(14%, 18%, 22%);
+  left: clamp(58%, 64%, 68%);
+  top: clamp(28%, 34%, 40%);
   transform: translate(-50%, -50%);
   z-index: 10;
   display: flex;
@@ -96,7 +96,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 48px;
+  height: 48px;
   color: #e8eaed;
+}
+
+.chrome-home__shortcut-icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
 }
 
 .chrome-home__shortcut-label {

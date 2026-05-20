@@ -5,11 +5,37 @@ import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
 
+// Replace PNGs in public/images/chrome-shortcuts/ with final shortcut icons when ready.
+const SHORTCUT_ICON_SRC = {
+  about: '/images/chrome-shortcuts/about.png',
+  newsletter: '/images/chrome-shortcuts/newsletter.png',
+  project: '/images/chrome-shortcuts/project.png',
+  contact: '/images/chrome-shortcuts/contact.png',
+}
+
 const SHORTCUT_ICONS = {
   user: User,
   folder: Folder,
   mail: Mail,
   newspaper: Newspaper,
+}
+
+function ShortcutIcon({ shortcutType, lucideIcon: LucideIcon }) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const iconSrc = SHORTCUT_ICON_SRC[shortcutType]
+
+  if (!iconSrc || imgFailed) {
+    return <LucideIcon size={28} strokeWidth={1.5} />
+  }
+
+  return (
+    <img
+      src={iconSrc}
+      alt=""
+      className="chrome-home__shortcut-icon-img"
+      onError={() => setImgFailed(true)}
+    />
+  )
 }
 
 export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
@@ -52,7 +78,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
                 aria-label={label}
               >
                 <span className="chrome-home__shortcut-icon">
-                  <Icon size={28} strokeWidth={1.5} />
+                  <ShortcutIcon shortcutType={s.type} lucideIcon={Icon} />
                 </span>
                 <span className="chrome-home__shortcut-label">{label}</span>
               </button>
