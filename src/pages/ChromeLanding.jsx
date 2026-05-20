@@ -143,6 +143,7 @@ export default function ChromeLanding({
   )
   const chromeNavReplayRef = useRef(false)
   const closingLastTabRef = useRef(false)
+  const chromeCursorContainerRef = useRef(null)
 
   const pushChromeNav = useCallback((tabId, type, title) => {
     if (chromeNavReplayRef.current) return
@@ -519,6 +520,7 @@ export default function ChromeLanding({
               onMinimizeComplete={handleChromeMinimizeComplete}
               onFocus={() => { setChromeFocused(true); setFocusedAppWindowId(null) }}
               isFocused={chromeFocused}
+              innerRef={activeTab?.type === 'about' ? chromeCursorContainerRef : undefined}
             >
               <ChromeFrame
                 tabs={tabs}
@@ -557,7 +559,7 @@ export default function ChromeLanding({
                   <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
                 ) : activeTab.type === 'about' ? (
                   <Suspense fallback={null}>
-                    <LazyAboutPage />
+                    <LazyAboutPage cursorContainerRef={chromeCursorContainerRef} />
                   </Suspense>
                 ) : activeTab.type === 'newsletter' ? (
                   <Suspense fallback={null}>

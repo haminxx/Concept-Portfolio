@@ -44,11 +44,13 @@ export function AboutThemeCursor({
     if (!container) return
 
     const handlePointerMove = (event: PointerEvent) => {
+      const hovered = document.elementFromPoint(event.clientX, event.clientY)
+      if (!hovered || !container.contains(hovered)) return
       updatePosition(event.clientX, event.clientY)
     }
 
-    container.addEventListener('pointermove', handlePointerMove, { passive: true })
-    return () => container.removeEventListener('pointermove', handlePointerMove)
+    document.addEventListener('pointermove', handlePointerMove, { passive: true })
+    return () => document.removeEventListener('pointermove', handlePointerMove)
   }, [containerRef, updatePosition])
 
   return (

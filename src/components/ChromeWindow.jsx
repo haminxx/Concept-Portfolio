@@ -7,7 +7,7 @@ const MENU_BAR_HEIGHT = 32
 
 const DOCK_HEIGHT = 54
 
-export default function ChromeWindow({ isMaximized, onMaximize, isMinimizing, isOpening, onOpeningComplete, onMinimizeComplete, onFocus, isFocused, children }) {
+export default function ChromeWindow({ isMaximized, onMaximize, isMinimizing, isOpening, onOpeningComplete, onMinimizeComplete, onFocus, isFocused, innerRef, children }) {
   const winRef = useRef(null)
   const openingCompleteRef = useRef(false)
   const [openingPhase, setOpeningPhase] = useState('dock')
@@ -222,7 +222,7 @@ export default function ChromeWindow({ isMaximized, onMaximize, isMinimizing, is
       onTransitionEnd={isOpening ? handleOpeningTransitionEnd : undefined}
       onAnimationEnd={isMinimizing ? (e) => { if (e.target.id === 'chrome-window-main') onMinimizeComplete?.() } : undefined}
     >
-      <div className="chrome-window__inner">
+      <div className="chrome-window__inner" ref={innerRef}>
         {children}
       </div>
       {!isMaximized && !isMinimizing && (
