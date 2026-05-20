@@ -82,7 +82,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
       </div>
       <a
         className="chrome-home__scene-caption"
-        href="https://www.youtube.com/watch?v=wxN1T1uxQ2g"
+        href="https://www.youtube.com/watch?v=UXar2tNdG34&pp=ygUhZXZlcnl0aGluZyBhbGwgYXQgb25jZSByb2NrIHNjZW5l0gcJCQQLAYcqIYzv"
         target="_blank"
         rel="noopener noreferrer"
       >
