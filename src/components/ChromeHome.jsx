@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Folder, Mail, Newspaper } from 'lucide-react'
-import { InteractiveCanvas } from '@/components/ui/interactive-canvas'
+import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
@@ -16,7 +16,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   const { t } = useLanguage()
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
   const menuRef = useRef(null)
-  const chromeHomeRef = useRef(null)
+  const contentRef = useRef(null)
 
   useEffect(() => {
     if (!shortcutContextMenu) return
@@ -28,22 +28,12 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   }, [shortcutContextMenu])
 
   return (
-    <div ref={chromeHomeRef} className="chrome-home">
-      <InteractiveCanvas
-        containerRef={chromeHomeRef}
-        gridWidth={52}
-        gridHeight={52}
-        dotColor="#d1d5db"
-        lineColor="#6b7280"
-        accentLineColor="#4ade80"
-        accentDistance={140}
-        maxDistance={80}
-        dotSizeMultiplier={280}
-        padding={16}
-        backgroundColor="transparent"
-        className="chrome-home__canvas"
-      />
-      <div className="chrome-home__content">
+    <div className="chrome-home">
+      <div className="chrome-home__bg" aria-hidden="true" />
+      <div ref={contentRef} className="chrome-home__content">
+        <div className="chrome-home__eyes" aria-hidden="true">
+          <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} />
+        </div>
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
             const Icon = SHORTCUT_ICONS[s.icon] || Folder
