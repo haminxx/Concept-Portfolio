@@ -1,86 +1,107 @@
 .glass-segmented-control {
   --glass-segment-count: 3;
-  --glass-segment-height: 2.5rem;
-  --glass-segment-padding: 0.25rem;
-  --glass-segment-radius: 999px;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-text: #e5e5e5;
 
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--glass-segment-count), minmax(0, 1fr));
+  display: flex;
   align-items: stretch;
   width: 100%;
   max-width: 28rem;
-  min-height: var(--glass-segment-height);
-  padding: var(--glass-segment-padding);
-  border-radius: var(--glass-segment-radius);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 1rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   box-shadow:
-    0 4px 24px rgba(32, 33, 36, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -1px 0 rgba(32, 33, 36, 0.04);
-  backdrop-filter: saturate(180%) blur(18px);
-  -webkit-backdrop-filter: saturate(180%) blur(18px);
+    inset 1px 1px 4px rgba(255, 255, 255, 0.2),
+    inset -1px -1px 6px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .glass-segmented-control__glider {
   position: absolute;
-  top: var(--glass-segment-padding);
-  left: var(--glass-segment-padding);
-  width: calc((100% - (var(--glass-segment-padding) * 2)) / var(--glass-segment-count));
-  height: calc(100% - (var(--glass-segment-padding) * 2));
-  border-radius: calc(var(--glass-segment-radius) - var(--glass-segment-padding));
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.95);
-  box-shadow:
-    0 2px 10px rgba(32, 33, 36, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
-  transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1);
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% / var(--glass-segment-count));
+  border-radius: 1rem;
+  z-index: 1;
   pointer-events: none;
-  z-index: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56),
+    background 0.4s ease-in-out,
+    box-shadow 0.4s ease-in-out;
+}
+
+.glass-segmented-control[data-active-index='0'] .glass-segmented-control__glider {
+  transform: translateX(0%);
+  background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+  box-shadow:
+    0 0 18px rgba(192, 192, 192, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.4) inset;
+}
+
+.glass-segmented-control[data-active-index='1'] .glass-segmented-control__glider {
+  transform: translateX(100%);
+  background: linear-gradient(135deg, #ffd70055, #ffcc00);
+  box-shadow:
+    0 0 18px rgba(255, 215, 0, 0.5),
+    0 0 10px rgba(255, 235, 150, 0.4) inset;
+}
+
+.glass-segmented-control[data-active-index='2'] .glass-segmented-control__glider {
+  transform: translateX(200%);
+  background: linear-gradient(135deg, #d0e7ff55, #a0d8ff);
+  box-shadow:
+    0 0 18px rgba(160, 216, 255, 0.5),
+    0 0 10px rgba(200, 240, 255, 0.4) inset;
 }
 
 .glass-segmented-control__option {
+  flex: 1;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   min-width: 0;
 }
 
 .glass-segmented-control__input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .glass-segmented-control__label {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(var(--glass-segment-height) - (var(--glass-segment-padding) * 2));
-  padding: 0 0.65rem;
-  border-radius: calc(var(--glass-segment-radius) - var(--glass-segment-padding));
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: #5f6368;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.8rem 1rem;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--glass-text);
   cursor: pointer;
   user-select: none;
-  transition: color 0.2s ease;
+  transition: color 0.3s ease-in-out;
   white-space: nowrap;
 }
 
+.glass-segmented-control__label:hover {
+  color: #ffffff;
+}
+
 .glass-segmented-control__input:checked + .glass-segmented-control__label {
-  color: #202124;
+  color: #ffffff;
 }
 
 .glass-segmented-control__input:focus-visible + .glass-segmented-control__label {
-  outline: 2px solid rgba(26, 115, 232, 0.45);
+  outline: 2px solid rgba(255, 255, 255, 0.45);
   outline-offset: 2px;
 }
 
 @media (max-width: 420px) {
   .glass-segmented-control__label {
-    font-size: 0.75rem;
-    padding: 0 0.4rem;
+    font-size: 12px;
+    padding: 0.75rem 0.5rem;
   }
 }

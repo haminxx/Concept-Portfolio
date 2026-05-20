@@ -4,7 +4,7 @@
   width: 100%;
   margin: 0;
   overflow: hidden;
-  background: #fafafa;
+  background: #ffffff;
   box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -12,8 +12,4 @@
 
 .about-page::-webkit-scrollbar {
   display: none;
-}
-
-.about-page .scroll-morph-hero {
-  touch-action: none;
 }

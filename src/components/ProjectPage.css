@@ -36,7 +36,14 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.projects-page__scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .projects-page__main {
@@ -53,9 +60,17 @@
   padding: 1.25rem 1.5rem 0.75rem;
   background: linear-gradient(
     to bottom,
-    var(--background) 70%,
+    var(--background) 72%,
     rgba(255, 255, 255, 0)
   );
+}
+
+.projects-page__filters-glass {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.35rem;
+  border-radius: 1.125rem;
+  background: #1a1a1a;
 }
 
 @media (min-width: 640px) {

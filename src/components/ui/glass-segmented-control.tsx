@@ -36,14 +36,9 @@ export function GlassSegmentedControl<T extends string>({
       className={cn('glass-segmented-control', className)}
       role="radiogroup"
       aria-label={ariaLabel}
+      data-active-index={activeIndex}
       style={{ '--glass-segment-count': options.length } as CSSProperties}
     >
-      <div
-        className="glass-segmented-control__glider"
-        aria-hidden
-        style={{ transform: `translateX(${activeIndex * 100}%)` }}
-      />
-
       {options.map((option) => {
         const checked = option.value === value
         const inputId = `${name}-${option.value}`
@@ -65,6 +60,8 @@ export function GlassSegmentedControl<T extends string>({
           </div>
         )
       })}
+
+      <div className="glass-segmented-control__glider" aria-hidden />
     </div>
   )
 }
