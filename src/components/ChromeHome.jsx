@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Folder, Mail, Newspaper } from 'lucide-react'
-import AnimatedGradientBackground from '@/components/ui/animated-gradient-background'
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
@@ -17,7 +16,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   const { t } = useLanguage()
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
   const menuRef = useRef(null)
-  const contentRef = useRef(null)
+  const homeRef = useRef(null)
 
   useEffect(() => {
     if (!shortcutContextMenu) return
@@ -29,18 +28,11 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   }, [shortcutContextMenu])
 
   return (
-    <div className="chrome-home">
-      <AnimatedGradientBackground
-        Breathing
-        startingGap={105}
-        topOffset={18}
-        breathingRange={3}
-        animationSpeed={0.012}
-      />
-      <div ref={contentRef} className="chrome-home__content">
-        <div className="chrome-home__eyes" aria-hidden="true">
-          <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} eyeSize={80} />
-        </div>
+    <div ref={homeRef} className="chrome-home">
+      <div className="chrome-home__eyes" aria-hidden="true">
+        <MouseFollowingEyes trackWindow={false} trackingRoot={homeRef} eyeSize={80} />
+      </div>
+      <div className="chrome-home__content">
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
             const Icon = SHORTCUT_ICONS[s.icon] || Folder
