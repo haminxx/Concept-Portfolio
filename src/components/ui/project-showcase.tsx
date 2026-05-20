@@ -49,6 +49,7 @@ export const DEFAULT_PROJECTS: Project[] = [
 type ProjectShowcaseProps = {
   projects?: Project[]
   filterKey?: string
+  onSelectProject?: (projectId: string) => void
 }
 
 const listItemVariants = {
@@ -69,34 +70,62 @@ const listItemVariants = {
   },
 }
 
+const listVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.2, ease: 'easeIn' as const },
+  },
+}
+
 export function ProjectShowcase({
   projects: projectsProp,
   filterKey = 'all',
+  onSelectProject,
 }: ProjectShowcaseProps) {
   const projects = projectsProp?.length ? projectsProp : DEFAULT_PROJECTS
 
   return (
-    <section className="projects-page__list">
+    <motion.section
+      className="projects-page__list"
+      variants={listVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <AnimatePresence mode="popLayout" initial={false}>
-        {projects.map((project, index) => (
-          <motion.div
-            key={`${filterKey}-${project.id ?? project.title}`}
-            layout
-            custom={index}
-            variants={listItemVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <BlogCard
-              title={project.title}
-              date={project.year}
-              description={project.description}
-              href={project.link}
-            />
-          </motion.div>
-        ))}
+        {projects.map((project, index) => {
+          const projectId = project.id ?? project.title
+          const handleClick = onSelectProject
+            ? () => onSelectProject(projectId)
+            : undefined
+
+          return (
+            <motion.div
+              key={`${filterKey}-${projectId}`}
+              layout
+              custom={index}
+              variants={listItemVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <BlogCard
+                title={project.title}
+                date={project.year}
+                description={project.description}
+                onClick={handleClick}
+              />
+            </motion.div>
+          )
+        })}
       </AnimatePresence>
-    </section>
+    </motion.section>
   )
 }

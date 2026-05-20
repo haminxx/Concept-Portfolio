@@ -12,12 +12,15 @@ export function BlogCard({ title, date, description, onClick, href }: BlogCardPr
 
   const content = (
     <>
-      <div className="relative flex items-end justify-center gap-1">
-        <div className="whitespace-nowrap font-serif text-xl text-neutral-700 transition-all duration-500 ease-out group-hover:text-[#ce624c] md:text-2xl">
+      <div className="blog-card__row relative flex min-w-0 items-center gap-2">
+        <div className="shrink-0 whitespace-nowrap font-serif text-xl text-neutral-700 transition-colors duration-300 ease-out group-hover:text-[#ce624c] md:text-2xl">
           {title}
         </div>
-        <span className="mb-[6px] w-full border-b-[0.5px] border-dashed border-neutral-400 transition-colors duration-500 ease-out group-hover:border-[#ce624c]" />
-        <div className="whitespace-nowrap font-mono text-xs uppercase text-neutral-500 transition-all duration-500 ease-out group-hover:text-[#ce624c] md:text-base">
+        <span
+          className="blog-card__leader min-w-[2rem] flex-1 border-b border-dashed border-neutral-400 transition-colors duration-300 ease-out group-hover:border-[#ce624c]"
+          aria-hidden
+        />
+        <div className="shrink-0 whitespace-nowrap font-mono text-xs uppercase tracking-wide text-neutral-500 transition-colors duration-300 ease-out group-hover:text-[#ce624c] md:text-sm">
           {date}
         </div>
       </div>

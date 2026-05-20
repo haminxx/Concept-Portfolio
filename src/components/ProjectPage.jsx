@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { AnimatePresence } from 'motion/react'
 
+import ProjectDetailPage from '@/components/ProjectDetailPage'
 import { GlassSegmentedControl } from '@/components/ui/glass-segmented-control'
 import { ProjectShowcase } from '@/components/ui/project-showcase'
-import { getProjectsByFilter } from '@/data/chromeProjects'
+import { getChromeProjectById, getProjectsByFilter } from '@/data/chromeProjects'
 import './ProjectPage.css'
 
 const FILTER_OPTIONS = [
@@ -13,86 +15,77 @@ const FILTER_OPTIONS = [
 
 /** @typedef {'all' | 'hackathon' | 'side'} ProjectFilter */
 
-function useSmoothedScroll(scrollRef) {
-  useEffect(() => {
-    const scrollEl = scrollRef.current
-    if (!scrollEl) return undefined
-
-    let targetScroll = scrollEl.scrollTop
-    let currentScroll = scrollEl.scrollTop
-    let rafId = null
-
-    const maxScroll = () =>
-      Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight)
-
-    const tick = () => {
-      const diff = targetScroll - currentScroll
-
-      if (Math.abs(diff) < 0.5) {
-        currentScroll = targetScroll
-        scrollEl.scrollTop = currentScroll
-        rafId = null
-        return
-      }
-
-      currentScroll += diff * 0.14
-      scrollEl.scrollTop = currentScroll
-      rafId = requestAnimationFrame(tick)
-    }
-
-    const scheduleTick = () => {
-      if (rafId === null) {
-        rafId = requestAnimationFrame(tick)
-      }
-    }
-
-    const onWheel = (event) => {
-      event.preventDefault()
-      targetScroll = Math.min(maxScroll(), Math.max(0, targetScroll + event.deltaY))
-      scheduleTick()
-    }
-
-    const onScroll = () => {
-      if (rafId === null) {
-        targetScroll = scrollEl.scrollTop
-        currentScroll = scrollEl.scrollTop
-      }
-    }
-
-    scrollEl.addEventListener('wheel', onWheel, { passive: false })
-    scrollEl.addEventListener('scroll', onScroll, { passive: true })
-
-    return () => {
-      scrollEl.removeEventListener('wheel', onWheel)
-      scrollEl.removeEventListener('scroll', onScroll)
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [scrollRef])
-}
-
 export default function ProjectPage() {
   const scrollRef = useRef(null)
   /** @type {[ProjectFilter, import('react').Dispatch<import('react').SetStateAction<ProjectFilter>>]} */
   const [filter, setFilter] = useState('all')
+  const [selectedProjectId, setSelectedProjectId] = useState(null)
 
   const projects = useMemo(() => getProjectsByFilter(filter), [filter])
+  const selectedProject = useMemo(
+    () => (selectedProjectId ? getChromeProjectById(selectedProjectId) : undefined),
+    [selectedProjectId]
+  )
 
-  useSmoothedScroll(scrollRef)
+  const resetScroll = useCallback(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }, [])
+
+  const handleSelectProject = useCallback(
+    (projectId) => {
+      setSelectedProjectId(projectId)
+      resetScroll()
+    },
+    [resetScroll]
+  )
+
+  const handleBack = useCallback(() => {
+    setSelectedProjectId(null)
+    resetScroll()
+  }, [resetScroll])
+
+  const handleFilterChange = useCallback(
+    (nextFilter) => {
+      setFilter(nextFilter)
+      setSelectedProjectId(null)
+      resetScroll()
+    },
+    [resetScroll]
+  )
+
+  const isDetail = Boolean(selectedProject)
 
   return (
     <div className="projects-page">
       <div ref={scrollRef} className="projects-page__scroll">
-        <div className="projects-page__filters">
-          <GlassSegmentedControl
-            options={FILTER_OPTIONS}
-            value={filter}
-            onChange={setFilter}
-            name="project-category"
-            aria-label="Filter projects by category"
-          />
-        </div>
+        {!isDetail ? (
+          <div className="projects-page__filters">
+            <GlassSegmentedControl
+              options={FILTER_OPTIONS}
+              value={filter}
+              onChange={handleFilterChange}
+              name="project-category"
+              aria-label="Filter projects by category"
+            />
+          </div>
+        ) : null}
 
-        <ProjectShowcase projects={projects} filterKey={filter} />
+        <AnimatePresence mode="wait" initial={false}>
+          {selectedProject ? (
+            <ProjectDetailPage
+              key={`detail-${selectedProject.id}`}
+              project={selectedProject}
+              onBack={handleBack}
+            />
+          ) : (
+            <ProjectShowcase
+              key={`list-${filter}`}
+              projects={projects}
+              filterKey={filter}
+              onSelectProject={handleSelectProject}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
