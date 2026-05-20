@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react'
 import { motion, useMotionValue, useSpring } from 'motion/react'
 
-import { GlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button'
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 
-const CURSOR_SIZE = 40
+const CURSOR_SIZE = 36
 const SPRING = { damping: 28, stiffness: 320, mass: 0.35 }
 
-type AboutGlassCursorProps = {
+type AboutThemeCursorProps = {
   containerRef: RefObject<HTMLElement | null>
+  isDark: boolean
+  onToggle: () => void
 }
 
-export function AboutGlassCursor({ containerRef }: AboutGlassCursorProps) {
-  const followerRef = useRef<HTMLDivElement>(null)
+export function AboutThemeCursor({
+  containerRef,
+  isDark,
+  onToggle,
+}: AboutThemeCursorProps) {
   const cursorX = useMotionValue(0)
   const cursorY = useMotionValue(0)
   const smoothX = useSpring(cursorX, SPRING)
@@ -47,8 +52,7 @@ export function AboutGlassCursor({ containerRef }: AboutGlassCursorProps) {
 
   return (
     <motion.div
-      ref={followerRef}
-      className="about-glass-cursor"
+      className="about-theme-cursor"
       style={{
         width: CURSOR_SIZE,
         height: CURSOR_SIZE,
@@ -57,17 +61,13 @@ export function AboutGlassCursor({ containerRef }: AboutGlassCursorProps) {
       }}
       aria-hidden
     >
-      <GlassButton
-        size="icon"
-        tabIndex={-1}
-        aria-hidden
-        className="about-glass-cursor__button pointer-events-none h-10 w-10 scale-[0.85]"
-        glassColor="oklch(from var(--foreground) l c h / 8%)"
-      >
-        <span className="sr-only">Cursor</span>
-      </GlassButton>
+      <AnimatedThemeToggler
+        isDark={isDark}
+        onToggle={onToggle}
+        className="about-theme-cursor__toggler pointer-events-auto scale-[0.9]"
+      />
     </motion.div>
   )
 }
 
-export default AboutGlassCursor
+export default AboutThemeCursor

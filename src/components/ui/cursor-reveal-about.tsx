@@ -6,12 +6,16 @@ import {
   useRef,
   type PointerEvent,
 } from 'react'
+import { motion } from 'motion/react'
 
 import './cursor-reveal-about.css'
 
 const STAMP_RADIUS = 56
 const STAMP_SOFT = 24
 const MIN_DISTANCE = 8
+
+const VEIL_LIGHT = '#ffffff'
+const VEIL_DARK = '#0a0a0a'
 
 function stampTrail(
   ctx: CanvasRenderingContext2D,
@@ -34,22 +38,38 @@ function stampTrail(
   ctx.restore()
 }
 
+function recolorVeil(ctx: CanvasRenderingContext2D, width: number, height: number, color: string) {
+  ctx.save()
+  ctx.globalCompositeOperation = 'source-atop'
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, width, height)
+  ctx.restore()
+}
+
 export type CursorRevealAboutHandle = {
   getContainer: () => HTMLDivElement | null
 }
 
-export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
-  function CursorRevealAbout(_props, ref) {
+type CursorRevealAboutProps = {
+  isDark?: boolean
+}
+
+export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevealAboutProps>(
+  function CursorRevealAbout({ isDark = false }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const hintRef = useRef<HTMLParagraphElement>(null)
     const hasMovedRef = useRef(false)
     const lastPointRef = useRef<{ x: number; y: number } | null>(null)
     const dprRef = useRef(1)
+    const veilColor = isDark ? VEIL_DARK : VEIL_LIGHT
 
     useImperativeHandle(ref, () => ({
       getContainer: () => containerRef.current,
     }))
+
+    const veilColorRef = useRef(veilColor)
+    veilColorRef.current = veilColor
 
     const resizeCanvas = useCallback(() => {
       const container = containerRef.current
@@ -69,7 +89,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
       if (!ctx) return
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = veilColorRef.current
       ctx.fillRect(0, 0, rect.width, rect.height)
       lastPointRef.current = null
     }, [])
@@ -89,6 +109,16 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
         window.removeEventListener('orientationchange', resizeCanvas)
       }
     }, [resizeCanvas])
+
+    useEffect(() => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      const ctx = canvas?.getContext('2d')
+      if (!ctx || !container) return
+
+      const rect = container.getBoundingClientRect()
+      recolorVeil(ctx, rect.width, rect.height, veilColor)
+    }, [veilColor])
 
     const revealAt = useCallback((x: number, y: number, force = false) => {
       const canvas = canvasRef.current
@@ -144,11 +174,19 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
     return (
       <div
         ref={containerRef}
-        className="cursor-reveal-about"
+        className={`cursor-reveal-about${isDark ? ' cursor-reveal-about--dark' : ''}`}
         onPointerMove={handlePointerMove}
         onPointerDown={handlePointerDown}
       >
-        <div className="cursor-reveal-about__content">
+        <motion.div
+          className="cursor-reveal-about__content"
+          initial={false}
+          animate={{
+            backgroundColor: isDark ? '#f5f5f5' : '#0a0a0a',
+            color: isDark ? '#0a0a0a' : '#f5f5f5',
+          }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
           <p className="cursor-reveal-about__eyebrow">haminxx</p>
           <h1 className="cursor-reveal-about__headline">Portfolio</h1>
           <p className="cursor-reveal-about__intro">
@@ -171,7 +209,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <canvas
           ref={canvasRef}
@@ -179,9 +217,17 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle>(
           aria-hidden
         />
 
-        <p ref={hintRef} className="cursor-reveal-about__hint">
+        <motion.p
+          ref={hintRef}
+          className="cursor-reveal-about__hint"
+          initial={false}
+          animate={{
+            color: isDark ? 'rgba(245, 245, 245, 0.35)' : 'rgba(10, 10, 10, 0.35)',
+          }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
           Move cursor to reveal
-        </p>
+        </motion.p>
       </div>
     )
   }

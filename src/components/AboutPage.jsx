@@ -1,17 +1,29 @@
-import { useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
-import { AboutGlassCursor } from '@/components/ui/about-glass-cursor'
+import { AboutThemeCursor } from '@/components/ui/about-theme-cursor'
 import { CursorRevealAbout } from '@/components/ui/cursor-reveal-about'
 
 import './AboutPage.css'
 
 export default function AboutPage() {
   const pageRef = useRef(null)
+  const [isDark, setIsDark] = useState(false)
+
+  const handleToggleTheme = useCallback(() => {
+    setIsDark((prev) => !prev)
+  }, [])
 
   return (
-    <div ref={pageRef} className="about-page h-full w-full overflow-hidden">
-      <CursorRevealAbout />
-      <AboutGlassCursor containerRef={pageRef} />
+    <div
+      ref={pageRef}
+      className={`about-page h-full w-full overflow-hidden${isDark ? ' about-page--dark' : ''}`}
+    >
+      <CursorRevealAbout isDark={isDark} />
+      <AboutThemeCursor
+        containerRef={pageRef}
+        isDark={isDark}
+        onToggle={handleToggleTheme}
+      />
     </div>
   )
 }
