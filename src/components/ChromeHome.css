@@ -10,19 +10,12 @@
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-}
-
-.chrome-home__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: #000;
+  background: #1a1a1a;
 }
 
 .chrome-home__content {
   position: relative;
-  z-index: 1;
+  z-index: 10;
   flex: 1;
   display: flex;
   flex-direction: column;

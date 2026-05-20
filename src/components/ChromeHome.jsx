@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Folder, Mail, Newspaper } from 'lucide-react'
+import AnimatedGradientBackground from '@/components/ui/animated-gradient-background'
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
@@ -29,7 +30,13 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
 
   return (
     <div className="chrome-home">
-      <div className="chrome-home__bg" aria-hidden="true" />
+      <AnimatedGradientBackground
+        Breathing
+        startingGap={105}
+        topOffset={18}
+        breathingRange={3}
+        animationSpeed={0.012}
+      />
       <div ref={contentRef} className="chrome-home__content">
         <div className="chrome-home__eyes" aria-hidden="true">
           <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} eyeSize={80} />
