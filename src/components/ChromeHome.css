@@ -32,10 +32,11 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-end;
   width: 100%;
-  padding: clamp(16px, 4vh, 32px) 24px clamp(24px, 8vh, 48px);
+  padding: clamp(16px, 4vh, 32px) clamp(20px, 6vw, 48px) clamp(18px, 6vh, 40px)
+    clamp(12px, 4vw, 32px);
   box-sizing: border-box;
   overflow: visible;
   pointer-events: none;
@@ -65,12 +66,14 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
-  place-content: center;
-  gap: clamp(12px, 2vw, 24px);
-  width: 100%;
-  max-width: min(720px, 100%);
+  align-content: flex-end;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: clamp(10px, 1.8vw, 20px);
+  width: auto;
+  max-width: min(520px, 72vw);
+  margin-left: clamp(0px, 2vw, 16px);
+  margin-bottom: clamp(0px, 1vh, 8px);
 }
 
 .chrome-home__shortcut {
@@ -157,6 +160,8 @@
   letter-spacing: normal;
   color: #e8eaed;
   text-align: center;
+  max-width: 72px;
+  line-height: 1.2;
   transition: color 0.25s ease, transform 0.25s ease;
 }
 
