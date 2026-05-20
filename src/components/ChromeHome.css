@@ -9,25 +9,16 @@
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  cursor: none;
-}
-
-.chrome-home,
-.chrome-home * {
-  cursor: none !important;
-}
-
-.chrome-home__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
   background: #000;
+}
+
+.chrome-home__canvas {
+  z-index: 0;
 }
 
 .chrome-home__content {
   position: relative;
-  z-index: 1;
+  z-index: 10;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -37,24 +28,7 @@
   padding: clamp(16px, 3vh, 28px) 24px clamp(16px, 2vh, 24px);
   box-sizing: border-box;
   overflow: visible;
-}
-
-.chrome-home__eyes {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 584px;
-  min-height: 72px;
-  margin-bottom: 8px;
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.chrome-home__magnetic-label {
-  position: relative;
-  z-index: 1;
+  pointer-events: none;
 }
 
 .chrome-home__shortcuts {
@@ -69,6 +43,7 @@
   width: 100%;
   max-width: min(720px, 100%);
   margin: 0 auto;
+  pointer-events: auto;
 }
 
 .chrome-home__shortcut {
@@ -83,6 +58,7 @@
   border-radius: 8px;
   color: #e8eaed;
   overflow: visible;
+  cursor: pointer;
 }
 
 .chrome-home__shortcut:hover {
@@ -94,6 +70,14 @@
   align-items: center;
   justify-content: center;
   color: #e8eaed;
+}
+
+.chrome-home__shortcut-label {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: #e8eaed;
+  text-align: center;
 }
 
 .chrome-home__context-menu {
@@ -120,6 +104,7 @@
   color: rgba(255, 255, 255, 0.95);
   font-size: 13px;
   text-align: left;
+  cursor: pointer;
 }
 
 .chrome-home__context-item:hover {
