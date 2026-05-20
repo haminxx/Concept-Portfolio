@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import AdminLoginPopover from './AdminLoginPopover'
 import SystemTray from './SystemTray'
+import { useAdmin } from '../context/AdminContext'
 import { useLanguage } from '../context/LanguageContext'
 import './MenuBar.css'
 
@@ -64,10 +66,13 @@ export default function MenuBar({
   isFullscreen,
 }) {
   const { t } = useLanguage()
+  const { isAdmin, logout } = useAdmin()
   const [openMenu, setOpenMenu] = useState(null)
   const [openCnl, setOpenCnl] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showLoginPopover, setShowLoginPopover] = useState(false)
   const barRef = useRef(null)
+  const cnlWrapRef = useRef(null)
   const leaveTimeoutRef = useRef(null)
 
   const handleMenuEnter = (menuId) => {
@@ -100,7 +105,18 @@ export default function MenuBar({
   }
 
   const handleCnlItem = (id) => {
+    if (id === 'login') {
+      setShowLoginPopover(true)
+      return
+    }
+    if (id === 'logout') {
+      setOpenCnl(false)
+      setShowLoginPopover(false)
+      logout()
+      return
+    }
     setOpenCnl(false)
+    setShowLoginPopover(false)
     if (id === 'turnOff') onTurnOff?.()
     else if (id === 'restart') onRestart?.()
     else if (id === 'sleep') onSleep?.()
@@ -149,6 +165,7 @@ export default function MenuBar({
         <div className="menu-bar__content">
         <div className="menu-bar__left">
           <div
+            ref={cnlWrapRef}
             className="menu-bar__cnl-wrap"
             onMouseEnter={handleCnlEnter}
             onMouseLeave={handleCnlLeave}
@@ -166,6 +183,14 @@ export default function MenuBar({
                 onMouseEnter={handleDropdownEnter}
                 onMouseLeave={handleDropdownLeave}
               >
+                <button
+                  type="button"
+                  className="menu-bar__item"
+                  onClick={() => handleCnlItem(isAdmin ? 'logout' : 'login')}
+                >
+                  {isAdmin ? 'Log out' : 'Log in'}
+                </button>
+                <div className="menu-bar__divider" />
                 {CNL_ITEMS.map((item) => (
                   <button
                     key={item.id}
@@ -226,6 +251,11 @@ export default function MenuBar({
         </div>
         </div>
       </header>
+      <AdminLoginPopover
+        open={showLoginPopover}
+        onClose={() => setShowLoginPopover(false)}
+        anchorRef={cnlWrapRef}
+      />
       {showHelp && (
         <div
           className="menu-bar__help-overlay"

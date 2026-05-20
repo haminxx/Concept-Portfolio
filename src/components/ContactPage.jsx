@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Mail, X } from 'lucide-react'
+import { Lock, Mail, MessageSquare, Unlock, X } from 'lucide-react'
 import { ContactSection } from '@/components/ui/contact'
+import { useAdmin } from '../context/AdminContext'
+import {
+  createMessageId,
+  formatMessageDetail,
+  getContactMessageById,
+  loadContactMessages,
+  saveContactMessage,
+} from '../utils/contactMessages'
 import './ContactPage.css'
 
 const ICON_SIZE = 52
@@ -15,12 +23,12 @@ const MAX_TEXT = 280
 
 /** @typedef {{ id: string, text: string, x: number, y: number, rotation: number, vx: number, vy: number, settled: boolean }} Drop */
 
-function createDrop(text, zoneWidth) {
+function createDrop(text, zoneWidth, id) {
   const margin = ICON_SIZE + 16
   const maxX = Math.max(margin, zoneWidth - margin)
   const x = margin + Math.random() * (maxX - margin)
   return {
-    id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: id ?? `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     text,
     x,
     y: SPAWN_TOP,
@@ -44,6 +52,26 @@ function restingY(drop, others, floorY) {
     }
   }
   return y
+}
+
+function previewText(text, max = 48) {
+  const t = text.trim()
+  if (t.length <= max) return t
+  return `${t.slice(0, max)}…`
+}
+
+function hasPublicFields(data) {
+  return Boolean(
+    data.publicName?.trim() || data.publicAge?.trim() || data.publicSetback?.trim(),
+  )
+}
+
+function hasPrivateFields(data) {
+  return Boolean(
+    data.privateEmail?.trim() ||
+      data.privateLinkedin?.trim() ||
+      data.privateDiscussion?.trim(),
+  )
 }
 
 function useFocusTrap(active, containerRef, onClose) {
@@ -89,7 +117,49 @@ function useFocusTrap(active, containerRef, onClose) {
   }, [active, containerRef, onClose])
 }
 
+function AdminMessagesPanel({ messages, onSelect, onRefresh }) {
+  return (
+    <aside className="contact-page__admin" aria-label="Hidden messages (admin)">
+      <div className="contact-page__admin-head">
+        <h2 className="contact-page__admin-title">Hidden messages</h2>
+        <button type="button" className="contact-page__admin-refresh" onClick={onRefresh}>
+          Refresh
+        </button>
+      </div>
+      {messages.length === 0 ? (
+        <p className="contact-page__admin-empty">No messages stored yet.</p>
+      ) : (
+        <ul className="contact-page__admin-list">
+          {messages.map((msg) => (
+            <li key={msg.id}>
+              <button
+                type="button"
+                className="contact-page__admin-item"
+                onClick={() => onSelect(msg.id)}
+              >
+                <span className="contact-page__admin-item-icon" aria-hidden>
+                  {msg.private ? <Lock size={14} /> : msg.public ? <Unlock size={14} /> : <MessageSquare size={14} />}
+                </span>
+                <span className="contact-page__admin-item-text">{previewText(msg.text, 56)}</span>
+                <time className="contact-page__admin-item-time" dateTime={new Date(msg.timestamp).toISOString()}>
+                  {new Date(msg.timestamp).toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </time>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
+  )
+}
+
 export default function ContactPage() {
+  const { isAdmin } = useAdmin()
   const titleId = useId()
   const zoneRef = useRef(null)
   const dropsRef = useRef(/** @type {Drop[]} */ ([]))
@@ -102,13 +172,41 @@ export default function ContactPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [zoneHeight, setZoneHeight] = useState(400)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const [storedMessages, setStoredMessages] = useState(() => loadContactMessages())
+  const [submitNotice, setSubmitNotice] = useState('')
 
   dropsRef.current = drops
 
   const selectedDrop = drops.find((d) => d.id === selectedId) ?? null
+  const selectedStored = selectedId ? getContactMessageById(selectedId) : null
+  const modalBody =
+    selectedStored != null
+      ? formatMessageDetail(selectedStored)
+      : selectedDrop?.text ?? ''
 
   const closeModal = useCallback(() => setSelectedId(null), [])
-  useFocusTrap(Boolean(selectedDrop), modalRef, closeModal)
+  useFocusTrap(Boolean(selectedId), modalRef, closeModal)
+
+  const refreshStoredMessages = useCallback(() => {
+    setStoredMessages(loadContactMessages())
+  }, [])
+
+  const addDrop = useCallback(
+    (text, messageId) => {
+      const zoneWidth = zoneRef.current?.clientWidth ?? 400
+      const next = createDrop(previewText(text, 80), zoneWidth, messageId)
+
+      if (reducedMotion) {
+        const floorY = zoneHeight - ICON_SIZE - FLOOR_PAD
+        const settled = { ...next, settled: true, vy: 0, vx: 0 }
+        settled.y = restingY(settled, dropsRef.current, floorY)
+        setDrops((prev) => [...prev, settled])
+      } else {
+        setDrops((prev) => [...prev, next])
+      }
+    },
+    [reducedMotion, zoneHeight],
+  )
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -132,27 +230,30 @@ export default function ContactPage() {
     return () => ro.disconnect()
   }, [])
 
-  const submitMessage = useCallback(
+  useEffect(() => {
+    if (!submitNotice) return undefined
+    const t = window.setTimeout(() => setSubmitNotice(''), 3200)
+    return () => window.clearTimeout(t)
+  }, [submitNotice])
+
+  const submitPhysicsMessage = useCallback(
     (e) => {
       e?.preventDefault?.()
       const text = draft.trim()
       if (!text) return
 
-      const zoneWidth = zoneRef.current?.clientWidth ?? 400
-      const next = createDrop(text, zoneWidth)
-
-      if (reducedMotion) {
-        const floorY = zoneHeight - ICON_SIZE - FLOOR_PAD
-        const settled = { ...next, settled: true, vy: 0, vx: 0 }
-        settled.y = restingY(settled, dropsRef.current, floorY)
-        setDrops((prev) => [...prev, settled])
-      } else {
-        setDrops((prev) => [...prev, next])
-      }
-
+      const id = createMessageId()
+      saveContactMessage({
+        id,
+        text,
+        timestamp: Date.now(),
+        source: 'physics',
+      })
+      refreshStoredMessages()
+      addDrop(text, id)
       setDraft('')
     },
-    [draft, reducedMotion, zoneHeight],
+    [draft, addDrop, refreshStoredMessages],
   )
 
   useEffect(() => {
@@ -232,21 +333,99 @@ export default function ContactPage() {
     }
   }, [reducedMotion])
 
-  const handleContactSubmit = useCallback((data) => {
-    console.log('Contact form submitted:', data)
+  const handleContactSubmit = useCallback(
+    (data) => {
+      const saved = []
+
+      if (hasPublicFields(data)) {
+        const id = createMessageId()
+        const setback = data.publicSetback.trim()
+        const label =
+          setback ||
+          [data.publicName.trim(), data.publicAge.trim() ? `age ${data.publicAge.trim()}` : '']
+            .filter(Boolean)
+            .join(' · ') ||
+          'Public message'
+        saveContactMessage({
+          id,
+          text: label,
+          timestamp: Date.now(),
+          public: true,
+          private: false,
+          source: 'form-public',
+          publicSection: {
+            name: data.publicName.trim(),
+            age: data.publicAge.trim(),
+            setback,
+          },
+        })
+        saved.push(id)
+        addDrop(label, id)
+      }
+
+      if (hasPrivateFields(data)) {
+        const id = createMessageId()
+        const discussion = data.privateDiscussion.trim()
+        const label =
+          discussion ||
+          data.privateEmail.trim() ||
+          data.privateLinkedin.trim() ||
+          'Private message'
+        saveContactMessage({
+          id,
+          text: label,
+          timestamp: Date.now(),
+          public: false,
+          private: true,
+          source: 'form-private',
+          privateSection: {
+            email: data.privateEmail.trim(),
+            linkedin: data.privateLinkedin.trim(),
+            discussion,
+          },
+        })
+        saved.push(id)
+        addDrop(label, id)
+      }
+
+      if (saved.length === 0) {
+        setSubmitNotice('Add a public or private message before sending.')
+        return
+      }
+
+      refreshStoredMessages()
+      setSubmitNotice('Message saved — thank you!')
+    },
+    [addDrop, refreshStoredMessages],
+  )
+
+  const openMessage = useCallback((id) => {
+    setSelectedId(id)
   }, [])
 
   return (
-    <div className="contact-page">
+    <div className={`contact-page${isAdmin ? ' contact-page--admin' : ''}`}>
       <div className="contact-page__physics">
+        {isAdmin ? (
+          <AdminMessagesPanel
+            messages={[...storedMessages].reverse()}
+            onSelect={openMessage}
+            onRefresh={refreshStoredMessages}
+          />
+        ) : null}
         <div
           ref={zoneRef}
           className="contact-page__zone"
           aria-label="Dropped messages"
         >
-          {drops.length === 0 && (
+          {drops.length === 0 && !isAdmin && (
             <p className="contact-page__hint" aria-live="polite">
               Type a message below and send it — it drops here as a note you can open.
+            </p>
+          )}
+          {drops.length === 0 && isAdmin && (
+            <p className="contact-page__hint" aria-live="polite">
+              Visitor messages appear here as icons. Use the panel above to read all stored messages.
             </p>
           )}
 
@@ -260,7 +439,7 @@ export default function ContactPage() {
                 height: ICON_SIZE,
                 transform: `translate3d(${drop.x}px, ${drop.y}px, 0) rotate(${drop.rotation}deg)`,
               }}
-              onClick={() => setSelectedId(drop.id)}
+              onClick={() => openMessage(drop.id)}
               aria-label={`Open message: ${drop.text.slice(0, 60)}${drop.text.length > 60 ? '…' : ''}`}
             >
               <Mail size={26} strokeWidth={1.75} aria-hidden />
@@ -270,7 +449,7 @@ export default function ContactPage() {
 
         <form
           className="contact-page__composer"
-          onSubmit={submitMessage}
+          onSubmit={submitPhysicsMessage}
           aria-label="Send a message"
         >
           <label htmlFor="contact-message" className="contact-page__label">
@@ -301,16 +480,22 @@ export default function ContactPage() {
 
       <div className="contact-page__form">
         <div className="contact-page__form-scroll">
+          {submitNotice ? (
+            <p className="contact-page__form-notice" role="status">
+              {submitNotice}
+            </p>
+          ) : null}
           <ContactSection
             embedded
-            contactEmail="hello@christianlee.com"
+            mainMessage="Let's Stay in Touch!"
+            contactEmail="cnl@christianjameslee.me"
             onSubmit={handleContactSubmit}
           />
         </div>
       </div>
 
       <AnimatePresence>
-        {selectedDrop && (
+        {selectedId && (
           <motion.div
             className="contact-page__modal"
             role="dialog"
@@ -348,7 +533,7 @@ export default function ContactPage() {
                   <X size={18} strokeWidth={2} aria-hidden />
                 </button>
               </div>
-              <p className="contact-page__modal-body">{selectedDrop.text}</p>
+              <p className="contact-page__modal-body">{modalBody}</p>
             </motion.div>
           </motion.div>
         )}

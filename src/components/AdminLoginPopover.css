@@ -1,0 +1,90 @@
+.admin-login-popover {
+  position: fixed;
+  z-index: 200;
+  width: min(17rem, calc(100vw - 2rem));
+  padding: 0.85rem 0.95rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  color: #202124;
+}
+
+[data-theme='dark'] .admin-login-popover {
+  background: rgba(28, 28, 30, 0.94);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f1f3f4;
+}
+
+.admin-login-popover__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-login-popover__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.admin-login-popover__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.admin-login-popover__label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #5f6368;
+}
+
+[data-theme='dark'] .admin-login-popover__label {
+  color: #9aa0a6;
+}
+
+.admin-login-popover__input {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: inherit;
+}
+
+[data-theme='dark'] .admin-login-popover__input {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.admin-login-popover__input:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 1px;
+}
+
+.admin-login-popover__error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #d93025;
+}
+
+.admin-login-popover__submit {
+  margin-top: 0.15rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #1a73e8;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-login-popover__submit:hover {
+  background: #1765cc;
+}

@@ -36,6 +36,114 @@
   min-height: 0;
 }
 
+.contact-page--admin .contact-page__physics {
+  gap: 0;
+}
+
+.contact-page__admin {
+  flex-shrink: 0;
+  max-height: 38%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--contact-border);
+  background: rgba(248, 249, 250, 0.95);
+  padding: 0.55rem 0.75rem 0.65rem;
+}
+
+.contact-page__admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.contact-page__admin-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--contact-fg);
+}
+
+.contact-page__admin-refresh {
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--contact-border);
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.72rem;
+  color: var(--contact-muted);
+  cursor: pointer;
+}
+
+.contact-page__admin-refresh:hover {
+  color: var(--contact-fg);
+  border-color: #c4c7c5;
+}
+
+.contact-page__admin-empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--contact-muted);
+}
+
+.contact-page__admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.4rem;
+  scrollbar-width: thin;
+}
+
+.contact-page__admin-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--contact-border);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.contact-page__admin-item:hover {
+  border-color: #1a73e8;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.12);
+}
+
+.contact-page__admin-item-icon {
+  color: #1a73e8;
+}
+
+.contact-page__admin-item-text {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--contact-fg);
+  word-break: break-word;
+}
+
+.contact-page__admin-item-time {
+  font-size: 0.65rem;
+  color: var(--contact-muted);
+}
+
+.contact-page__form-notice {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  background: rgba(26, 115, 232, 0.08);
+  font-size: 0.78rem;
+  color: #1a73e8;
+}
+
 .contact-page__zone {
   position: relative;
   flex: 1;
@@ -300,6 +408,7 @@
   color: var(--contact-fg);
   overflow-y: auto;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

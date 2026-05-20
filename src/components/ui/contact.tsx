@@ -1,8 +1,7 @@
 import React from 'react'
-import { Github, Linkedin } from 'lucide-react'
+import { Instagram, Linkedin } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -11,10 +10,12 @@ import { cn } from '@/lib/utils'
 import './contact-section.css'
 
 export interface ContactFormData {
-  name: string
-  email: string
-  message: string
-  projectType: string[]
+  publicName: string
+  publicAge: string
+  publicSetback: string
+  privateEmail: string
+  privateLinkedin: string
+  privateDiscussion: string
 }
 
 export interface ContactSocialLink {
@@ -41,27 +42,15 @@ export interface ContactSectionProps {
 
 const DEFAULT_SOCIAL_LINKS: ContactSocialLink[] = [
   {
-    id: 'github',
-    name: 'GitHub',
-    href: 'https://github.com/haminxx',
-  },
-  {
     id: 'linkedin',
     name: 'LinkedIn',
     href: 'https://www.linkedin.com/in/christian-j-l/',
   },
-]
-
-const PROJECT_TYPE_OPTIONS = [
-  'Website',
-  'Mobile App',
-  'Web App',
-  'E-Commerce',
-  'Brand Identity',
-  '3D & Animation',
-  'Social Media Marketing',
-  'Brand Strategy & Consulting',
-  'Other',
+  {
+    id: 'instagram',
+    name: 'Instagram',
+    href: 'https://www.instagram.com/85liez/',
+  },
 ]
 
 const BUBBLE_LAYOUT = [
@@ -87,12 +76,12 @@ function SocialIcon({ link }: { link: ContactSocialLink }) {
     return <img src={link.iconSrc} alt="" className="h-4 w-4" />
   }
 
-  if (link.id === 'github' || link.name.toLowerCase() === 'github') {
-    return <Github className="h-4 w-4" aria-hidden />
-  }
-
   if (link.id === 'linkedin' || link.name.toLowerCase() === 'linkedin') {
     return <Linkedin className="h-4 w-4" aria-hidden />
+  }
+
+  if (link.id === 'instagram' || link.name.toLowerCase() === 'instagram') {
+    return <Instagram className="h-4 w-4" aria-hidden />
   }
 
   return <span className="text-xs font-semibold">{link.name.slice(0, 1)}</span>
@@ -105,7 +94,6 @@ function ContactFormCard({
   embedded,
   formData,
   onChange,
-  onCheckboxChange,
   onSubmit,
 }: {
   mainMessage: string
@@ -114,7 +102,6 @@ function ContactFormCard({
   embedded?: boolean
   formData: ContactFormData
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-  onCheckboxChange: (type: string, checked: boolean) => void
   onSubmit: (e: React.FormEvent) => void
 }) {
   return (
@@ -129,12 +116,11 @@ function ContactFormCard({
       </h2>
 
       <div className={cn(embedded ? 'mb-4' : 'mb-6')}>
-        <p className="mb-2 text-sm text-muted-foreground">Mail us at</p>
+        <p className="mb-2 text-sm text-muted-foreground">contact me at</p>
         <a href={`mailto:${contactEmail}`} className="text-sm font-medium text-primary hover:underline">
           {contactEmail}
         </a>
-        <div className="mt-3 flex items-center space-x-3">
-          <span className="text-sm text-muted-foreground">OR</span>
+        <div className="mt-3 flex items-center justify-between gap-3 max-w-[8rem]">
           {socialLinks.map((link) => (
             <Button key={link.id} variant="outline" size="icon" asChild>
               <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={link.name}>
@@ -147,72 +133,87 @@ function ContactFormCard({
 
       <hr className="my-4 border-border sm:my-5" />
 
-      <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
-        <p className="text-sm text-muted-foreground">Leave us a brief message</p>
-        <div className={cn('grid grid-cols-1 gap-4', !embedded && 'md:grid-cols-2')}>
-          <div className="space-y-2">
-            <Label htmlFor="contact-section-name">Your name</Label>
-            <Input
-              id="contact-section-name"
-              name="name"
-              placeholder="Your name"
-              value={formData.name}
-              onChange={onChange}
-              required
-            />
+      <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6">
+        <section className="space-y-3">
+          <div>
+            <p className="text-sm font-bold text-foreground">Public message</p>
+            <p className="text-xs text-muted-foreground">optional</p>
+          </div>
+          <div className={cn('grid grid-cols-1 gap-3', !embedded && 'sm:grid-cols-2')}>
+            <div className="space-y-2">
+              <Label htmlFor="contact-section-public-name">Name</Label>
+              <Input
+                id="contact-section-public-name"
+                name="publicName"
+                placeholder="Name"
+                value={formData.publicName}
+                onChange={onChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-section-public-age">Age</Label>
+              <Input
+                id="contact-section-public-age"
+                name="publicAge"
+                type="text"
+                inputMode="numeric"
+                placeholder="Age"
+                value={formData.publicAge}
+                onChange={onChange}
+              />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="contact-section-email">Email</Label>
+            <Label htmlFor="contact-section-public-setback">What is your most memorable setback</Label>
+            <Textarea
+              id="contact-section-public-setback"
+              name="publicSetback"
+              placeholder="Share your answer…"
+              className="min-h-[72px]"
+              value={formData.publicSetback}
+              onChange={onChange}
+            />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <p className="text-sm font-bold text-foreground">Private message</p>
+          <div className="space-y-2">
+            <Label htmlFor="contact-section-private-email">Email</Label>
             <Input
-              id="contact-section-email"
-              name="email"
+              id="contact-section-private-email"
+              name="privateEmail"
               type="email"
-              placeholder="Email"
-              value={formData.email}
+              placeholder="you@example.com"
+              value={formData.privateEmail}
               onChange={onChange}
-              required
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="contact-section-message">Briefly describe your project idea...</Label>
-          <Textarea
-            id="contact-section-message"
-            name="message"
-            placeholder="Briefly describe your project idea..."
-            className="min-h-[80px]"
-            value={formData.message}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">I&apos;m looking for...</p>
-          <div
-            className={cn(
-              'grid gap-2',
-              embedded ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3',
-            )}
-          >
-            {PROJECT_TYPE_OPTIONS.map((option) => {
-              const optionId = option.replace(/\s/g, '-').toLowerCase()
-              return (
-                <div key={option} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={optionId}
-                    checked={formData.projectType.includes(option)}
-                    onCheckedChange={(checked) => onCheckboxChange(option, checked === true)}
-                  />
-                  <Label htmlFor={optionId} className="text-xs font-normal leading-snug sm:text-sm">
-                    {option}
-                  </Label>
-                </div>
-              )
-            })}
+          <div className="space-y-2">
+            <Label htmlFor="contact-section-private-linkedin">LinkedIn</Label>
+            <Input
+              id="contact-section-private-linkedin"
+              name="privateLinkedin"
+              type="url"
+              placeholder="Profile URL or handle"
+              value={formData.privateLinkedin}
+              onChange={onChange}
+            />
           </div>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact-section-private-discussion">
+              What would you like to discusse with me?
+            </Label>
+            <Textarea
+              id="contact-section-private-discussion"
+              name="privateDiscussion"
+              placeholder="Your message…"
+              className="min-h-[80px]"
+              value={formData.privateDiscussion}
+              onChange={onChange}
+            />
+          </div>
+        </section>
 
         <Button type="submit" className="w-full">
           Send a message
@@ -224,8 +225,8 @@ function ContactFormCard({
 
 export const ContactSection: React.FC<ContactSectionProps> = ({
   title = 'We can turn your dream project into reality',
-  mainMessage = "Let's talk! 👋",
-  contactEmail = 'hello@christianlee.com',
+  mainMessage = "Let's Stay in Touch!",
+  contactEmail = 'cnl@christianjameslee.me',
   socialLinks = DEFAULT_SOCIAL_LINKS,
   backgroundImageSrc = 'https://images.unsplash.com/photo-1742273330004-ef9c9d228530?ixlib=rb-4.1.0&auto=format&fit=crop&q=60&w=900',
   hideNav: hideNavProp = true,
@@ -237,25 +238,17 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   const hideNav = hideNavProp ?? hideHeader ?? true
 
   const [formData, setFormData] = React.useState<ContactFormData>({
-    name: '',
-    email: '',
-    message: '',
-    projectType: [],
+    publicName: '',
+    publicAge: '',
+    publicSetback: '',
+    privateEmail: '',
+    privateLinkedin: '',
+    privateDiscussion: '',
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleCheckboxChange = (type: string, checked: boolean) => {
-    setFormData((prev) => {
-      const currentTypes = prev.projectType
-      if (checked) {
-        return { ...prev, projectType: [...currentTypes, type] }
-      }
-      return { ...prev, projectType: currentTypes.filter((t) => t !== type) }
-    })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -264,13 +257,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   }
 
   const cardProps = {
-    mainMessage: embedded ? (mainMessage === "Let's talk! 👋" ? 'Get in touch' : mainMessage) : mainMessage,
+    mainMessage,
     contactEmail,
     socialLinks,
     embedded,
     formData,
     onChange: handleChange,
-    onCheckboxChange: handleCheckboxChange,
     onSubmit: handleSubmit,
   }
 

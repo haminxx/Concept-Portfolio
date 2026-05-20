@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { AdminProvider } from './context/AdminContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { RootErrorBoundary } from './components/RootErrorBoundary'
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')).render(
     <RootErrorBoundary>
       <BrowserRouter>
         <LanguageProvider>
-          <ThemeProvider>
-            <App />
-          </ThemeProvider>
+          <AdminProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
+          </AdminProvider>
         </LanguageProvider>
       </BrowserRouter>
     </RootErrorBoundary>
