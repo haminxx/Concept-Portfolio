@@ -104,6 +104,7 @@ export function HoverPeek({
   lensZoomFactor = 1.75,
   lensSize = 100,
   portalContainer,
+  positionAboveCursor = false,
 }: HoverPeekProps) {
   const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const finalImageSrc = usePreviewSource(
