@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { User, Folder, Mail, Newspaper } from 'lucide-react'
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
+import { MorphingText } from '@/components/ui/liquid-text'
 import { SHORTCUTS } from '../config/shortcuts'
-import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
+
+const SHORTCUT_LABELS = {
+  about: { rock: 'Chert', page: 'About' },
+  newsletter: { rock: 'Calcite', page: 'Newsletter' },
+  project: { rock: 'Quartz', page: 'Project' },
+  contact: { rock: 'Fieldstone', page: 'Contact' },
+}
 
 const SHORTCUT_ICON_SRC = {
   about: '/images/chrome-shortcuts/about.png',
@@ -37,9 +44,23 @@ function ShortcutIcon({ shortcutType, lucideIcon: LucideIcon }) {
   )
 }
 
+function ShortcutLabel({ shortcutType, hovered }) {
+  const labels = SHORTCUT_LABELS[shortcutType]
+  if (!labels) return null
+
+  return (
+    <MorphingText
+      texts={[labels.rock, labels.page]}
+      active={hovered}
+      filterId={`threshold-${shortcutType}`}
+      className="chrome-home__morph-label"
+    />
+  )
+}
+
 export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
-  const { t } = useLanguage()
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
+  const [hoveredShortcut, setHoveredShortcut] = useState(null)
   const menuRef = useRef(null)
   const homeRef = useRef(null)
 
@@ -69,25 +90,30 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
             const Icon = SHORTCUT_ICONS[s.icon] || Folder
-            const label = t(`shortcuts.${s.type}`)
+            const pageLabel = SHORTCUT_LABELS[s.type]?.page ?? s.label
+            const isHovered = hoveredShortcut === s.type
             return (
               <button
                 key={s.id}
                 type="button"
                 className="chrome-home__shortcut"
                 onClick={() => onNavigateShortcut?.(s.type)}
+                onMouseEnter={() => setHoveredShortcut(s.type)}
+                onMouseLeave={() => setHoveredShortcut(null)}
                 onContextMenu={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   setShortcutContextMenu({ x: e.clientX, y: e.clientY, shortcutType: s.type })
                 }}
-                title={label}
-                aria-label={label}
+                title={pageLabel}
+                aria-label={pageLabel}
               >
                 <span className="chrome-home__shortcut-icon">
                   <ShortcutIcon shortcutType={s.type} lucideIcon={Icon} />
                 </span>
-                <span className="chrome-home__shortcut-label">{label}</span>
+                <span className="chrome-home__shortcut-label">
+                  <ShortcutLabel shortcutType={s.type} hovered={isHovered} />
+                </span>
               </button>
             )
           })}

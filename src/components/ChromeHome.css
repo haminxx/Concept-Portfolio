@@ -35,7 +35,7 @@
   align-items: flex-start;
   justify-content: flex-end;
   width: 100%;
-  padding: clamp(16px, 4vh, 32px) clamp(20px, 6vw, 48px) clamp(18px, 6vh, 40px)
+  padding: clamp(16px, 4vh, 32px) clamp(20px, 6vw, 48px) clamp(32px, 10vh, 64px)
     clamp(12px, 4vw, 32px);
   box-sizing: border-box;
   overflow: visible;
@@ -73,7 +73,7 @@
   width: auto;
   max-width: min(520px, 72vw);
   margin-left: clamp(0px, 2vw, 16px);
-  margin-bottom: clamp(0px, 1vh, 8px);
+  margin-bottom: clamp(18px, 5vh, 44px);
 }
 
 .chrome-home__shortcut {
@@ -155,19 +155,32 @@
 }
 
 .chrome-home__shortcut-label {
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.25rem;
+  width: 100%;
+  max-width: 88px;
+  color: #e8eaed;
+  transition: color 0.25s ease;
+}
+
+.chrome-home__morph-label {
+  height: 1.25rem;
+  max-width: 88px;
+  font-size: clamp(11px, 1.1vw, 13px);
   font-weight: 400;
   letter-spacing: normal;
-  color: #e8eaed;
-  text-align: center;
-  max-width: 72px;
-  line-height: 1.2;
-  transition: color 0.25s ease, transform 0.25s ease;
+  color: inherit;
 }
 
 .chrome-home__shortcut:hover .chrome-home__shortcut-label {
   color: #ffffff;
+}
+
+.chrome-home__shortcut:hover .chrome-home__morph-label {
   transform: scale(1.04);
+  transition: transform 0.25s ease;
 }
 
 .chrome-home__context-menu {
