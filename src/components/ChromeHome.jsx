@@ -3,7 +3,6 @@ import { User, Folder, Mail, Newspaper } from 'lucide-react'
 import { MagneticText } from '@/components/ui/morphing-cursor'
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
 import { Cursor } from '@/components/ui/custom-cursor'
-import { CursorDrivenParticleTypography } from '@/components/ui/cursor-driven-particle-typography'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
@@ -38,13 +37,6 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
       <div ref={contentRef} className="chrome-home__content">
         <div className="chrome-home__eyes" aria-hidden="true">
           <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} />
-        </div>
-        <div className="chrome-home__particle-text">
-          <CursorDrivenParticleTypography
-            text="Green"
-            fontSize={100}
-            color="#4ade80"
-          />
         </div>
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {

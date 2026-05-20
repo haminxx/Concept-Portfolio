@@ -76,6 +76,7 @@ body {
 
 /* Hide scrollbars but keep scroll functionality */
 .app-window__content,
+.chrome-home,
 .chrome-landing__content,
 .ytmusic-window__main,
 .gallery-window__main,
@@ -90,6 +91,7 @@ body {
 }
 
 .app-window__content::-webkit-scrollbar,
+.chrome-home::-webkit-scrollbar,
 .chrome-landing__content::-webkit-scrollbar,
 .ytmusic-window__main::-webkit-scrollbar,
 .gallery-window__main::-webkit-scrollbar,
