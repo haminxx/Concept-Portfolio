@@ -57,6 +57,9 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
       <div className="chrome-home__eyes" aria-hidden="true">
         <MouseFollowingEyes trackWindow={false} trackingRoot={homeRef} eyeSize={80} />
       </div>
+      <p className="chrome-home__scene-caption" aria-hidden="true">
+        Everything Everywhere All at Once (2022) Scene 1:36:00
+      </p>
       <div className="chrome-home__content">
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
