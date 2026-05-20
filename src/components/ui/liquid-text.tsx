@@ -3,8 +3,22 @@ import { cn } from '@/lib/utils'
 
 const DEFAULT_MORPH_TIME = 1.5
 const DEFAULT_COOLDOWN_TIME = 0.5
-const SHORT_MORPH_TIME = 0.9
-const SHORT_COOLDOWN_TIME = 0.2
+/** Hover / one-shot morph (e.g. Chrome Home shortcut labels). */
+const SHORT_MORPH_TIME = 0.45
+const SHORT_COOLDOWN_TIME = 0.15
+const MORPH_BLUR_SCALE = 3
+const MORPH_BLUR_MAX = 10
+const MORPH_OPACITY_EXP = 0.65
+
+function morphBlurPx(fraction: number): string {
+  const safe = Math.max(fraction, 0.06)
+  const px = Math.min(MORPH_BLUR_SCALE / safe - MORPH_BLUR_SCALE, MORPH_BLUR_MAX)
+  return `${px}px`
+}
+
+function morphOpacityPct(fraction: number): string {
+  return `${Math.pow(fraction, MORPH_OPACITY_EXP) * 100}%`
+}
 
 export type MorphingTextProps = {
   className?: string
@@ -15,6 +29,8 @@ export type MorphingTextProps = {
   active?: boolean
   morphTime?: number
   cooldownTime?: number
+  /** Text color for both morph layers (e.g. #fff on photo backgrounds). */
+  color?: string
 }
 
 function MorphingSpans({
@@ -52,12 +68,12 @@ function useMorphingTextLoop(texts: string[], morphTime: number, cooldownTime: n
       const current2 = text2Ref.current
       if (!current1 || !current2 || texts.length === 0) return
 
-      current2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`
-      current2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`
+      current2.style.filter = `blur(${morphBlurPx(fraction)})`
+      current2.style.opacity = morphOpacityPct(fraction)
 
       const invertedFraction = 1 - fraction
-      current1.style.filter = `blur(${Math.min(8 / invertedFraction - 8, 100)}px)`
-      current1.style.opacity = `${Math.pow(invertedFraction, 0.4) * 100}%`
+      current1.style.filter = `blur(${morphBlurPx(invertedFraction)})`
+      current1.style.opacity = morphOpacityPct(invertedFraction)
 
       current1.textContent = texts[textIndexRef.current % texts.length]
       current2.textContent = texts[(textIndexRef.current + 1) % texts.length]
@@ -141,12 +157,12 @@ function useMorphingTextOnce(
       current1.textContent = primary
       current2.textContent = secondary
 
-      current2.style.filter = `blur(${Math.min(8 / fraction - 8, 100)}px)`
-      current2.style.opacity = `${Math.pow(fraction, 0.4) * 100}%`
+      current2.style.filter = `blur(${morphBlurPx(fraction)})`
+      current2.style.opacity = morphOpacityPct(fraction)
 
       const invertedFraction = 1 - fraction
-      current1.style.filter = `blur(${Math.min(8 / invertedFraction - 8, 100)}px)`
-      current1.style.opacity = `${Math.pow(invertedFraction, 0.4) * 100}%`
+      current1.style.filter = `blur(${morphBlurPx(invertedFraction)})`
+      current1.style.opacity = morphOpacityPct(invertedFraction)
     },
     [from, to],
   )
@@ -268,14 +284,19 @@ export function MorphingText({
   active,
   morphTime,
   cooldownTime,
+  color,
 }: MorphingTextProps) {
   const isControlled = active !== undefined && texts.length === 2
-  const filterStyle = { filter: `url(#${filterId}) blur(0.6px)` } as const
+  const filterStyle = {
+    filter: isControlled ? `url(#${filterId})` : `url(#${filterId}) blur(0.6px)`,
+    ...(color ? { color } : {}),
+  } as const
 
   return (
     <div
       className={cn(
-        'relative mx-auto w-full text-center font-sans font-normal leading-none',
+        'relative mx-auto w-full text-center font-sans leading-none',
+        isControlled ? 'font-semibold' : 'font-normal',
         className,
       )}
       style={filterStyle}

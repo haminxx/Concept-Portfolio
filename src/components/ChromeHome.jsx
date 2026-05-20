@@ -54,6 +54,8 @@ function ShortcutLabel({ shortcutType, hovered }) {
       active={hovered}
       filterId={`threshold-${shortcutType}`}
       className="chrome-home__morph-label"
+      color="#fff"
+      morphTime={0.45}
     />
   )
 }
