@@ -126,7 +126,7 @@ const Eye = ({ mouseX, mouseY, selfRef, otherRef }: EyeProps) => {
   return (
     <div
       ref={selfRef}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-black bg-white"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 bg-white"
     >
       <div
         ref={pupilRef}

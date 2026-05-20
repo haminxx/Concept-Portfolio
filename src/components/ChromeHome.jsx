@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { User, Folder, Mail, Newspaper } from 'lucide-react'
 import { MagneticText } from '@/components/ui/morphing-cursor'
 import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
+import { Cursor } from '@/components/ui/custom-cursor'
+import { CursorDrivenParticleTypography } from '@/components/ui/cursor-driven-particle-typography'
 import { SHORTCUTS } from '../config/shortcuts'
 import { useLanguage } from '../context/LanguageContext'
 import './ChromeHome.css'
@@ -18,6 +20,7 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
   const menuRef = useRef(null)
   const contentRef = useRef(null)
+  const chromeHomeRef = useRef(null)
 
   useEffect(() => {
     if (!shortcutContextMenu) return
@@ -29,11 +32,19 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
   }, [shortcutContextMenu])
 
   return (
-    <div className="chrome-home">
+    <div ref={chromeHomeRef} className="chrome-home">
+      <Cursor containerRef={chromeHomeRef} />
       <div className="chrome-home__bg" aria-hidden="true" />
       <div ref={contentRef} className="chrome-home__content">
         <div className="chrome-home__eyes" aria-hidden="true">
           <MouseFollowingEyes trackWindow={false} trackingRoot={contentRef} />
+        </div>
+        <div className="chrome-home__particle-text">
+          <CursorDrivenParticleTypography
+            text="Green"
+            fontSize={100}
+            color="#4ade80"
+          />
         </div>
         <div className="chrome-home__shortcuts">
           {SHORTCUTS.map((s) => {
@@ -61,9 +72,9 @@ export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
                   text={label}
                   hoverText={hoverText}
                   circleSize={56}
-                  textClassName="text-[13px] font-normal tracking-normal text-[#3c4043]"
+                  textClassName="text-[13px] font-normal tracking-normal text-[#e8eaed]"
                   hoverTextClassName="text-[13px] font-normal tracking-normal text-white"
-                  circleClassName="bg-[#202124]"
+                  circleClassName="bg-[#5f6368]"
                   className="chrome-home__magnetic-label"
                 />
               </button>
