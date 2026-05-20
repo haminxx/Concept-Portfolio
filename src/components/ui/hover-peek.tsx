@@ -88,6 +88,7 @@ function useHoverState(followMouse: boolean, positionAboveCursor: boolean) {
     followX,
     cursorPos,
     cursorPosRef,
+    updateCursorPos,
   }
 }
 
@@ -144,6 +145,7 @@ export function HoverPeek({
     followX,
     cursorPos,
     cursorPosRef,
+    updateCursorPos,
   } = useHoverState(enableMouseFollow, positionAboveCursor)
 
   const [isHoveringLens, setIsHoveringLens] = useState(false)
@@ -163,13 +165,12 @@ export function HoverPeek({
     if (!positionAboveCursor) return undefined
 
     const handleWindowPointerMove = (event: PointerEvent) => {
-      cursorPosRef.current = { x: event.clientX, y: event.clientY }
-      setCursorPos({ x: event.clientX, y: event.clientY })
+      updateCursorPos(event.clientX, event.clientY)
     }
 
     window.addEventListener('pointermove', handleWindowPointerMove, { passive: true })
     return () => window.removeEventListener('pointermove', handleWindowPointerMove)
-  }, [cursorPosRef, isPeeking, positionAboveCursor])
+  }, [isPeeking, positionAboveCursor, updateCursorPos])
 
   const handleLensMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (!enableLensEffect) return

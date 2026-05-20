@@ -4,49 +4,30 @@
 }
 
 .contact-page {
-  --background: #ffffff;
-  --foreground: #202124;
-  --muted: #dadce0;
-  --muted-foreground: #5f6368;
-  --border: #e8eaed;
-  --primary: #1a73e8;
-  --primary-foreground: #ffffff;
-  --card: rgba(255, 255, 255, 0.85);
-  --input: #e8eaed;
-  --ring: rgba(26, 115, 232, 0.35);
-
-  --color-background: #ffffff;
-  --color-foreground: #202124;
-  --color-muted-foreground: #5f6368;
-  --color-muted: #dadce0;
-  --color-border: #e8eaed;
-  --color-primary: #1a73e8;
-  --color-primary-foreground: #ffffff;
-  --color-input: #e8eaed;
-  --color-ring: rgba(26, 115, 232, 0.35);
-  --color-card: rgba(255, 255, 255, 0.85);
-
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   flex: 1;
   min-height: 0;
   height: 100%;
   width: 100%;
-  color: var(--foreground);
-  background: var(--background);
-  overflow: hidden;
-}
-
-.contact-page__scroll {
-  flex: 1;
-  min-height: 0;
+  background: #fff;
+  color: #202124;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
-.contact-page .contact-section {
-  min-height: 100%;
-  width: 100%;
+.contact-page--empty {
+  padding: 2rem;
+}
+
+.contact-page__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #202124;
 }
