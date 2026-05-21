@@ -8,7 +8,9 @@
 .cursor-reveal-about {
   --veil-surface: #ffffff;
   --content-surface: #0a0a0a;
+  --content-ink: #f5f5f5;
   --invert-ink: #ffffff;
+  --hint-ink: rgba(245, 245, 245, 0.35);
 
   position: relative;
   width: 100%;
@@ -18,48 +20,34 @@
   background: var(--veil-surface);
   isolation: isolate;
   touch-action: none;
-  transition: background-color 0.4s ease;
 }
 
 .cursor-reveal-about--dark {
   --veil-surface: #0a0a0a;
   --content-surface: #f5f5f5;
+  --content-ink: #0a0a0a;
   --invert-ink: #f5f5f5;
+  --hint-ink: rgba(10, 10, 10, 0.35);
   background: var(--veil-surface);
 }
 
+/* z0: content surface */
 .cursor-reveal-about__content {
   position: absolute;
   inset: 0;
   z-index: 0;
   background: var(--content-surface);
-  transition: background-color 0.4s ease;
 }
 
-.cursor-reveal-about__veil {
+/* z1: text hidden under veil until erased */
+.cursor-reveal-about__below-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
-  touch-action: none;
-  cursor: none !important;
 }
 
-.cursor-reveal-about__hero,
-.cursor-reveal-about__bio {
-  position: absolute;
-  z-index: 2;
-  margin: 0;
-  pointer-events: none;
-  color: var(--invert-ink);
-  mix-blend-mode: difference;
-}
-
-.cursor-reveal-about__hero {
-  top: 0;
-  left: 0;
+.cursor-reveal-about__headline-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -68,12 +56,14 @@
   box-sizing: border-box;
 }
 
-.cursor-reveal-about__question {
+.cursor-reveal-about__question-spacer {
+  visibility: hidden;
   margin: 0;
   font-size: clamp(1.75rem, 5vw, 3.25rem);
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .cursor-reveal-about__name {
@@ -82,26 +72,20 @@
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  opacity: 0;
-  transform: translateX(-0.35rem);
-  transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
-}
-
-.cursor-reveal-about__hero--revealed .cursor-reveal-about__name {
-  opacity: 1;
-  transform: translateX(0);
+  color: var(--content-ink);
 }
 
 .cursor-reveal-about__bio {
+  position: absolute;
   left: 0;
   right: 0;
   max-width: 32rem;
+  margin: 0;
   padding: 1.25rem clamp(2rem, 6vw, 4.5rem) 0;
   font-size: clamp(0.9375rem, 1.8vw, 1.125rem);
   line-height: 1.65;
   font-weight: 400;
+  color: var(--content-ink);
   top: calc(clamp(2.25rem, 7vw, 5rem) + clamp(2.75rem, 7vw, 4.25rem));
 }
 
@@ -109,27 +93,50 @@
   position: absolute;
   right: clamp(1.5rem, 4vw, 3rem);
   bottom: clamp(1.5rem, 4vw, 3rem);
-  z-index: 2;
   margin: 0;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.35);
-  mix-blend-mode: difference;
+  color: var(--hint-ink);
+}
+
+/* z2: opaque veil erased by trail */
+.cursor-reveal-about__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  touch-action: none;
+  cursor: none !important;
 }
 
-.cursor-reveal-about--dark .cursor-reveal-about__hint {
-  color: #f5f5f5;
-}
-
-.about-theme-cursor {
+/* z3: "Who am I?" above veil — instant difference invert */
+.cursor-reveal-about__question {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 3;
+  margin: 0;
+  padding: clamp(2.25rem, 7vw, 5rem) clamp(2rem, 6vw, 4.5rem) 0;
+  box-sizing: border-box;
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--invert-ink);
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+/* z4: theme cursor (about-theme-cursor.css) */
+.about-theme-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -156,7 +163,7 @@
 }
 
 @media (max-width: 640px) {
-  .cursor-reveal-about__hero {
+  .cursor-reveal-about__headline-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.15rem;
@@ -175,20 +182,8 @@
     cursor: auto !important;
   }
 
-  .cursor-reveal-about,
-  .cursor-reveal-about__content,
-  .cursor-reveal-about__name,
-  .cursor-reveal-about__hint {
-    transition: none;
-  }
-
   .cursor-reveal-about__veil {
     opacity: 0.12;
-  }
-
-  .cursor-reveal-about__name {
-    opacity: 1;
-    transform: none;
   }
 
   .cursor-reveal-about__hint {

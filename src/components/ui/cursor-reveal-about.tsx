@@ -7,7 +7,6 @@ import {
   useState,
   type PointerEvent,
 } from 'react'
-import { motion } from 'motion/react'
 
 import './cursor-reveal-about.css'
 
@@ -17,6 +16,8 @@ const MIN_DISTANCE = 8
 
 const VEIL_LIGHT = '#ffffff'
 const VEIL_DARK = '#0a0a0a'
+const CONTENT_LIGHT = '#0a0a0a'
+const CONTENT_DARK = '#f5f5f5'
 
 function stampTrail(
   ctx: CanvasRenderingContext2D,
@@ -59,12 +60,12 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
   function CursorRevealAbout({ isDark = false }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const hintRef = useRef<HTMLParagraphElement>(null)
     const hasMovedRef = useRef(false)
     const [hasRevealed, setHasRevealed] = useState(false)
     const lastPointRef = useRef<{ x: number; y: number } | null>(null)
     const dprRef = useRef(1)
     const veilColor = isDark ? VEIL_DARK : VEIL_LIGHT
+    const contentColor = isDark ? CONTENT_DARK : CONTENT_LIGHT
 
     useImperativeHandle(ref, () => ({
       getContainer: () => containerRef.current,
@@ -138,6 +139,12 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
       lastPointRef.current = { x, y }
     }, [])
 
+    const markRevealed = useCallback(() => {
+      if (hasMovedRef.current) return
+      hasMovedRef.current = true
+      setHasRevealed(true)
+    }, [])
+
     const handlePointerMove = useCallback(
       (event: PointerEvent<HTMLDivElement>) => {
         const container = containerRef.current
@@ -148,14 +155,9 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
         const y = event.clientY - rect.top
 
         revealAt(x, y)
-
-        if (!hasMovedRef.current) {
-          hasMovedRef.current = true
-          setHasRevealed(true)
-          hintRef.current?.style.setProperty('opacity', '0')
-        }
+        markRevealed()
       },
-      [revealAt]
+      [revealAt, markRevealed]
     )
 
     const handlePointerDown = useCallback(
@@ -165,14 +167,9 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
 
         const rect = container.getBoundingClientRect()
         revealAt(event.clientX - rect.left, event.clientY - rect.top, true)
-
-        if (!hasMovedRef.current) {
-          hasMovedRef.current = true
-          setHasRevealed(true)
-          hintRef.current?.style.setProperty('opacity', '0')
-        }
+        markRevealed()
       },
-      [revealAt]
+      [revealAt, markRevealed]
     )
 
     return (
@@ -182,15 +179,27 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
         onPointerMove={handlePointerMove}
         onPointerDown={handlePointerDown}
       >
-        <motion.div
+        <div
           className="cursor-reveal-about__content"
-          initial={false}
-          animate={{
-            backgroundColor: isDark ? '#f5f5f5' : '#0a0a0a',
-          }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          style={{ backgroundColor: contentColor }}
           aria-hidden
         />
+
+        <div className="cursor-reveal-about__below-veil" aria-hidden>
+          <div className="cursor-reveal-about__headline-row">
+            <span className="cursor-reveal-about__question-spacer">Who am I?</span>
+            <p className="cursor-reveal-about__name" aria-hidden={!hasRevealed}>
+              Christian Lee
+            </p>
+          </div>
+
+          <p className="cursor-reveal-about__bio">
+            Designer and developer crafting thoughtful digital experiences — from
+            concept to polished interfaces — based in the Pacific Northwest.
+          </p>
+
+          <p className="cursor-reveal-about__hint">Move cursor to reveal</p>
+        </div>
 
         <canvas
           ref={canvasRef}
@@ -198,31 +207,7 @@ export const CursorRevealAbout = forwardRef<CursorRevealAboutHandle, CursorRevea
           aria-hidden
         />
 
-        <header
-          className={`cursor-reveal-about__hero${hasRevealed ? ' cursor-reveal-about__hero--revealed' : ''}`}
-        >
-          <h1 className="cursor-reveal-about__question">Who am I?</h1>
-          <p className="cursor-reveal-about__name" aria-hidden={!hasRevealed}>
-            Christian Lee
-          </p>
-        </header>
-
-        <p className="cursor-reveal-about__bio">
-          Designer and developer crafting thoughtful digital experiences — from
-          concept to polished interfaces — based in the Pacific Northwest.
-        </p>
-
-        <motion.p
-          ref={hintRef}
-          className="cursor-reveal-about__hint"
-          initial={false}
-          animate={{
-            color: isDark ? 'rgba(245, 245, 245, 0.35)' : 'rgba(10, 10, 10, 0.35)',
-          }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
-        >
-          Move cursor to reveal
-        </motion.p>
+        <h1 className="cursor-reveal-about__question">Who am I?</h1>
       </div>
     )
   }

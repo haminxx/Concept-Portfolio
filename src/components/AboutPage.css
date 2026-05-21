@@ -16,7 +16,6 @@
   box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  transition: background-color 0.4s ease;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -28,8 +27,8 @@
 .about-page canvas,
 .about-page .cursor-reveal-about__veil,
 .about-page .cursor-reveal-about__content,
-.about-page .cursor-reveal-about__hero,
-.about-page .cursor-reveal-about__bio {
+.about-page .cursor-reveal-about__below-veil,
+.about-page .cursor-reveal-about__question {
   cursor: none !important;
 }
 
@@ -54,7 +53,6 @@
   }
 
   .about-page {
-    transition: none;
     -webkit-user-select: auto;
     user-select: auto;
   }
