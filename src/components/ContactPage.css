@@ -10,6 +10,10 @@
 }
 
 .contact-page {
+  --contact-fg: #202124;
+  --contact-muted: #5f6368;
+  --contact-border: #e8eaed;
+
   position: relative;
   display: flex;
   flex: 1;
@@ -17,15 +21,72 @@
   height: 100%;
   width: 100%;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.contact-page__zone {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.contact-page__avatar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 4px 14px rgba(60, 64, 67, 0.16),
+    0 1px 4px rgba(60, 64, 67, 0.08);
+  cursor: pointer;
+  overflow: hidden;
+  will-change: transform;
+  transition: box-shadow 0.15s ease;
+}
+
+.contact-page__avatar:hover {
+  box-shadow:
+    0 8px 24px rgba(26, 115, 232, 0.22),
+    0 2px 8px rgba(60, 64, 67, 0.12);
+}
+
+.contact-page__avatar:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 3px;
+}
+
+.contact-page__avatar--settled {
+  will-change: auto;
+}
+
+.contact-page__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
 }
 
 .contact-page__center {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: center;
   min-height: 0;
   padding: 24px;
+  pointer-events: none;
+}
+
+.contact-page__center > * {
+  pointer-events: auto;
 }
 
 .contact-page__trigger {
@@ -89,6 +150,7 @@
 }
 
 .contact-page__drawer {
+  max-height: 70vh;
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(20, 20, 20, 0.55);
   backdrop-filter: blur(12px);
@@ -226,6 +288,123 @@
   color: rgba(248, 250, 252, 0.92);
 }
 
+.contact-page__modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  pointer-events: auto;
+}
+
+.contact-page__modal-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(32, 33, 36, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.contact-page__modal-panel {
+  position: relative;
+  width: min(22rem, 100%);
+  max-height: min(70%, 20rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.125rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.8),
+    0 16px 48px rgba(60, 64, 67, 0.18);
+  overflow: hidden;
+}
+
+.contact-page__modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0.55rem;
+  border-bottom: 1px solid var(--contact-border);
+}
+
+.contact-page__modal-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-page__modal-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--contact-fg);
+}
+
+.contact-page__modal-row {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--contact-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.contact-page__modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgba(241, 243, 244, 0.9);
+  color: var(--contact-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.contact-page__modal-close:hover {
+  background: #e8eaed;
+  color: var(--contact-fg);
+}
+
+.contact-page__modal-close:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 2px;
+}
+
+.contact-page__modal-body {
+  padding: 0.9rem 1rem 1.1rem;
+  overflow-y: auto;
+}
+
+.contact-page__modal-question {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--contact-muted);
+}
+
+.contact-page__modal-answer {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--contact-fg);
+  word-break: break-word;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -236,4 +415,10 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-page__avatar {
+    transition: none;
+  }
 }

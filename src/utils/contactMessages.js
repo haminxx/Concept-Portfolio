@@ -1,3 +1,5 @@
+import { parseFirstName, resolveContactAvatarUrl } from './contactAvatar'
+
 export const CONTACT_MESSAGES_KEY = 'cnl-contact-messages'
 
 /**
@@ -27,6 +29,8 @@ export const CONTACT_MESSAGES_KEY = 'cnl-contact-messages'
  * @property {string} [discussion]
  * @property {string} [randomQuestion]
  * @property {string} [randomAnswer]
+ * @property {string} [firstName]
+ * @property {string} [avatarImageUrl]
  */
 
 /**
@@ -82,24 +86,40 @@ export function saveContactChromeForm(formSection) {
     .filter(Boolean)
     .join('\n\n')
 
+  const enriched = {
+    ...formSection,
+    firstName: parseFirstName(formSection.name),
+    avatarImageUrl:
+      formSection.avatarImageUrl ??
+      resolveContactAvatarUrl({
+        linkedin: formSection.linkedin,
+        name: formSection.name,
+      }),
+  }
+
   return saveContactMessage({
     id: createMessageId(),
     timestamp: Date.now(),
     source: 'form-chrome',
     text,
-    formSection,
+    formSection: enriched,
     publicSection: {
-      name: formSection.name,
-      age: formSection.age,
+      name: enriched.name,
+      age: enriched.age,
       setback: randomAnswer || undefined,
     },
     privateSection: {
-      email: formSection.email,
-      linkedin: formSection.linkedin,
-      phone: formSection.phone,
+      email: enriched.email,
+      linkedin: enriched.linkedin,
+      phone: enriched.phone,
       discussion,
     },
   })
+}
+
+/** Messages saved from the Chrome contact wizard (for avatar floor). */
+export function loadChromeContactMessages() {
+  return loadContactMessages().filter((m) => m.source === 'form-chrome' && m.formSection)
 }
 
 /** @param {ContactMessage} message */
