@@ -6,8 +6,9 @@ import { CursorRevealAbout } from '@/components/ui/cursor-reveal-about'
 
 import './AboutPage.css'
 
-export default function AboutPage({ cursorContainerRef }) {
+export default function AboutPage({ cursorContainerRef: _cursorContainerRef }) {
   const pageRef = useRef(null)
+  const revealRef = useRef(null)
   const [cursorHost, setCursorHost] = useState(null)
   const [isDark, setIsDark] = useState(false)
 
@@ -16,27 +17,29 @@ export default function AboutPage({ cursorContainerRef }) {
   }, [])
 
   useLayoutEffect(() => {
-    setCursorHost(cursorContainerRef?.current ?? null)
-  }, [cursorContainerRef])
+    setCursorHost(revealRef.current?.getContainer() ?? null)
+  }, [])
 
-  const portalRef = cursorHost ? cursorContainerRef : pageRef
-  const themeCursor = (
+  const portalRef = useRef(null)
+  portalRef.current = cursorHost
+
+  const themeCursor = cursorHost ? (
     <AboutThemeCursor
       portalRef={portalRef}
       boundsRef={pageRef}
       isDark={isDark}
       onToggle={handleToggleTheme}
     />
-  )
+  ) : null
 
   return (
     <div
       ref={pageRef}
       className={`about-page h-full w-full overflow-hidden${isDark ? ' about-page--dark' : ''}`}
     >
-      <CursorRevealAbout isDark={isDark} />
+      <CursorRevealAbout ref={revealRef} isDark={isDark} />
       <div className="about-page__cursor-guard" aria-hidden />
-      {cursorHost ? createPortal(themeCursor, cursorHost) : themeCursor}
+      {cursorHost && themeCursor ? createPortal(themeCursor, cursorHost) : null}
     </div>
   )
 }

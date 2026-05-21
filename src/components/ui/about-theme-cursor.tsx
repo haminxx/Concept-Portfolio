@@ -98,7 +98,7 @@ export function AboutThemeCursor({
       <AnimatedThemeToggler
         isDark={isDark}
         onToggle={onToggle}
-        inkColor={isDark ? 'dark' : 'bright'}
+        inkColor="invert"
         hideSystemCursor
         className="about-theme-cursor__toggler pointer-events-auto"
       />

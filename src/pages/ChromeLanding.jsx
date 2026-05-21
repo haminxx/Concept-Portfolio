@@ -55,6 +55,7 @@ import {
   runBootFullscreenSequence,
 } from '../utils/fullscreen'
 import { getAddressPathSegments } from '../utils/chromeAddressPath'
+import { clearChromeSessionState } from '../utils/chromeSessionState'
 import './ChromeLanding.css'
 
 const APP_ICONS = {
@@ -101,6 +102,7 @@ export default function ChromeLanding({
   const [focusedAppWindowId, setFocusedAppWindowId] = useState(null)
   const [chromeFocused, setChromeFocused] = useState(false)
   const [chromeRefreshing, setChromeRefreshing] = useState(false)
+  const [chromeWindowKey, setChromeWindowKey] = useState(0)
   const [showShutdown, setShowShutdown] = useState(false)
   const [shutdownAction, setShutdownAction] = useState(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -304,7 +306,17 @@ export default function ChromeLanding({
     })
     setTabs([HOME_TAB])
     setActiveTabId('home')
+    setChromeNavTick((n) => n + 1)
   }, [])
+
+  const resetChromeWindow = useCallback(() => {
+    resetChromeTabsToHome()
+    setChromeMaximized(false)
+    setChromeContextMenu(null)
+    clearChromeSessionState()
+    setChromeWindowKey((k) => k + 1)
+    iframeRefreshKeyRef.current += 1
+  }, [resetChromeTabsToHome])
 
   const closeTab = useCallback((id) => {
     chromeNavStacksRef.current.delete(id)
@@ -368,10 +380,14 @@ export default function ChromeLanding({
   const iframeRefreshKeyRef = useRef(0)
   const handleRefresh = useCallback(() => {
     setChromeRefreshing(true)
+    resetChromeWindow()
     setTimeout(() => {
-      iframeRefreshKeyRef.current += 1
       setChromeRefreshing(false)
     }, 400)
+  }, [resetChromeWindow])
+
+  useEffect(() => {
+    clearChromeSessionState()
   }, [])
 
   const openNewHomeTab = useCallback(() => {
@@ -535,7 +551,7 @@ export default function ChromeLanding({
         if (win._type === 'chrome') {
           return (
             <ChromeWindow
-              key="chrome"
+              key={chromeWindowKey}
               isMaximized={chromeMaximized}
               onMaximize={toggleMaximize}
               isMinimizing={chromeMinimizing}

@@ -22,10 +22,6 @@
   position: relative;
 }
 
-.chrome-landing--about-active .about-theme-cursor {
-  z-index: 50;
-}
-
 /* daedalOS-style desktop layer: full viewport background behind Chrome window */
 .daedalos-desktop {
   position: fixed;

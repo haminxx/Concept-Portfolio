@@ -10,8 +10,8 @@ import {
 
 import './cursor-reveal-about.css'
 
-const STAMP_RADIUS = 112
-const STAMP_SOFT = 44
+const STAMP_RADIUS = 84
+const STAMP_SOFT = 32
 const MIN_DISTANCE = 8
 
 const VEIL_LIGHT = '#ffffff'

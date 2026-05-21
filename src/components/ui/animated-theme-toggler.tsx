@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils'
 const INK = {
   dark: 'rgba(0, 0, 0, 0.85)',
   bright: 'rgba(255, 255, 255, 0.9)',
+  /** Solid white for mix-blend-mode: difference (About page cursor). */
+  invert: '#ffffff',
 } as const
 
 export type ThemeTogglerInkColor = keyof typeof INK
