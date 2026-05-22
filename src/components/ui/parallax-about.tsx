@@ -37,8 +37,29 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
     const headerElement = root.querySelector<HTMLElement>('.parallax-about__header')
 
     const syncViewportHeight = () => {
-      scroller.style.setProperty('--parallax-viewport-h', `${scroller.clientHeight}px`)
+      const height = scroller.clientHeight
+      if (height < 1) return
+
+      scroller.style.setProperty('--parallax-viewport-h', `${height}px`)
+
+      if (headerElement) {
+        headerElement.style.height = `${height}px`
+        headerElement.style.minHeight = `${height}px`
+      }
+
+      lenis?.resize()
+      ScrollTrigger.refresh()
     }
+
+    let syncRaf: number | null = null
+    const scheduleSync = () => {
+      if (syncRaf != null) return
+      syncRaf = requestAnimationFrame(() => {
+        syncRaf = null
+        syncViewportHeight()
+      })
+    }
+
     syncViewportHeight()
 
     let lenis: Lenis | null = null
@@ -106,15 +127,27 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
       })
     }
 
+    scheduleSync()
+
     const handleResize = () => {
-      syncViewportHeight()
-      ScrollTrigger.refresh()
+      scheduleSync()
     }
+
+    const resizeObserver = new ResizeObserver(handleResize)
+    resizeObserver.observe(scroller)
+
+    const chromeWindow = scroller.closest('.chrome-window')
+    if (chromeWindow instanceof HTMLElement) {
+      resizeObserver.observe(chromeWindow)
+    }
+
     window.addEventListener('resize', handleResize)
     ScrollTrigger.refresh()
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      resizeObserver.disconnect()
+      if (syncRaf != null) cancelAnimationFrame(syncRaf)
       ScrollTrigger.getAll().forEach((instance) => {
         if (instance.scroller === scroller) instance.kill()
       })
@@ -136,7 +169,6 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
             <img
               src={LAYER_IMAGES[1]}
               loading="eager"
-              width={800}
               data-parallax-layer="1"
               alt=""
               className="parallax-about__layer-img parallax-about__layer-img--back"
@@ -144,7 +176,6 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
             <img
               src={LAYER_IMAGES[2]}
               loading="eager"
-              width={800}
               data-parallax-layer="2"
               alt=""
               className="parallax-about__layer-img"
@@ -155,7 +186,6 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
             <img
               src={LAYER_IMAGES[4]}
               loading="eager"
-              width={800}
               data-parallax-layer="4"
               alt=""
               className="parallax-about__layer-img parallax-about__layer-img--front"
