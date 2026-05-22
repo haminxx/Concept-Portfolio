@@ -80,6 +80,10 @@
 .chrome-landing__content:has(.contact-page),
 .chrome-landing__content:has(.about-page) {
   background: #fff;
+}
+
+.chrome-landing__content:has(.newsletter-page),
+.chrome-landing__content:has(.contact-page) {
   cursor: none !important;
 }
 
