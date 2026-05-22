@@ -1,63 +1,6 @@
-.about-page,
-.about-page *,
-.about-page *::before,
-.about-page *::after {
-  cursor: none !important;
-}
-
 .about-page {
-  position: relative;
   min-height: 100%;
   height: 100%;
   width: 100%;
-  margin: 0;
-  overflow: hidden;
-  background: #ffffff;
   box-sizing: border-box;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.about-page--dark {
-  background: #0a0a0a;
-}
-
-.about-page canvas,
-.about-page .cursor-reveal-about__veil,
-.about-page .cursor-reveal-about__content,
-.about-page .cursor-reveal-about__below-veil,
-.about-page .cursor-reveal-about__question {
-  cursor: none !important;
-}
-
-.about-page__cursor-guard {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  cursor: none !important;
-}
-
-.about-page::-webkit-scrollbar {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about-page,
-  .about-page *,
-  .about-page *::before,
-  .about-page *::after {
-    cursor: auto !important;
-  }
-
-  .about-page {
-    -webkit-user-select: auto;
-    user-select: auto;
-  }
-
-  .about-page__cursor-guard {
-    display: none;
-  }
 }

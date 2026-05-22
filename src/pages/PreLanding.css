@@ -77,4 +77,20 @@
   color: rgba(255, 255, 255, 0.96);
   filter: drop-shadow(0 2px 24px rgba(0, 0, 0, 0.35));
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.pre-landing__hello--visible {
+  opacity: 1;
+}
+
+.pre-landing__hello--visible.pre-landing__hello--exiting,
+.pre-landing__hello--exiting {
+  opacity: 0;
+  transition: opacity 1.05s ease 0.1s;
+}
+
+.pre-landing--exiting-fade .pre-landing__hello {
+  opacity: 0;
 }

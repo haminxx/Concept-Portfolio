@@ -127,7 +127,6 @@ export default function ChromeLanding({
   const chromeNavReplayRef = useRef(false)
   const [chromeNavTick, setChromeNavTick] = useState(0)
   const closingLastTabRef = useRef(false)
-  const chromeCursorContainerRef = useRef(null)
 
   const pushChromeNav = useCallback((tabId, type, title, meta) => {
     if (chromeNavReplayRef.current) return
@@ -492,7 +491,7 @@ export default function ChromeLanding({
   return (
     <MusicPlayerProvider>
     <DesktopBackgroundProvider>
-    <div className={`chrome-landing${activeTab?.type === 'about' ? ' chrome-landing--about-active' : ''}`}>
+    <div className="chrome-landing">
       <Desktop
         onOpenApp={openAppTab}
         sortBy={sortBy}
@@ -560,7 +559,6 @@ export default function ChromeLanding({
               onMinimizeComplete={handleChromeMinimizeComplete}
               onFocus={() => { setChromeFocused(true); setFocusedAppWindowId(null) }}
               isFocused={chromeFocused}
-              innerRef={activeTab?.type === 'about' ? chromeCursorContainerRef : undefined}
             >
               <ChromeFrame
                 tabs={tabs}
@@ -599,7 +597,7 @@ export default function ChromeLanding({
                   <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
                 ) : activeTab.type === 'about' ? (
                   <Suspense fallback={null}>
-                    <LazyAboutPage cursorContainerRef={chromeCursorContainerRef} />
+                    <LazyAboutPage />
                   </Suspense>
                 ) : activeTab.type === 'newsletter' ? (
                   <Suspense fallback={null}>

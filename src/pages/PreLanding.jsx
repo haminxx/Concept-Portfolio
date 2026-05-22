@@ -20,11 +20,18 @@ function PreLandingBackground() {
 
 function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const [phaseIndex, setPhaseIndex] = useState(0)
+  const [helloVisible, setHelloVisible] = useState(false)
   const exitingTimerRef = useRef(null)
   const pauseTimerRef = useRef(null)
 
   const phase = PHASES[phaseIndex]
   const isExiting = phase === 'exiting'
+  const showHello = phase === 'hello' || isExiting
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setHelloVisible(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   const startExit = useCallback((e) => {
     requestDocumentFullscreenFromGesture(e)
@@ -100,11 +107,11 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
         <PreLandingBackground />
       </div>
       <div className="pre-landing__content">
-        {phase === 'hello' && (
+        {showHello && (
           <AppleHelloEnglishEffect
-            className="pre-landing__hello h-32 md:h-48 text-white"
+            className={`pre-landing__hello h-32 md:h-48 text-white${helloVisible ? ' pre-landing__hello--visible' : ''}${isExiting ? ' pre-landing__hello--exiting' : ''}`}
             speed={1.1}
-            onAnimationComplete={handleAnimationComplete}
+            onAnimationComplete={phase === 'hello' ? handleAnimationComplete : undefined}
           />
         )}
       </div>
