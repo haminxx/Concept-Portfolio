@@ -13,6 +13,7 @@ const MAX_STRETCH = 0.55
 
 type AboutLiquidCursorProps = {
   boundsRef: RefObject<HTMLElement | null>
+  portalRef?: RefObject<HTMLElement | null>
   size?: number
   className?: string
 }
@@ -33,6 +34,7 @@ function isPointerInsideBounds(
 
 export function AboutLiquidCursor({
   boundsRef,
+  portalRef,
   size = DEFAULT_SIZE,
   className,
 }: AboutLiquidCursorProps) {
@@ -56,8 +58,8 @@ export function AboutLiquidCursor({
   }, [])
 
   useEffect(() => {
-    setPortalTarget(boundsRef.current)
-  }, [boundsRef])
+    setPortalTarget(portalRef?.current ?? boundsRef.current)
+  }, [boundsRef, portalRef])
 
   useGSAP(
     () => {

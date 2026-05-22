@@ -1,0 +1,113 @@
+.parallax-about {
+  width: 100%;
+  color: #0a0a0a;
+  background: #fff;
+}
+
+.parallax-about__header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: var(--parallax-viewport-h, 100%);
+}
+
+.parallax-about__visuals {
+  position: relative;
+  width: 100%;
+  min-height: inherit;
+  overflow: hidden;
+}
+
+.parallax-about__black-line-overflow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #0a0a0a;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.parallax-about__layers {
+  position: relative;
+  width: 100%;
+  min-height: min(100%, 520px);
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.parallax-about__layer-img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(110%, 820px);
+  max-width: none;
+  height: auto;
+  transform: translateX(-50%);
+  will-change: transform;
+  pointer-events: none;
+  user-select: none;
+}
+
+.parallax-about__layer-img--back {
+  z-index: 1;
+}
+
+.parallax-about__layer-img--front {
+  z-index: 4;
+}
+
+.parallax-about__layer-title {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.parallax-about__title {
+  margin: 0;
+  font-size: clamp(2.75rem, 14vw, 7.5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-align: center;
+}
+
+.parallax-about__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 88%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.parallax-about__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 55vh;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.parallax-about__icon {
+  width: min(8rem, 28vw);
+  height: auto;
+  color: #0a0a0a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parallax-about__layer-img,
+  .parallax-about__layer-title {
+    transform: none !important;
+  }
+}

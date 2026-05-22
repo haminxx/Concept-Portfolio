@@ -98,6 +98,15 @@
   display: none;
 }
 
+.chrome-landing__content:has(.about-page) .about-page__scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chrome-landing__content:has(.about-page) .about-page__scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .chrome-landing__content:has(.chrome-home),
 .chrome-landing__content:has(.projects-page),
 .chrome-landing__content:has(.newsletter-page),
