@@ -1,32 +1,74 @@
 .words-preloader {
-  position: absolute;
-  inset: 0;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
   pointer-events: none;
+  opacity: 0;
+  animation: words-preloader-fade-in 0.55s ease forwards;
+}
+
+.words-preloader--exiting {
+  animation: none;
+  opacity: 1;
+}
+
+.words-preloader--exiting .words-preloader__word {
+  opacity: 0;
+  transition: opacity 1.05s ease 0.08s;
+}
+
+@keyframes words-preloader-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .words-preloader__word {
   display: flex;
   align-items: center;
+  justify-content: center;
   margin: 0;
-  color: #fff;
-  font-size: clamp(2rem, 6vw, 3.5rem);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  width: 100%;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.96);
+  /* Match hello SVG visual weight (h-32 / md:h-48 slot) */
+  font-size: clamp(3.25rem, 11vw, 6.25rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
   line-height: 1;
   filter: drop-shadow(0 2px 24px rgba(0, 0, 0, 0.35));
   white-space: nowrap;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Display',
+    'SF Pro Text',
+    'Helvetica Neue',
+    Helvetica,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    'Hiragino Sans',
+    'Noto Sans JP',
+    'PingFang SC',
+    system-ui,
+    sans-serif;
+  font-feature-settings: 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .words-preloader__dot {
   display: block;
-  width: 0.3em;
-  height: 0.3em;
-  margin-right: 0.55em;
-  background: #fff;
+  width: 0.22em;
+  height: 0.22em;
+  margin-right: 0.45em;
+  background: currentColor;
   border-radius: 50%;
   flex: none;
+  opacity: 0.92;
 }

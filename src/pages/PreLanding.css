@@ -67,13 +67,33 @@
   transition: opacity 0.55s ease;
 }
 
+/* Shared slot — hello SVG and word cycle share the same footprint (h-32 / md:h-48). */
+.pre-landing__greeting-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100vw - 2rem, 56rem);
+  max-width: min(100vw - 2rem, 56rem);
+  height: 8rem;
+  flex: none;
+}
+
+@media (min-width: 768px) {
+  .pre-landing__greeting-slot {
+    height: 12rem;
+  }
+}
+
 .pre-landing--exiting-fade .pre-landing__content {
   opacity: 0;
 }
 
 .pre-landing__hello {
   width: auto;
-  max-width: min(100vw - 2rem, 56rem);
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   color: rgba(255, 255, 255, 0.96);
   filter: drop-shadow(0 2px 24px rgba(0, 0, 0, 0.35));
   pointer-events: none;
@@ -83,12 +103,6 @@
 
 .pre-landing__hello--visible {
   opacity: 1;
-}
-
-.pre-landing__hello--visible.pre-landing__hello--exiting,
-.pre-landing__hello--exiting {
-  opacity: 0;
-  transition: opacity 1.05s ease 0.1s;
 }
 
 .pre-landing--exiting-fade .pre-landing__hello {

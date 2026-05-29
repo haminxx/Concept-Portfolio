@@ -23,13 +23,14 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [helloVisible, setHelloVisible] = useState(false)
   const exitingTimerRef = useRef(null)
+  const helloPauseRef = useRef(null)
 
   const phase = PHASES[phaseIndex]
   const isWords = phase === 'words'
   const isExiting = phase === 'exiting'
-  const showHello = phase === 'hello' || isWords || isExiting
+  // English hello SVG only during the handwriting phase — then fully removed.
+  const showHello = phase === 'hello'
   const showWords = isWords || isExiting
-  const helloFadingOut = isWords || isExiting
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setHelloVisible(true))
@@ -37,7 +38,7 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   }, [])
 
   const startExit = useCallback((e) => {
-    requestDocumentFullscreenFromGesture(e)
+    if (e) requestDocumentFullscreenFromGesture(e)
     setPhaseIndex((current) => {
       if (current >= 2) return current
       onExitStart?.()
@@ -45,12 +46,16 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
     })
   }, [onExitStart])
 
-  // English "hello" handwriting finished -> begin the multilingual words cycle.
+  // Handwriting finished — brief hold, then unmount hello and start other languages.
   const handleHelloComplete = useCallback(() => {
-    setPhaseIndex((current) => (current <= 0 ? 1 : current))
+    if (helloPauseRef.current != null) window.clearTimeout(helloPauseRef.current)
+    helloPauseRef.current = window.setTimeout(() => {
+      setPhaseIndex((current) => (current <= 0 ? 1 : current))
+      helloPauseRef.current = null
+    }, 450)
   }, [])
 
-  // Words cycle finished on the final (Korean) greeting -> fade out into desktop.
+  // Korean greeting held — fade out into desktop.
   const handleWordsComplete = useCallback(() => {
     startExit()
   }, [startExit])
@@ -58,6 +63,7 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   useEffect(() => {
     return () => {
       if (exitingTimerRef.current != null) window.clearTimeout(exitingTimerRef.current)
+      if (helloPauseRef.current != null) window.clearTimeout(helloPauseRef.current)
     }
   }, [])
 
@@ -111,14 +117,19 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
       </div>
       <div className="pre-landing__content">
         {showHello && (
-          <AppleHelloEnglishEffect
-            className={`pre-landing__hello h-32 md:h-48 text-white${helloVisible ? ' pre-landing__hello--visible' : ''}${helloFadingOut ? ' pre-landing__hello--exiting' : ''}`}
-            speed={1.1}
-            onAnimationComplete={phase === 'hello' ? handleHelloComplete : undefined}
-          />
+          <div className="pre-landing__greeting-slot">
+            <AppleHelloEnglishEffect
+              className={`pre-landing__hello h-full w-auto max-w-full text-white${helloVisible ? ' pre-landing__hello--visible' : ''}`}
+              speed={1.1}
+              onAnimationComplete={handleHelloComplete}
+            />
+          </div>
         )}
         {showWords && (
-          <WordsPreloader onComplete={isWords ? handleWordsComplete : undefined} />
+          <WordsPreloader
+            exiting={isExiting}
+            onComplete={isWords ? handleWordsComplete : undefined}
+          />
         )}
       </div>
     </div>
