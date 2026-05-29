@@ -61,14 +61,3 @@
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
-.words-preloader__dot {
-  display: block;
-  width: 0.22em;
-  height: 0.22em;
-  margin-right: 0.45em;
-  background: currentColor;
-  border-radius: 50%;
-  flex: none;
-  opacity: 0.92;
-}
