@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react'
 import { AppleHelloEnglishEffect } from '@/components/ui/apple-hello-effect'
+import WordsPreloader from '@/components/ui/words-preloader'
 import { DesktopBackgroundProvider, useDesktopBackground } from '../context/DesktopBackgroundContext'
 import { requestDocumentFullscreenFromGesture } from '../utils/fullscreen'
 import './PreLanding.css'
 
 const DesktopShaderBackground = lazy(() => import('../components/ui/DesktopShaderBackground'))
 
-const PHASES = ['hello', 'exiting']
+const PHASES = ['hello', 'words', 'exiting']
 
 function PreLandingBackground() {
   const { color1, color2, speed } = useDesktopBackground()
@@ -22,11 +23,13 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [helloVisible, setHelloVisible] = useState(false)
   const exitingTimerRef = useRef(null)
-  const pauseTimerRef = useRef(null)
 
   const phase = PHASES[phaseIndex]
+  const isWords = phase === 'words'
   const isExiting = phase === 'exiting'
-  const showHello = phase === 'hello' || isExiting
+  const showHello = phase === 'hello' || isWords || isExiting
+  const showWords = isWords || isExiting
+  const helloFadingOut = isWords || isExiting
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setHelloVisible(true))
@@ -36,25 +39,25 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const startExit = useCallback((e) => {
     requestDocumentFullscreenFromGesture(e)
     setPhaseIndex((current) => {
-      if (current >= 1) return current
+      if (current >= 2) return current
       onExitStart?.()
-      return 1
+      return 2
     })
   }, [onExitStart])
 
-  const handleAnimationComplete = useCallback(() => {
-    if (pauseTimerRef.current != null) window.clearTimeout(pauseTimerRef.current)
-    const pauseMs = 700
-    pauseTimerRef.current = window.setTimeout(() => {
-      startExit()
-      pauseTimerRef.current = null
-    }, pauseMs)
+  // English "hello" handwriting finished -> begin the multilingual words cycle.
+  const handleHelloComplete = useCallback(() => {
+    setPhaseIndex((current) => (current <= 0 ? 1 : current))
+  }, [])
+
+  // Words cycle finished on the final (Korean) greeting -> fade out into desktop.
+  const handleWordsComplete = useCallback(() => {
+    startExit()
   }, [startExit])
 
   useEffect(() => {
     return () => {
       if (exitingTimerRef.current != null) window.clearTimeout(exitingTimerRef.current)
-      if (pauseTimerRef.current != null) window.clearTimeout(pauseTimerRef.current)
     }
   }, [])
 
@@ -109,10 +112,13 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
       <div className="pre-landing__content">
         {showHello && (
           <AppleHelloEnglishEffect
-            className={`pre-landing__hello h-32 md:h-48 text-white${helloVisible ? ' pre-landing__hello--visible' : ''}${isExiting ? ' pre-landing__hello--exiting' : ''}`}
+            className={`pre-landing__hello h-32 md:h-48 text-white${helloVisible ? ' pre-landing__hello--visible' : ''}${helloFadingOut ? ' pre-landing__hello--exiting' : ''}`}
             speed={1.1}
-            onAnimationComplete={phase === 'hello' ? handleAnimationComplete : undefined}
+            onAnimationComplete={phase === 'hello' ? handleHelloComplete : undefined}
           />
+        )}
+        {showWords && (
+          <WordsPreloader onComplete={isWords ? handleWordsComplete : undefined} />
         )}
       </div>
     </div>
