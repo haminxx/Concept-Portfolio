@@ -238,20 +238,6 @@ export default function ChromeLanding({
     [activeTabId, pushChromeNav]
   )
 
-  const openShortcutTab = useCallback((shortcutType) => {
-    const shortcut = SHORTCUTS.find((s) => s.type === shortcutType)
-    if (!shortcut) return
-    const id = `${shortcutType}-${Date.now()}`
-    const newTab = { id, title: shortcut.label, type: shortcutType }
-    chromeNavStacksRef.current.set(id, {
-      entries: [{ type: shortcutType, title: shortcut.label }],
-      index: 0,
-    })
-    setTabs((prev) => [...prev, newTab])
-    setActiveTabId(id)
-    setChromeMinimized(false)
-  }, [])
-
   const resetChromeTabsToHome = useCallback(() => {
     chromeNavStacksRef.current.clear()
     chromeNavStacksRef.current.set('home', {
@@ -508,7 +494,6 @@ export default function ChromeLanding({
                 onNavigate={handleChromeNavigate}
                 onBack={handleBack}
                 onForward={handleForward}
-                onNewTab={openNewHomeTab}
               />
               <div
                 className="chrome-landing__content min-h-0 flex-1 bg-gray-100 dark:bg-zinc-800"
@@ -524,7 +509,7 @@ export default function ChromeLanding({
                   </div>
                 )}
                 {!activeTab ? null : activeTab.type === 'home' ? (
-                  <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
+                  <ChromeHome />
                 ) : activeTab.type === 'about' ? (
                   <AboutPage />
                 ) : activeTab.type === 'newsletter' ? (

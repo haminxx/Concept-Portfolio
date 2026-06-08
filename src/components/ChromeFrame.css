@@ -8,7 +8,7 @@
 .chrome-frame__drag {
   position: absolute;
   left: 150px;
-  right: 230px;
+  right: 16px;
   top: 0;
   height: 100%;
   z-index: 1;

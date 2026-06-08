@@ -6,25 +6,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Sidebar,
-  Share,
-  Plus,
-  Copy,
-  User,
-  FolderKanban,
-  Newspaper,
-  MessageCircle,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '../lib/utils'
 import SafariSearchBar from './SafariSearchBar'
 import './ChromeFrame.css'
-
-const NAV_ITEMS = [
-  { type: 'about', label: 'About', icon: User },
-  { type: 'project', label: 'Project', icon: FolderKanban },
-  { type: 'newsletter', label: 'Newsletter', icon: Newspaper },
-  { type: 'contact', label: 'Contact', icon: MessageCircle },
-]
 
 const TRAFFIC_HOVER = { scale: 1.12 }
 const TRAFFIC_TAP = { scale: 0.92 }
@@ -44,7 +30,6 @@ export default function ChromeFrame({
   onNavigate,
   onBack,
   onForward,
-  onNewTab,
 }) {
   return (
     <motion.header
@@ -162,81 +147,13 @@ export default function ChromeFrame({
           </motion.button>
         </div>
 
-        {/* Centered address / search field */}
+        {/* Centered address / search field. Page navigation (About / Project /
+            Newsletter / Contact) now flies out of this search on hover — see
+            SafariSearchBar — so the static toolbar nav icons were removed to
+            avoid duplicating the spotlight fly-out. */}
         <div className="relative z-[4] min-w-0 flex-1">
           <SafariSearchBar activeTabType={activeTabType} onNavigate={onNavigate} />
         </div>
-
-        {/* Share / new tab / tabs */}
-        <div
-          className="chrome-frame__tools relative z-[4] flex shrink-0 items-center gap-0.5"
-          onMouseDown={stopWindowDrag}
-          onPointerDown={stopWindowDrag}
-        >
-          <motion.button
-            type="button"
-            className="chrome-frame__icon-btn"
-            aria-label="Share"
-            title="Share"
-            whileHover={ICON_HOVER}
-            whileTap={ICON_TAP}
-          >
-            <Share size={16} strokeWidth={1.75} />
-          </motion.button>
-          <motion.button
-            type="button"
-            className="chrome-frame__icon-btn"
-            aria-label="New tab"
-            title="New tab"
-            onClick={() => onNewTab?.()}
-            whileHover={ICON_HOVER}
-            whileTap={ICON_TAP}
-          >
-            <Plus size={18} strokeWidth={2} />
-          </motion.button>
-          <motion.button
-            type="button"
-            className="chrome-frame__icon-btn"
-            aria-label="Show all tabs"
-            title="Show all tabs"
-            whileHover={ICON_HOVER}
-            whileTap={ICON_TAP}
-          >
-            <Copy size={15} strokeWidth={1.75} />
-          </motion.button>
-        </div>
-
-        <span className="chrome-frame__divider" aria-hidden="true" />
-
-        {/* Page navigation (About / Project / Newsletter / Contact) */}
-        <nav
-          className="chrome-frame__nav relative z-[4] flex shrink-0 items-center gap-0.5"
-          aria-label="Page navigation"
-          onMouseDown={stopWindowDrag}
-          onPointerDown={stopWindowDrag}
-        >
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeTabType === item.type
-            return (
-              <motion.button
-                key={item.type}
-                type="button"
-                className={cn(
-                  'chrome-frame__nav-btn',
-                  isActive && 'chrome-frame__nav-btn--active',
-                )}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-                title={item.label}
-                onClick={() => onNavigate?.(item.type)}
-                whileHover={ICON_HOVER}
-                whileTap={ICON_TAP}
-              >
-                <item.icon size={16} strokeWidth={1.75} />
-              </motion.button>
-            )
-          })}
-        </nav>
       </div>
     </motion.header>
   )

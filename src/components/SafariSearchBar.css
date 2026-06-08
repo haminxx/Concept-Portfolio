@@ -107,6 +107,80 @@
   color: rgba(255, 255, 255, 0.38);
 }
 
+/* ---- Hover fly-out shortcut cluster ------------------------------------- */
+/* The panel sits flush under the field; its top padding is a transparent hover
+   bridge so the cluster stays open while the cursor crosses into it. */
+.safari-search-bar__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 49;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-top: 8px;
+  pointer-events: none;
+}
+
+.safari-search-bar__shortcut {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 4.5rem;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.16),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+  will-change: transform;
+}
+
+[data-theme='dark'] .safari-search-bar__shortcut {
+  background: rgba(40, 40, 40, 0.98);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.safari-search-bar__shortcut:hover,
+.safari-search-bar__shortcut--active {
+  background: #007aff;
+  border-color: #007aff;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .safari-search-bar__shortcut:hover,
+[data-theme='dark'] .safari-search-bar__shortcut--active {
+  background: #0a84ff;
+  border-color: #0a84ff;
+  color: #ffffff;
+}
+
+.safari-search-bar__shortcut-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.safari-search-bar__shortcut-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
 .safari-search-bar__dropdown {
   position: absolute;
   top: calc(100% + 6px);
@@ -175,8 +249,27 @@
 .safari-search-bar__option-main {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   min-width: 0;
+}
+
+.safari-search-bar__option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.safari-search-bar__option-desc {
+  font-size: 0.6875rem;
+  color: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .safari-search-bar__option-desc {
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .safari-search-bar__option-icon {

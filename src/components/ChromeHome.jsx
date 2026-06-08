@@ -1,147 +1,70 @@
-import { useState, useEffect, useRef } from 'react'
-import { User, Folder, Mail, Newspaper } from 'lucide-react'
-import { MouseFollowingEyes } from '@/components/ui/mouse-following-eyes'
-import { MorphingText } from '@/components/ui/liquid-text'
-import { SHORTCUTS } from '../config/shortcuts'
+import { useRef } from 'react'
+import TextCursorProximity from './ui/text-cursor-proximity'
 import './ChromeHome.css'
 
-const SHORTCUT_LABELS = {
-  about: { rock: 'Chert', page: 'About' },
-  newsletter: { rock: 'Calcite', page: 'Newsletter' },
-  project: { rock: 'Quartz', page: 'Project' },
-  contact: { rock: 'Fieldstone', page: 'Contact' },
+const NAME_STYLES = {
+  scale: { from: 1, to: 1.18 },
+  fontWeight: { from: 600, to: 800 },
 }
 
-const SHORTCUT_ICON_SRC = {
-  about: '/images/chrome-shortcuts/about.png',
-  newsletter: '/images/chrome-shortcuts/newsletter.png',
-  project: '/images/chrome-shortcuts/project.png',
-  contact: '/images/chrome-shortcuts/contact.png',
+const SINCE_STYLES = {
+  scale: { from: 1, to: 1.22 },
+  fontWeight: { from: 500, to: 700 },
 }
 
-const SHORTCUT_ICONS = {
-  user: User,
-  folder: Folder,
-  mail: Mail,
-  newspaper: Newspaper,
-}
-
-function ShortcutIcon({ shortcutType, lucideIcon: LucideIcon }) {
-  const [imgFailed, setImgFailed] = useState(false)
-  const iconSrc = SHORTCUT_ICON_SRC[shortcutType]
-
-  if (!iconSrc || imgFailed) {
-    return <LucideIcon size={28} strokeWidth={1.5} />
-  }
+export default function ChromeHome() {
+  const containerRef = useRef(null)
 
   return (
-    <img
-      src={iconSrc}
-      alt=""
-      className="chrome-home__shortcut-icon-img"
-      onError={() => setImgFailed(true)}
-    />
-  )
-}
+    <div ref={containerRef} className="chrome-home">
+      {/*
+        Full-bleed background video. Drop the real file at
+        `public/videos/home-bg.mp4` (the user will supply it later). Until then
+        the neutral dark `.chrome-home` background colour shows through, so a
+        missing file degrades gracefully.
+      */}
+      <video
+        className="chrome-home__video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        src="/videos/home-bg.mp4"
+      />
+      <div className="chrome-home__overlay" aria-hidden="true" />
 
-function ShortcutLabel({ shortcutType, hovered }) {
-  const labels = SHORTCUT_LABELS[shortcutType]
-  if (!labels) return null
+      <div className="chrome-home__hero">
+        <div className="chrome-home__name">
+          <TextCursorProximity
+            label="Christian"
+            className="chrome-home__name-line"
+            containerRef={containerRef}
+            styles={NAME_STYLES}
+            radius={130}
+            falloff="gaussian"
+          />
+          <TextCursorProximity
+            label="Lee"
+            className="chrome-home__name-line"
+            containerRef={containerRef}
+            styles={NAME_STYLES}
+            radius={130}
+            falloff="gaussian"
+          />
+        </div>
 
-  return (
-    <MorphingText
-      texts={[labels.rock, labels.page]}
-      active={hovered}
-      filterId={`threshold-${shortcutType}`}
-      className="chrome-home__morph-label"
-      color="#fff"
-      morphTime={0.45}
-    />
-  )
-}
-
-export default function ChromeHome({ onNavigateShortcut, onShortcutInNewTab }) {
-  const [shortcutContextMenu, setShortcutContextMenu] = useState(null)
-  const [hoveredShortcut, setHoveredShortcut] = useState(null)
-  const menuRef = useRef(null)
-  const homeRef = useRef(null)
-
-  useEffect(() => {
-    if (!shortcutContextMenu) return
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setShortcutContextMenu(null)
-    }
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [shortcutContextMenu])
-
-  return (
-    <div ref={homeRef} className="chrome-home">
-      <div className="chrome-home__eyes" aria-hidden="true">
-        <MouseFollowingEyes trackWindow={false} trackingRoot={homeRef} eyeSize={80} />
-      </div>
-      <a
-        className="chrome-home__scene-caption"
-        href="https://www.youtube.com/watch?v=UXar2tNdG34&pp=ygUhZXZlcnl0aGluZyBhbGwgYXQgb25jZSByb2NrIHNjZW5l0gcJCQQLAYcqIYzv"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Everything Everywhere All at Once (2022) Scene 1:36:00
-      </a>
-      <div className="chrome-home__content">
-        <div className="chrome-home__shortcuts">
-          {SHORTCUTS.map((s) => {
-            const Icon = SHORTCUT_ICONS[s.icon] || Folder
-            const pageLabel = SHORTCUT_LABELS[s.type]?.page ?? s.label
-            const isHovered = hoveredShortcut === s.type
-            return (
-              <button
-                key={s.id}
-                type="button"
-                className="chrome-home__shortcut"
-                onClick={() => onNavigateShortcut?.(s.type)}
-                onMouseEnter={() => setHoveredShortcut(s.type)}
-                onMouseLeave={() => setHoveredShortcut(null)}
-                onContextMenu={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  setShortcutContextMenu({ x: e.clientX, y: e.clientY, shortcutType: s.type })
-                }}
-                title={pageLabel}
-                aria-label={pageLabel}
-              >
-                <span className="chrome-home__shortcut-icon">
-                  <ShortcutIcon shortcutType={s.type} lucideIcon={Icon} />
-                </span>
-                <span className="chrome-home__shortcut-label">
-                  <ShortcutLabel shortcutType={s.type} hovered={isHovered} />
-                </span>
-              </button>
-            )
-          })}
+        <div className="chrome-home__since">
+          <TextCursorProximity
+            label="Since 2003"
+            className="chrome-home__since-text"
+            containerRef={containerRef}
+            styles={SINCE_STYLES}
+            radius={90}
+            falloff="gaussian"
+          />
         </div>
       </div>
-      {shortcutContextMenu && (
-        <div
-          ref={menuRef}
-          className="chrome-home__context-menu"
-          style={{
-            left: Math.min(shortcutContextMenu.x, typeof window !== 'undefined' ? window.innerWidth - 180 : shortcutContextMenu.x),
-            top: shortcutContextMenu.y,
-          }}
-        >
-          <button
-            type="button"
-            className="chrome-home__context-item"
-            onClick={() => {
-              onShortcutInNewTab?.(shortcutContextMenu.shortcutType)
-              setShortcutContextMenu(null)
-            }}
-          >
-            Open in new tab
-          </button>
-        </div>
-      )}
     </div>
   )
 }
