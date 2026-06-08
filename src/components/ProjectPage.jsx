@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Dithering } from '@paper-design/shaders-react'
 import { ArrowUpRight } from 'lucide-react'
 
-import { getProjectsByFilter } from '@/data/chromeProjects'
+import { getChromeProjectById, getProjectsByFilter } from '@/data/chromeProjects'
+import { ProjectCaseStudyDetail } from '@/components/ProjectCaseStudy'
 import { ProjectFilterSwitcher } from '@/components/ui/project-filter-switcher'
 import './ProjectPage.css'
 
@@ -10,6 +11,7 @@ const FALLBACK_IMAGE = '/images/chrome-shortcuts/project.png'
 
 function mapToShowcaseProjects(projects) {
   return projects.map((project) => ({
+    id: project.id,
     title: project.title,
     description: project.description,
     year: project.year,
@@ -18,7 +20,7 @@ function mapToShowcaseProjects(projects) {
   }))
 }
 
-function ProjectShowcase({ isDarkMode, projects }) {
+function ProjectShowcase({ isDarkMode, projects, onProjectSelect }) {
   const [hoveredIndex, setHoveredIndex] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 })
@@ -106,12 +108,11 @@ function ProjectShowcase({ isDarkMode, projects }) {
         {projects.map((project, index) => {
           const isHovered = hoveredIndex === index
           return (
-            <a
-              key={project.title}
-              href={project.link}
-              target={project.link?.startsWith('http') ? '_blank' : undefined}
-              rel={project.link?.startsWith('http') ? 'noreferrer' : undefined}
-              className="group block"
+            <button
+              type="button"
+              key={project.id ?? project.title}
+              className="group block w-full text-left cursor-pointer"
+              onClick={() => onProjectSelect?.(project.id)}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
             >
@@ -157,7 +158,7 @@ function ProjectShowcase({ isDarkMode, projects }) {
                   </span>
                 </div>
               </div>
-            </a>
+            </button>
           )
         })}
         <div className={`border-t ${borderColor}`} />
@@ -169,6 +170,7 @@ function ProjectShowcase({ isDarkMode, projects }) {
 export default function ProjectPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [selectedProjectId, setSelectedProjectId] = useState(null)
   const [isFilterFloating, setIsFilterFloating] = useState(false)
   const scrollRef = useRef(null)
 
@@ -198,8 +200,24 @@ export default function ProjectPage() {
     return () => scrollEl.removeEventListener('scroll', onScroll)
   }, [])
 
+  const selectedProject = useMemo(
+    () => (selectedProjectId ? getChromeProjectById(selectedProjectId) : null),
+    [selectedProjectId]
+  )
+
   const handleFilterChange = (nextFilter) => {
     setFilter(nextFilter)
+    setSelectedProjectId(null)
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }
+
+  const handleBackToList = () => {
+    setSelectedProjectId(null)
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }
+
+  const handleProjectSelect = (projectId) => {
+    setSelectedProjectId(projectId)
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
@@ -268,7 +286,14 @@ export default function ProjectPage() {
             </div>
           </div>
 
-          {projects.length === 0 ? (
+          {selectedProject ? (
+            <ProjectCaseStudyDetail
+              key={selectedProject.id}
+              project={selectedProject}
+              onBack={handleBackToList}
+              isDarkMode={isDarkMode}
+            />
+          ) : projects.length === 0 ? (
             <div className="projects-page__empty">
               <p className={`projects-page__empty-title ${baseText}`}>Coming soon</p>
               <p className={`projects-page__empty-note ${mutedText}`}>
@@ -276,7 +301,12 @@ export default function ProjectPage() {
               </p>
             </div>
           ) : (
-            <ProjectShowcase key={filter} isDarkMode={isDarkMode} projects={projects} />
+            <ProjectShowcase
+              key={filter}
+              isDarkMode={isDarkMode}
+              projects={projects}
+              onProjectSelect={handleProjectSelect}
+            />
           )}
         </div>
       </div>
