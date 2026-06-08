@@ -3,16 +3,10 @@ import { Dithering } from '@paper-design/shaders-react'
 import { ArrowUpRight } from 'lucide-react'
 
 import { getProjectsByFilter } from '@/data/chromeProjects'
+import { ProjectFilterSwitcher } from '@/components/ui/project-filter-switcher'
 import './ProjectPage.css'
 
 const FALLBACK_IMAGE = '/images/chrome-shortcuts/project.png'
-
-const FILTER_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'hackathon', label: 'Hackathon' },
-  { value: 'side', label: 'Side Project' },
-  { value: 'study-case', label: 'Study Case' },
-]
 
 function mapToShowcaseProjects(projects) {
   return projects.map((project) => ({
@@ -175,6 +169,7 @@ function ProjectShowcase({ isDarkMode, projects }) {
 export default function ProjectPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [isFilterFloating, setIsFilterFloating] = useState(false)
   const scrollRef = useRef(null)
 
   const projects = useMemo(
@@ -190,6 +185,19 @@ export default function ProjectPage() {
     [isDarkMode]
   )
 
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl) return undefined
+
+    const onScroll = () => {
+      setIsFilterFloating(scrollEl.scrollTop > 20)
+    }
+
+    onScroll()
+    scrollEl.addEventListener('scroll', onScroll, { passive: true })
+    return () => scrollEl.removeEventListener('scroll', onScroll)
+  }, [])
+
   const handleFilterChange = (nextFilter) => {
     setFilter(nextFilter)
     if (scrollRef.current) scrollRef.current.scrollTop = 0
@@ -197,10 +205,6 @@ export default function ProjectPage() {
 
   const mutedText = isDarkMode ? 'text-white/55' : 'text-black/55'
   const baseText = isDarkMode ? 'text-white' : 'text-black'
-  const activeTab = isDarkMode ? 'bg-white/12 text-white' : 'bg-black/8 text-black'
-  const inactiveTab = isDarkMode
-    ? 'text-white/55 hover:text-white hover:bg-white/6'
-    : 'text-black/55 hover:text-black hover:bg-black/6'
 
   return (
     <div className="projects-page relative h-full overflow-hidden flex">
@@ -210,34 +214,10 @@ export default function ProjectPage() {
         }`}
       >
         <header
-          className={`flex-shrink-0 flex items-center justify-between gap-4 px-6 py-5 border-b ${
+          className={`flex-shrink-0 flex items-center justify-end px-6 py-4 border-b ${
             isDarkMode ? 'border-white/12' : 'border-black/12'
           }`}
         >
-          <div
-            className="flex flex-wrap items-center gap-1"
-            role="tablist"
-            aria-label="Filter projects by category"
-          >
-            {FILTER_OPTIONS.map((option) => {
-              const isActive = filter === option.value
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => handleFilterChange(option.value)}
-                  className={`px-3 py-1.5 text-xs font-medium tracking-wide rounded-full transition-colors ${
-                    isActive ? activeTab : inactiveTab
-                  }`}
-                >
-                  {option.label}
-                </button>
-              )
-            })}
-          </div>
-
           <button
             onClick={() => setIsDarkMode((prev) => !prev)}
             className={`flex-shrink-0 p-2 rounded-full transition-colors ${
@@ -273,6 +253,21 @@ export default function ProjectPage() {
         </header>
 
         <div ref={scrollRef} className="projects-page__scroll flex-1 min-h-0">
+          <div
+            className={`projects-page__filter-anchor ${
+              isFilterFloating ? 'projects-page__filter-anchor--floating' : ''
+            }`}
+            data-theme={isDarkMode ? 'dark' : 'light'}
+          >
+            <div className="projects-page__filter-card">
+              <ProjectFilterSwitcher
+                value={filter}
+                onValueChange={handleFilterChange}
+                isDarkMode={isDarkMode}
+              />
+            </div>
+          </div>
+
           {projects.length === 0 ? (
             <div className="projects-page__empty">
               <p className={`projects-page__empty-title ${baseText}`}>Coming soon</p>
