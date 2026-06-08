@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './ChromeWindow.css'
 
-const MIN_WIDTH = 400
+const MIN_WIDTH = 700
 const MIN_HEIGHT = 300
 const MENU_BAR_HEIGHT = 32
 

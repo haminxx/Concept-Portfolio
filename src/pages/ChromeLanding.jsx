@@ -1,18 +1,18 @@
-import { useState, useCallback, useEffect, useRef, useMemo, Suspense } from 'react'
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useDockOrder } from '../hooks/useDockOrder'
 import { useDesktopItems } from '../hooks/useDesktopItems'
 import ChromeFrame from '../components/ChromeFrame'
 import ChromeWindow from '../components/ChromeWindow'
 import ChromeHome from '../components/ChromeHome'
 import ChromeContextMenu from '../components/ChromeContextMenu'
+import AboutPage from '../components/AboutPage'
+import ContactPage from '../components/ContactPage'
+import NewsletterPage from '../components/NewsletterPage'
+import ProjectPage from '../components/ProjectPage'
 import Desktop from '../components/Desktop'
 import DesktopDocumentsFolderModal from '../components/DesktopDocumentsFolderModal'
 import {
   LazyInstagramWindow,
-  LazyAboutPage,
-  LazyProjectPage,
-  LazyContactPage,
-  LazyNewsletterPage,
   LazyMapWindow,
   LazyDoomWindow,
   LazyDadNMeWindow,
@@ -54,7 +54,6 @@ import {
   toggleDocumentFullscreen,
   runBootFullscreenSequence,
 } from '../utils/fullscreen'
-import { getAddressPathSegments } from '../utils/chromeAddressPath'
 import { clearChromeSessionState } from '../utils/chromeSessionState'
 import './ChromeLanding.css'
 
@@ -125,7 +124,6 @@ export default function ChromeLanding({
     new Map([['home', { entries: [{ type: 'home', title: 'Home' }], index: 0 }]]),
   )
   const chromeNavReplayRef = useRef(false)
-  const [chromeNavTick, setChromeNavTick] = useState(0)
   const closingLastTabRef = useRef(false)
 
   const pushChromeNav = useCallback((tabId, type, title, meta) => {
@@ -133,7 +131,6 @@ export default function ChromeLanding({
     let state = chromeNavStacksRef.current.get(tabId)
     if (!state) {
       chromeNavStacksRef.current.set(tabId, { entries: [{ type, title, meta }], index: 0 })
-      setChromeNavTick((n) => n + 1)
       return
     }
     const { entries, index } = state
@@ -150,7 +147,6 @@ export default function ChromeLanding({
     nextEntries.push({ type, title, meta })
     state.entries = nextEntries
     state.index = nextEntries.length - 1
-    setChromeNavTick((n) => n + 1)
   }, [])
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0]
@@ -165,42 +161,6 @@ export default function ChromeLanding({
       })
     }
   }, [activeTabId, tabs])
-
-  const chromeNavState = chromeNavStacksRef.current.get(activeTabId)
-  const canGoBack = chromeNavState ? chromeNavState.index > 0 : false
-  const canGoForward = chromeNavState ? chromeNavState.index < chromeNavState.entries.length - 1 : false
-  const pathSegments = useMemo(
-    () => getAddressPathSegments(chromeNavState),
-    // chromeNavTick: in-page pushes without tab state changes
-    [chromeNavState, chromeNavTick, activeTabId],
-  )
-  const currentNavEntry = chromeNavState?.entries[chromeNavState.index]
-  const restoredProjectId =
-    activeTab?.type === 'project' ? (currentNavEntry?.meta?.projectId ?? null) : null
-  const restoredEditionId =
-    activeTab?.type === 'newsletter' ? (currentNavEntry?.meta?.editionId ?? null) : null
-
-  const handleChromeInPageNav = useCallback(
-    (title, meta) => {
-      const tab = tabs.find((t) => t.id === activeTabId)
-      if (!tab) return
-      pushChromeNav(activeTabId, tab.type, title, meta)
-    },
-    [activeTabId, tabs, pushChromeNav],
-  )
-
-  const handleChromeInPageBack = useCallback(() => {
-    const state = chromeNavStacksRef.current.get(activeTabId)
-    if (!state || state.index <= 0) return
-    state.index -= 1
-    const { type, title } = state.entries[state.index]
-    chromeNavReplayRef.current = true
-    setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, type, title } : t)))
-    setChromeNavTick((n) => n + 1)
-    queueMicrotask(() => {
-      chromeNavReplayRef.current = false
-    })
-  }, [activeTabId])
 
   const openAppTab = useCallback((appKey) => {
     const app = APPS[appKey]
@@ -292,11 +252,6 @@ export default function ChromeLanding({
     setChromeMinimized(false)
   }, [])
 
-  const setActiveTab = useCallback((id) => setActiveTabId(id), [])
-  const reorderTabs = useCallback((newTabs) => {
-    setTabs(newTabs)
-  }, [])
-
   const resetChromeTabsToHome = useCallback(() => {
     chromeNavStacksRef.current.clear()
     chromeNavStacksRef.current.set('home', {
@@ -305,7 +260,6 @@ export default function ChromeLanding({
     })
     setTabs([HOME_TAB])
     setActiveTabId('home')
-    setChromeNavTick((n) => n + 1)
   }, [])
 
   const resetChromeWindow = useCallback(() => {
@@ -357,7 +311,6 @@ export default function ChromeLanding({
     const { type, title } = state.entries[state.index]
     chromeNavReplayRef.current = true
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
-    setChromeNavTick((n) => n + 1)
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -371,7 +324,6 @@ export default function ChromeLanding({
     const { type, title } = state.entries[state.index]
     chromeNavReplayRef.current = true
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
-    setChromeNavTick((n) => n + 1)
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -400,30 +352,6 @@ export default function ChromeLanding({
     setChromeMinimized(false)
   }, [])
 
-  /** Open a DuckDuckGo search in the current tab (or a new one if needed). */
-  const handleChromeSearch = useCallback((query) => {
-    const url = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&ia=web`
-    const id = activeTabId
-    pushChromeNav(id, 'iframe', query)
-    setTabs((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, type: 'iframe', title: query, url } : t)),
-    )
-    setChromeMinimized(false)
-  }, [activeTabId, pushChromeNav])
-
-  /** Navigate the address bar to a URL or search query. */
-  const handleAddressBarNavigate = useCallback((url, query) => {
-    const id = activeTabId
-    if (url) {
-      const title = url.replace(/^https?:\/\//, '').split('/')[0]
-      pushChromeNav(id, 'iframe', title)
-      setTabs((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, type: 'iframe', title, url } : t)),
-      )
-    } else if (query) {
-      handleChromeSearch(query)
-    }
-  }, [activeTabId, pushChromeNav, handleChromeSearch])
   const toggleMaximize = useCallback(() => setChromeMaximized((m) => !m), [])
   const setMinimized = useCallback(() => setChromeMinimizing(true), [])
 
@@ -561,27 +489,13 @@ export default function ChromeLanding({
               isFocused={chromeFocused}
             >
               <ChromeFrame
-                tabs={tabs}
-                activeTabId={activeTabId}
-                onSelectTab={setActiveTab}
-                onCloseTab={closeTab}
-                onNewTab={openNewHomeTab}
-                onReorderTabs={reorderTabs}
-                pathSegments={pathSegments}
-                onGoHome={goHome}
-                onBack={handleBack}
-                onForward={handleForward}
-                onRefresh={handleRefresh}
-                onNavigate={handleAddressBarNavigate}
                 isMaximized={chromeMaximized}
                 onMaximize={toggleMaximize}
                 onMinimize={setMinimized}
                 onWindowClose={setMinimized}
-                canGoBack={canGoBack}
-                canGoForward={canGoForward}
               />
               <div
-                className="chrome-landing__content"
+                className="chrome-landing__content min-h-0 flex-1 bg-gray-100 dark:bg-zinc-800"
                 onContextMenu={(e) => {
                   e.preventDefault()
                   const url = getUrlForTab(activeTab)
@@ -596,29 +510,13 @@ export default function ChromeLanding({
                 {!activeTab ? null : activeTab.type === 'home' ? (
                   <ChromeHome onNavigateShortcut={navigateToShortcut} onShortcutInNewTab={openShortcutTab} />
                 ) : activeTab.type === 'about' ? (
-                  <Suspense fallback={null}>
-                    <LazyAboutPage />
-                  </Suspense>
+                  <AboutPage />
                 ) : activeTab.type === 'newsletter' ? (
-                  <Suspense fallback={null}>
-                    <LazyNewsletterPage
-                      restoredEditionId={restoredEditionId}
-                      onEditionNavigate={handleChromeInPageNav}
-                      onEditionBack={handleChromeInPageBack}
-                    />
-                  </Suspense>
+                  <NewsletterPage />
                 ) : activeTab.type === 'project' ? (
-                  <Suspense fallback={null}>
-                    <LazyProjectPage
-                      restoredProjectId={restoredProjectId}
-                      onProjectNavigate={handleChromeInPageNav}
-                      onProjectBack={handleChromeInPageBack}
-                    />
-                  </Suspense>
+                  <ProjectPage />
                 ) : activeTab.type === 'contact' ? (
-                  <Suspense fallback={null}>
-                    <LazyContactPage />
-                  </Suspense>
+                  <ContactPage />
                 ) : activeTab.type === 'iframe' && activeTab.url ? (
                   <iframe
                     key={`${iframeRefreshKeyRef.current}-${activeTab.url}`}

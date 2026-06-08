@@ -9,10 +9,10 @@ export const APPS = {
     iconPath: '/dock-icons/finder.png',
   },
   chrome: {
-    label: 'Chrome',
+    label: 'Safari',
     domain: 'portfolio.local',
     icon: 'chrome',
-    iconPath: '/dock-icons/chrome.png',
+    iconPath: '/dock-icons/safari.png',
   },
   instagram: {
     label: 'Instagram',

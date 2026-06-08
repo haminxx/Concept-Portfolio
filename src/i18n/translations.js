@@ -61,7 +61,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: 'Photos',
@@ -254,7 +254,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: '사진',
@@ -346,7 +346,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: 'Fotos',
@@ -438,7 +438,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: '照片',
@@ -530,7 +530,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: 'Fotos',
@@ -622,7 +622,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: '写真',
@@ -714,7 +714,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: 'फ़ोटो',
@@ -806,7 +806,7 @@ export const translations = {
     },
     apps: {
       finder: 'Finder',
-      chrome: 'Chrome',
+      chrome: 'Safari',
       instagram: 'Instagram',
       netflix: 'Netflix',
       photos: 'الصور',

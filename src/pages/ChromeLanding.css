@@ -61,9 +61,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* Chrome content area - home tab uses full white fill */
+/* Safari content area */
 .chrome-landing__content {
-  background: #f8f9fa;
+  background: #f4f4f5;
 }
 
 .chrome-landing__content:has(.chrome-home) {
@@ -71,47 +71,11 @@
   overflow: hidden;
 }
 
-.chrome-landing__content:has(.projects-page) {
-  background: #fff;
-  overflow: hidden;
-}
-
-.chrome-landing__content:has(.newsletter-page),
-.chrome-landing__content:has(.contact-page),
-.chrome-landing__content:has(.about-page) {
-  background: #fff;
-}
-
-.chrome-landing__content:has(.newsletter-page),
-.chrome-landing__content:has(.contact-page) {
-  cursor: none !important;
-}
-
-.chrome-landing__content:has(.newsletter-page) .newsletter-page__scroll,
-.chrome-landing__content:has(.newsletter-page) .newsletter-page__article {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.chrome-landing__content:has(.newsletter-page) .newsletter-page__scroll::-webkit-scrollbar,
-.chrome-landing__content:has(.newsletter-page) .newsletter-page__article::-webkit-scrollbar {
-  display: none;
-}
-
-.chrome-landing__content:has(.about-page) .about-page__scroll {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.chrome-landing__content:has(.about-page) .about-page__scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.chrome-landing__content:has(.chrome-home),
 .chrome-landing__content:has(.projects-page),
 .chrome-landing__content:has(.newsletter-page),
 .chrome-landing__content:has(.contact-page),
 .chrome-landing__content:has(.about-page) {
+  background: #f4f4f5;
   overflow: hidden;
 }
 
