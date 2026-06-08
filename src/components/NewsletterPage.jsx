@@ -9,11 +9,17 @@ const LOREM = [
   'We are told that attention is the scarcest resource of the age. Perhaps. But generosity of attention, freely given to a single small thing, still feels like the closest most of us come to a quiet kind of magic.',
 ]
 
+const DETAIL_LABELS = ['Observation', 'Tiny ritual', 'Open question', 'Desk note', 'Afterimage']
+
 function makeSection(id, title, paragraphs = 3) {
   return {
     id,
     title,
     body: Array.from({ length: paragraphs }, (_, i) => LOREM[i % LOREM.length]),
+    detail: {
+      label: DETAIL_LABELS[(id.length + title.length) % DETAIL_LABELS.length],
+      text: LOREM[(paragraphs + title.length) % LOREM.length],
+    },
   }
 }
 
@@ -89,7 +95,7 @@ const chapters = [
 
 function ChapterIndex({ onSelect }) {
   return (
-    <div className="newsletter-page__main">
+    <div className="newsletter-page__main newsletter-page__main--index">
       <header className="newsletter-page__header">
         <p className="newsletter-page__eyebrow">Issue No. 12 &middot; The Marginalia Letter</p>
         <h1>A Field Guide to Slow Reading</h1>
@@ -98,6 +104,13 @@ function ChapterIndex({ onSelect }) {
           begin.
         </p>
       </header>
+
+      <div className="newsletter-page__intro-card" data-toc-ignore>
+        <p>
+          A small editorial issue for the browser window: centered, unhurried, and arranged like a
+          stack of notes waiting on a clean desk.
+        </p>
+      </div>
 
       <div className="newsletter-page__index">
         {chapters.map((chapter) => (
@@ -113,7 +126,9 @@ function ChapterIndex({ onSelect }) {
             <span className="newsletter-page__index-title">{chapter.title}</span>
             <span className="newsletter-page__index-blurb">{chapter.blurb}</span>
             <span className="newsletter-page__index-meta">
-              {chapter.sections.length} sections &middot; Read &rarr;
+              {chapter.sections.length} sections
+              <span aria-hidden="true"> / </span>
+              Read &rarr;
             </span>
           </button>
         ))}
@@ -124,12 +139,14 @@ function ChapterIndex({ onSelect }) {
 
 function ChapterView({ chapter, onBack }) {
   return (
-    <div className="newsletter-page__main">
-      <button type="button" className="newsletter-page__back" onClick={onBack}>
-        &larr; All chapters
-      </button>
+    <div className="newsletter-page__main newsletter-page__main--chapter">
+      <div className="newsletter-page__back-row">
+        <button type="button" className="newsletter-page__back" onClick={onBack}>
+          &larr; All chapters
+        </button>
+      </div>
 
-      <header className="newsletter-page__header newsletter-page__header--left">
+      <header className="newsletter-page__header">
         <p className="newsletter-page__eyebrow">
           Chapter {String(chapter.number).padStart(2, '0')}
         </p>
@@ -139,6 +156,9 @@ function ChapterView({ chapter, onBack }) {
 
       <nav className="newsletter-page__chapter-toc" aria-label="In this chapter">
         <p className="newsletter-page__chapter-toc-label">In this chapter</p>
+        <p className="newsletter-page__chapter-toc-intro">
+          A centered table for the chapter&apos;s sections, built to skim before settling in.
+        </p>
         <ol>
           {chapter.sections.map((section, i) => (
             <li key={section.id}>
@@ -154,14 +174,34 @@ function ChapterView({ chapter, onBack }) {
       </nav>
 
       <article className="newsletter-page__article">
-        {chapter.sections.map((section) => (
+        {chapter.sections.map((section, sectionIndex) => (
           <section key={section.id} className="newsletter-page__section">
+            <p className="newsletter-page__section-kicker">
+              Section {String(sectionIndex + 1).padStart(2, '0')}
+            </p>
             <h2 id={section.id} data-toc data-toc-title={section.title}>
               {section.title}
             </h2>
-            {section.body.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
+            {section.body.slice(0, 1).map((paragraph, i) => (
+              <p className="newsletter-page__section-lede" key={`lede-${i}`}>
+                {paragraph}
+              </p>
             ))}
+            {section.body.slice(1).map((paragraph, i) => (
+              <p key={`body-${i}`}>{paragraph}</p>
+            ))}
+
+            <aside className="newsletter-page__callout">
+              <h3
+                id={`${section.id}-note`}
+                data-toc
+                data-toc-title={`${section.title} - margin note`}
+                data-toc-depth="1"
+              >
+                {section.detail.label}
+              </h3>
+              <p>{section.detail.text}</p>
+            </aside>
           </section>
         ))}
 

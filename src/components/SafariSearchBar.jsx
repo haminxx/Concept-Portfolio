@@ -110,28 +110,25 @@ function SpotlightPlaceholder({ text }) {
 }
 
 /**
- * One shortcut "flying out" from behind the search field. Each button collapses
- * toward the centre on enter/exit (so the cluster appears to emerge from under
- * the field) and fans out to its flex position with a per-index spring stagger.
+ * One shortcut "flying out" to the RIGHT of the search field (original Apple
+ * Spotlight behaviour). Each circular button starts collapsed behind the field
+ * (translated left) and fans out to its flex position with a per-index spring
+ * stagger; on exit it translates back to the right and collapses.
  */
-function ShortcutButton({ item, index, count, isHighlighted, onSelect, onHoverChange }) {
-  const center = (count - 1) / 2
-  // Collapse offset: how far this button starts from / returns to centre.
-  const collapseX = -(index - center) * 84
+function ShortcutButton({ item, index, isHighlighted, onSelect, onHoverChange }) {
   const Icon = item.icon
 
   return (
     <motion.button
       type="button"
-      layout
       className={cn(
         'safari-search-bar__shortcut',
         isHighlighted && 'safari-search-bar__shortcut--active',
       )}
-      initial={{ opacity: 0, x: collapseX, scale: 0.55, filter: 'blur(6px)' }}
-      animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, x: collapseX, scale: 0.55, filter: 'blur(6px)' }}
-      transition={{ ...FLYOUT_SPRING, delay: index * 0.045 }}
+      initial={{ opacity: 0, scale: 0.7, x: -(64 * (index + 1)) }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.7, x: 64 * (index + 1) }}
+      transition={{ ...FLYOUT_SPRING, delay: index * 0.04 }}
       onMouseEnter={() => onHoverChange(item.label)}
       onMouseLeave={() => onHoverChange(null)}
       onMouseDown={(e) => e.preventDefault()}
@@ -139,10 +136,7 @@ function ShortcutButton({ item, index, count, isHighlighted, onSelect, onHoverCh
       title={item.label}
       aria-label={item.label}
     >
-      <span className="safari-search-bar__shortcut-icon">
-        <Icon size={18} strokeWidth={1.9} aria-hidden="true" />
-      </span>
-      <span className="safari-search-bar__shortcut-label">{item.label}</span>
+      <Icon size={17} strokeWidth={1.9} aria-hidden="true" />
     </motion.button>
   )
 }
@@ -291,18 +285,26 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
         </div>
       </motion.div>
 
-      {/* Panel below the field: hover fly-out shortcuts OR typed results. The
-          panel touches the field (top:100%) with internal padding acting as a
-          hover bridge so the cluster doesn't retract when crossing the gap. */}
-      <div className="safari-search-bar__panel" id="safari-search-dropdown">
-        <AnimatePresence mode="popLayout">
+      {/* Quick-nav shortcuts fan out HORIZONTALLY to the RIGHT of the field
+          (original Apple Spotlight behaviour). The cluster is anchored to the
+          field's right edge and overlays the toolbar; its transparent left
+          padding is a hover bridge so it stays open while the cursor crosses
+          into it. pointer-events only engage while open so it never blocks the
+          toolbar drag area when collapsed. */}
+      <div
+        className={cn(
+          'safari-search-bar__panel',
+          showShortcuts && 'safari-search-bar__panel--open',
+        )}
+        id="safari-search-dropdown"
+      >
+        <AnimatePresence>
           {showShortcuts &&
             FLYOUT_SHORTCUTS.map((item, index) => (
               <ShortcutButton
                 key={item.type}
                 item={item}
                 index={index}
-                count={FLYOUT_SHORTCUTS.length}
                 isHighlighted={!hasQuery && index === highlightedIndex}
                 onSelect={navigateTo}
                 onHoverChange={handleShortcutHover}

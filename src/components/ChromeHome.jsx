@@ -35,32 +35,26 @@ export default function ChromeHome() {
       <div className="chrome-home__overlay" aria-hidden="true" />
 
       <div className="chrome-home__hero">
-        <div className="chrome-home__name">
-          <TextCursorProximity
-            label="Christian"
-            className="chrome-home__name-line"
-            containerRef={containerRef}
-            styles={NAME_STYLES}
-            radius={130}
-            falloff="gaussian"
-          />
-          <TextCursorProximity
-            label="Lee"
-            className="chrome-home__name-line"
-            containerRef={containerRef}
-            styles={NAME_STYLES}
-            radius={130}
-            falloff="gaussian"
-          />
-        </div>
-
+        {/* Small eyebrow/kicker ABOVE the name. */}
         <div className="chrome-home__since">
           <TextCursorProximity
             label="Since 2003"
             className="chrome-home__since-text"
             containerRef={containerRef}
             styles={SINCE_STYLES}
-            radius={90}
+            radius={80}
+            falloff="gaussian"
+          />
+        </div>
+
+        {/* Smaller, centred name on a single line. */}
+        <div className="chrome-home__name">
+          <TextCursorProximity
+            label="Christian Lee"
+            className="chrome-home__name-line"
+            containerRef={containerRef}
+            styles={NAME_STYLES}
+            radius={120}
             falloff="gaussian"
           />
         </div>

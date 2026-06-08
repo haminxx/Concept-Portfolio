@@ -82,12 +82,13 @@ export default function DynamicIslandTOC({
     }
     const nodes = Array.from(root.querySelectorAll(headingSelector))
     const next = nodes
-      .filter((node) => node.id)
+      .filter((node) => node.id && !node.closest('[data-toc-ignore]'))
       .map((node) => {
-        const explicit = node.getAttribute('data-toc-level')
+        const explicit = node.getAttribute('data-toc-depth') ?? node.getAttribute('data-toc-level')
         const tag = node.tagName.toLowerCase()
-        const level = explicit
-          ? Number(explicit)
+        const parsedLevel = explicit === null ? NaN : Number(explicit)
+        const level = Number.isFinite(parsedLevel)
+          ? parsedLevel
           : tag === 'h3'
             ? 1
             : tag === 'h4'
@@ -96,7 +97,7 @@ export default function DynamicIslandTOC({
         return {
           id: node.id,
           title: node.getAttribute('data-toc-title') || node.textContent?.trim() || '',
-          level: Number.isFinite(level) ? level : 0,
+          level,
         }
       })
     setHeadings(next)
@@ -127,7 +128,9 @@ export default function DynamicIslandTOC({
     const containerTop = container.getBoundingClientRect().top
 
     let current = null
-    const nodes = Array.from(root.querySelectorAll(headingSelector)).filter((n) => n.id)
+    const nodes = Array.from(root.querySelectorAll(headingSelector)).filter(
+      (node) => node.id && !node.closest('[data-toc-ignore]'),
+    )
     for (const node of nodes) {
       const top = node.getBoundingClientRect().top - containerTop
       if (top <= ACTIVE_OFFSET) {
@@ -227,32 +230,55 @@ export default function DynamicIslandTOC({
               className="dynamic-island-toc__panel"
             >
               <div className="dynamic-island-toc__panel-head">
-                <span className="dynamic-island-toc__panel-label">{label}</span>
+                <div className="dynamic-island-toc__panel-title">
+                  <span className="dynamic-island-toc__panel-label">TABLE OF CONTENTS</span>
+                  <span className="dynamic-island-toc__panel-sublabel">{label}</span>
+                </div>
                 <button
                   type="button"
                   className="dynamic-island-toc__close"
                   onClick={() => setIsExpanded(false)}
-                  aria-label="Collapse"
+                  aria-label="Close table of contents"
                 >
-                  <CircleProgress progress={progress} />
+                  <CircleProgress progress={progress} size={26} />
+                  <span className="dynamic-island-toc__close-x" aria-hidden="true">
+                    &times;
+                  </span>
                 </button>
               </div>
-              <nav className="dynamic-island-toc__list">
-                {headings.map((heading) => (
-                  <button
-                    key={heading.id}
-                    type="button"
-                    onClick={() => scrollToHeading(heading.id)}
-                    style={{ paddingLeft: `${0.75 + heading.level * 0.85}rem` }}
-                    className={cn(
-                      'dynamic-island-toc__item',
-                      heading.id === activeId && 'dynamic-island-toc__item--active',
-                    )}
-                  >
-                    <span className="dynamic-island-toc__item-dot" aria-hidden="true" />
-                    <span className="dynamic-island-toc__item-text">{heading.title}</span>
-                  </button>
-                ))}
+              <nav className="dynamic-island-toc__list" aria-label="Table of contents">
+                {headings.map((heading) => {
+                  const isActive = heading.id === activeId
+
+                  return (
+                    <button
+                      key={heading.id}
+                      type="button"
+                      onClick={() => scrollToHeading(heading.id)}
+                      style={{ paddingLeft: `${0.8 + heading.level * 0.85}rem` }}
+                      className={cn(
+                        'dynamic-island-toc__item',
+                        isActive && 'dynamic-island-toc__item--active',
+                      )}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId="dynamic-island-toc-active"
+                          className="dynamic-island-toc__item-active-bg"
+                          transition={islandTransition}
+                        />
+                      )}
+                      <span className="dynamic-island-toc__item-dot" aria-hidden="true" />
+                      <motion.span
+                        className="dynamic-island-toc__item-text"
+                        animate={{ x: isActive ? 2 : 0 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        {heading.title}
+                      </motion.span>
+                    </button>
+                  )
+                })}
               </nav>
             </motion.div>
           ) : (
@@ -269,7 +295,18 @@ export default function DynamicIslandTOC({
               aria-label="Open table of contents"
             >
               <CircleProgress progress={progress} />
-              <span className="dynamic-island-toc__pill-text">{activeTitle}</span>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={activeTitle}
+                  className="dynamic-island-toc__pill-text"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.16 }}
+                >
+                  {activeTitle}
+                </motion.span>
+              </AnimatePresence>
               <span className="dynamic-island-toc__pill-count">
                 {Math.min(
                   headings.length,

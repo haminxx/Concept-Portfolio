@@ -107,50 +107,56 @@
   color: rgba(255, 255, 255, 0.38);
 }
 
-/* ---- Hover fly-out shortcut cluster ------------------------------------- */
-/* The panel sits flush under the field; its top padding is a transparent hover
-   bridge so the cluster stays open while the cursor crosses into it. */
+/* ---- Right-fanning shortcut cluster (Apple Spotlight style) -------------- */
+/* The cluster is anchored to the field's RIGHT edge and overlays the toolbar.
+   Its transparent left padding is a hover bridge so the cluster stays open
+   while the cursor crosses into it. pointer-events stay off until --open so a
+   collapsed cluster never blocks the toolbar drag area behind it. */
 .safari-search-bar__panel {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 49;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  z-index: 60;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
   gap: 0.4rem;
-  padding-top: 8px;
+  padding-left: 0.5rem;
   pointer-events: none;
+}
+
+.safari-search-bar__panel--open {
+  pointer-events: auto;
 }
 
 .safari-search-bar__shortcut {
   pointer-events: auto;
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  width: 4.5rem;
-  padding: 0.5rem 0.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 0.75rem;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 9999px;
   background: rgba(255, 255, 255, 0.98);
   box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.16),
-    0 1px 3px rgba(0, 0, 0, 0.08);
+    0 6px 18px rgba(0, 0, 0, 0.16),
+    0 1px 3px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  color: rgba(0, 0, 0, 0.78);
+  color: rgba(0, 0, 0, 0.72);
   cursor: pointer;
   will-change: transform;
 }
 
 [data-theme='dark'] .safari-search-bar__shortcut {
-  background: rgba(40, 40, 40, 0.98);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.86);
+  background: rgba(48, 48, 48, 0.98);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.82);
   box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.5),
+    0 6px 18px rgba(0, 0, 0, 0.5),
     0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
@@ -166,19 +172,6 @@
   background: #0a84ff;
   border-color: #0a84ff;
   color: #ffffff;
-}
-
-.safari-search-bar__shortcut-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.safari-search-bar__shortcut-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
 }
 
 .safari-search-bar__dropdown {

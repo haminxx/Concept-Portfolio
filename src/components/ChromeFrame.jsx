@@ -147,11 +147,13 @@ export default function ChromeFrame({
           </motion.button>
         </div>
 
-        {/* Centered address / search field. Page navigation (About / Project /
-            Newsletter / Contact) now flies out of this search on hover — see
-            SafariSearchBar — so the static toolbar nav icons were removed to
-            avoid duplicating the spotlight fly-out. */}
-        <div className="relative z-[4] min-w-0 flex-1">
+        {/* Address / search field centred in the window. Page navigation
+            (About / Project / Newsletter / Contact) flies out HORIZONTALLY to
+            the right of this search on hover — see SafariSearchBar — so the
+            static toolbar nav icons were removed to avoid duplicating the
+            spotlight fly-out. Absolutely positioned so the right fly-out can
+            overlay the toolbar without shifting the centred field. */}
+        <div className="chrome-frame__search">
           <SafariSearchBar activeTabType={activeTabType} onNavigate={onNavigate} />
         </div>
       </div>
