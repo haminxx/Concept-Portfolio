@@ -11,9 +11,10 @@ const FILTER_OPTIONS = [
   { value: 'all', label: 'All' },
   { value: 'hackathon', label: 'Hack-a-thon' },
   { value: 'side', label: 'Side projects' },
+  { value: 'study-case', label: 'Study Case' },
 ]
 
-/** @typedef {'all' | 'hackathon' | 'side'} ProjectFilter */
+/** @typedef {'all' | 'hackathon' | 'side' | 'study-case'} ProjectFilter */
 
 export default function ProjectPage({
   restoredProjectId = null,
@@ -90,6 +91,11 @@ export default function ProjectPage({
               project={selectedProject}
               onBack={handleBack}
             />
+          ) : projects.length === 0 ? (
+            <div key={`empty-${filter}`} className="projects-page__empty">
+              <p className="projects-page__empty-title">Coming soon</p>
+              <p className="projects-page__empty-note">No study cases to show just yet.</p>
+            </div>
           ) : (
             <ProjectShowcase
               key={`list-${filter}`}

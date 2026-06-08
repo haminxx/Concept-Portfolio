@@ -36,6 +36,9 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
     const triggerElement = root.querySelector<HTMLElement>('[data-parallax-layers]')
     const headerElement = root.querySelector<HTMLElement>('.parallax-about__header')
 
+    let lenis: Lenis | null = null
+    let tickerRaf: ((time: number) => void) | null = null
+
     const syncViewportHeight = () => {
       const height = scroller.clientHeight
       if (height < 1) return
@@ -61,9 +64,6 @@ export function ParallaxAbout({ scrollRef }: ParallaxAboutProps) {
     }
 
     syncViewportHeight()
-
-    let lenis: Lenis | null = null
-    let tickerRaf: ((time: number) => void) | null = null
 
     ScrollTrigger.defaults({ scroller })
 

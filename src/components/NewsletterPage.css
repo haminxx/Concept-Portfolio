@@ -44,7 +44,14 @@
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transform: translateX(0);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Push the toggle out with the side menu so it stays attached to the menu edge. */
+.newsletter-page__menu-toggle[aria-expanded='true'] {
+  transform: translateX(min(22.5rem, 90vw));
 }
 
 .newsletter-page__menu-toggle:hover {
@@ -269,6 +276,7 @@
   border-radius: 0.625rem;
   font-size: 0.9375rem;
   color: var(--foreground);
+  caret-color: #1a73e8;
   background: #fff;
 }
 

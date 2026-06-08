@@ -1,7 +1,7 @@
 import type { Project } from '@/components/ui/project-showcase'
 
 export type ProjectCategory = 'hackathon' | 'side' | 'all'
-export type ProjectFilter = 'all' | 'hackathon' | 'side'
+export type ProjectFilter = 'all' | 'hackathon' | 'side' | 'study-case'
 
 export interface ProcessStep {
   title: string
@@ -275,6 +275,7 @@ export function getProjectCounts(): Record<ProjectFilter, number> {
     all: ALL_TAB_ORDER.length,
     hackathon: HACKATHON_TAB_ORDER.length,
     side: SIDE_TAB_ORDER.length,
+    'study-case': 0,
   }
 }
 
@@ -284,6 +285,9 @@ export function getProjectsByFilter(filter: ProjectFilter): Project[] {
       return orderProjects(HACKATHON_TAB_ORDER)
     case 'side':
       return orderProjects(SIDE_TAB_ORDER)
+    case 'study-case':
+      // No study cases yet — intentionally empty.
+      return []
     case 'all':
     default:
       return orderProjects(ALL_TAB_ORDER)
