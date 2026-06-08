@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import './styles/liquid-glass.css';
 
+/*
+ * Drive Tailwind's `dark:` variant from the app's `data-theme` attribute (set by
+ * ThemeContext) instead of the OS `prefers-color-scheme`. This keeps window chrome
+ * and the Safari toolbar in sync with the in-app theme toggle, and makes the
+ * light-mode default actually render light regardless of system settings.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   --color-background: #0a0a0a;
   --color-foreground: #f4f4f5;

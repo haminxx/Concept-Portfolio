@@ -2,10 +2,13 @@
   position: fixed;
   min-width: 700px;
   min-height: 300px;
-  background: #f4f4f5;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* macOS light window: white/grey surface, subtle border, soft shadow */
+  background: #f6f6f8;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(31, 31, 31, 0.18);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -17,10 +20,26 @@
     border-radius 0.35s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
+[data-theme='dark'] .chrome-window {
+  background: #1c1c1e;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
 .chrome-window--focused {
   z-index: 21;
-  box-shadow: 5px 5px 14px rgba(31, 31, 31, 0.32);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.24),
+    0 4px 10px rgba(0, 0, 0, 0.12);
   transition: width 0.2s cubic-bezier(0.33, 1, 0.68, 1), height 0.2s cubic-bezier(0.33, 1, 0.68, 1), top 0.2s cubic-bezier(0.33, 1, 0.68, 1), left 0.2s cubic-bezier(0.33, 1, 0.68, 1), transform 0.2s cubic-bezier(0.33, 1, 0.68, 1), border-radius 0.2s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+[data-theme='dark'] .chrome-window--focused {
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.65),
+    0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .chrome-window--maximized {

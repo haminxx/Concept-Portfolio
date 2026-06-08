@@ -16,9 +16,11 @@ const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
   const [nightMode, setNightModeState] = useState(() => {
-    if (typeof window === 'undefined') return true
+    // Default to LIGHT mode on first entry (no stored preference). Only honor an
+    // explicit saved choice of 'dark'. System preference is intentionally ignored.
+    if (typeof window === 'undefined') return false
     const stored = localStorage.getItem(THEME_KEY)
-    return stored === 'light' ? false : true
+    return stored === 'dark'
   })
   const [accentColor, setAccentColorState] = useState(() => {
     if (typeof window === 'undefined') return 'blue'
@@ -63,7 +65,7 @@ export function useTheme() {
   const ctx = useContext(ThemeContext)
   return (
     ctx || {
-      nightMode: true,
+      nightMode: false,
       setNightMode: () => {},
       accentColor: 'blue',
       setAccentColor: () => {},

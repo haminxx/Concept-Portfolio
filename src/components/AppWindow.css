@@ -17,6 +17,10 @@
     border-radius 0.35s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
+[data-theme='dark'] .app-window {
+  background: #1c1c1e;
+}
+
 .app-window--focused {
   z-index: 21;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -58,6 +62,16 @@
   -webkit-user-select: none;
   position: relative;
   z-index: 10;
+}
+
+[data-theme='dark'] .app-window__title {
+  background: #2a2a2c;
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .app-window__icon,
+[data-theme='dark'] .app-window__title-text {
+  color: #f5f5f7;
 }
 
 .app-window__title:active {

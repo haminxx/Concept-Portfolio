@@ -3,15 +3,58 @@
   flex-shrink: 0;
 }
 
+/* Draggable empty area between the left and right toolbar clusters. The whole
+   frame is also draggable via ChromeWindow, this just provides the grab cursor. */
 .chrome-frame__drag {
   position: absolute;
-  left: 88px;
-  right: 148px;
+  left: 150px;
+  right: 230px;
   top: 0;
   height: 100%;
   z-index: 1;
   cursor: grab;
   pointer-events: auto;
+}
+
+/* Generic macOS Safari toolbar icon button (sidebar, back, forward, share, etc.) */
+.chrome-frame__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+[data-theme='dark'] .chrome-frame__icon-btn {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.chrome-frame__icon-btn:hover {
+  background: #e5e5e5;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+[data-theme='dark'] .chrome-frame__icon-btn:hover {
+  background: #404040;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.chrome-frame__divider {
+  width: 1px;
+  height: 1.25rem;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme='dark'] .chrome-frame__divider {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .chrome-frame__nav-btn {
@@ -29,17 +72,17 @@
   transition: background 0.12s ease, color 0.12s ease;
 }
 
-.dark .chrome-frame__nav-btn {
+[data-theme='dark'] .chrome-frame__nav-btn {
   color: rgba(255, 255, 255, 0.55);
 }
 
 .chrome-frame__nav-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: #e5e5e5;
   color: rgba(0, 0, 0, 0.85);
 }
 
-.dark .chrome-frame__nav-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+[data-theme='dark'] .chrome-frame__nav-btn:hover {
+  background: #404040;
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -48,7 +91,7 @@
   color: #007aff;
 }
 
-.dark .chrome-frame__nav-btn--active {
+[data-theme='dark'] .chrome-frame__nav-btn--active {
   background: rgba(10, 132, 255, 0.22);
   color: #0a84ff;
 }
@@ -58,7 +101,7 @@
   color: #007aff;
 }
 
-.dark .chrome-frame__nav-btn--active:hover {
+[data-theme='dark'] .chrome-frame__nav-btn--active:hover {
   background: rgba(10, 132, 255, 0.3);
   color: #0a84ff;
 }
@@ -70,7 +113,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: filter 0.12s ease, transform 0.12s ease;
   box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.08);
 }
 
@@ -89,16 +131,6 @@
 
 .chrome-frame__traffic-icon--restore {
   color: rgba(30, 50, 30, 0.9);
-}
-
-.chrome-frame__traffic:hover {
-  filter: brightness(0.92);
-  transform: scale(1.08);
-}
-
-.chrome-frame__traffic:active {
-  filter: brightness(0.78);
-  transform: scale(0.96);
 }
 
 .chrome-frame__traffic--close:hover {
