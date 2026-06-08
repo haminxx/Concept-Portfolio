@@ -4,6 +4,7 @@
   --c-dark: #000;
   --c-content: #224;
   --c-action: #0052f5;
+  --c-highlight: rgba(0, 82, 245, 0.2);
   --glass-reflex-dark: 1;
   --glass-reflex-light: 1;
   --saturation: 150%;
@@ -15,8 +16,8 @@
   grid-template-columns: repeat(var(--switcher-count), minmax(0, 1fr));
   align-items: stretch;
   gap: 0;
-  width: min(100%, 36rem);
-  min-height: 3.25rem;
+  width: min(100%, 16rem);
+  min-height: 3rem;
   box-sizing: border-box;
   padding: 0.45rem 0.5rem 0.5rem;
   margin: 0;
@@ -52,7 +53,8 @@
   --c-light: #fff;
   --c-dark: #000;
   --c-content: #e8e8e8;
-  --c-action: #ffdc03;
+  --c-action: #64d2ff;
+  --c-highlight: rgba(100, 210, 255, 0.22);
   --glass-reflex-dark: 2;
   --glass-reflex-light: 0.3;
 }
@@ -63,8 +65,29 @@
   --c-dark: #000;
   --c-content: #224;
   --c-action: #0052f5;
+  --c-highlight: rgba(0, 82, 245, 0.2);
   --glass-reflex-dark: 1;
   --glass-reflex-light: 1;
+}
+
+.project-filter-switcher[data-active='all'] {
+  --c-action: #007aff;
+  --c-highlight: rgba(0, 122, 255, 0.22);
+}
+
+.project-filter-switcher[data-active='side'] {
+  --c-action: #af52de;
+  --c-highlight: rgba(175, 82, 222, 0.24);
+}
+
+.project-filter-switcher[data-active='hackathon'] {
+  --c-action: #ff9500;
+  --c-highlight: rgba(255, 149, 0, 0.25);
+}
+
+.project-filter-switcher[data-active='study-case'] {
+  --c-action: #30d158;
+  --c-highlight: rgba(48, 209, 88, 0.24);
 }
 
 .project-filter-switcher .switcher__legend {
@@ -100,13 +123,16 @@
 }
 
 .project-filter-switcher .switcher__label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  line-height: 1.1;
-  text-align: center;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
   white-space: nowrap;
-  color: var(--c);
+  clip-path: inset(100%);
+  clip: rect(0 0 0 0);
+  overflow: hidden;
 }
 
 .project-filter-switcher .switcher__filter {
@@ -122,12 +148,10 @@
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.2rem;
   min-width: 0;
-  padding: 0.35rem 0.4rem;
+  padding: 0.5rem 0.4rem;
   box-sizing: border-box;
   border-radius: 99em;
   opacity: 1;
@@ -167,6 +191,7 @@
   height: calc(100% - (var(--switcher-pad) * 2));
   border-radius: 99em;
   background-color: color-mix(in srgb, var(--c-glass) 36%, transparent);
+  background-image: linear-gradient(135deg, var(--c-highlight), transparent 62%);
   z-index: 0;
   pointer-events: none;
   box-shadow:
@@ -179,7 +204,8 @@
       color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 20%), transparent),
     inset 0 -4px 1px -2px
       color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 10%), transparent),
-    0 3px 6px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent);
+    0 3px 6px 0 color-mix(in srgb, var(--c-dark) calc(var(--glass-reflex-dark) * 8%), transparent),
+    0 0 18px var(--c-highlight);
   transition:
     background-color 400ms cubic-bezier(1, 0, 0.4, 1),
     box-shadow 400ms cubic-bezier(1, 0, 0.4, 1),
@@ -241,14 +267,6 @@
 }
 
 @media (max-width: 520px) {
-  .project-filter-switcher.switcher {
-    width: min(100%, 20rem);
-  }
-
-  .project-filter-switcher .switcher__label {
-    font-size: 0.55rem;
-  }
-
   .project-filter-switcher .switcher__icon {
     width: 1rem;
     height: 1rem;

@@ -12,20 +12,20 @@ const FILTER_OPTIONS = [
     Icon: LayoutGrid,
   },
   {
-    value: 'hackathon',
-    label: 'Hackathon',
-    cOption: '2',
-    Icon: Rocket,
-  },
-  {
     value: 'side',
     label: 'Side Project',
-    cOption: '3',
+    cOption: '2',
     Icon: Sparkles,
   },
   {
+    value: 'hackathon',
+    label: 'Hackathon',
+    cOption: '3',
+    Icon: Rocket,
+  },
+  {
     value: 'study-case',
-    label: 'Study Case',
+    label: 'Case Study',
     cOption: '4',
     Icon: BookOpen,
   },
@@ -66,6 +66,7 @@ export function ProjectFilterSwitcher({
     <fieldset
       className={`switcher project-filter-switcher ${themeClass} ${className}`.trim()}
       data-previous={previousCOption ?? undefined}
+      data-active={activeValue}
     >
       <legend className="switcher__legend">Filter projects by category</legend>
 
