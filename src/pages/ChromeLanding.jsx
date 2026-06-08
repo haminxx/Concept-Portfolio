@@ -303,6 +303,17 @@ export default function ChromeLanding({
     )
   }, [activeTabId, tabs, pushChromeNav])
 
+  const handleChromeNavigate = useCallback(
+    (type) => {
+      if (type === 'home') {
+        goHome()
+      } else {
+        navigateToShortcut(type)
+      }
+    },
+    [goHome, navigateToShortcut],
+  )
+
   const handleBack = useCallback(() => {
     const id = activeTabId
     const state = chromeNavStacksRef.current.get(id)
@@ -493,6 +504,8 @@ export default function ChromeLanding({
                 onMaximize={toggleMaximize}
                 onMinimize={setMinimized}
                 onWindowClose={setMinimized}
+                activeTabType={activeTab?.type}
+                onNavigate={handleChromeNavigate}
               />
               <div
                 className="chrome-landing__content min-h-0 flex-1 bg-gray-100 dark:bg-zinc-800"
