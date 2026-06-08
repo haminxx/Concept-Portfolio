@@ -120,11 +120,16 @@ export default function ChromeWindow({ isMaximized, onMaximize, isMinimizing, is
       const o = dragPosStartRef.current
       const newX = Math.max(0, o.x + dx)
       const newY = Math.max(MENU_BAR_HEIGHT, o.y + dy)
-      if (winRef.current) {
-        winRef.current.style.transform = ''
+      const el = winRef.current
+      if (el) {
+        el.style.left = `${newX}px`
+        el.style.top = `${newY}px`
+        el.style.transform = ''
       }
       setPosition({ x: newX, y: newY })
-      setIsDragging(false)
+      requestAnimationFrame(() => {
+        setIsDragging(false)
+      })
     }
     document.addEventListener('mousemove', handleMove)
     document.addEventListener('mouseup', handleUp)
@@ -216,7 +221,7 @@ export default function ChromeWindow({ isMaximized, onMaximize, isMinimizing, is
     <div
       ref={winRef}
       id="chrome-window-main"
-      className={`chrome-window ${isMaximized ? 'chrome-window--maximized' : ''} ${isFocused ? 'chrome-window--focused' : ''} ${isDragging ? 'chrome-window--dragging' : ''} ${isMinimizing ? 'chrome-window--minimizing' : ''} ${isOpening ? 'chrome-window--opening' : ''}`}
+      className={`chrome-window ${isMaximized ? 'chrome-window--maximized' : ''} ${isFocused ? 'chrome-window--focused' : ''} ${isDragging ? 'chrome-window--dragging' : ''} ${isResizing ? 'chrome-window--resizing' : ''} ${isMinimizing ? 'chrome-window--minimizing' : ''} ${isOpening ? 'chrome-window--opening' : ''}`}
       style={style}
       onMouseDown={handleMouseDown}
       onTransitionEnd={isOpening ? handleOpeningTransitionEnd : undefined}

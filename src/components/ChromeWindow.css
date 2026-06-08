@@ -116,9 +116,15 @@
   cursor: grab;
 }
 
-.chrome-window--dragging {
+.chrome-window--dragging,
+.chrome-window--resizing {
   will-change: transform;
   cursor: grabbing;
+  transition: none;
+}
+
+.chrome-window--resizing {
+  cursor: default;
 }
 
 .chrome-window--opening {

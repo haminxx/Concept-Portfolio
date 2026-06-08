@@ -34,6 +34,8 @@ export default function AppWindow({
   const [openingPhase, setOpeningPhase] = useState('dock')
   const winRef = useRef(null)
   const dragRef = useRef({ startX: 0, startY: 0, startLeft: 0, startTop: 0 })
+  const dragRafRef = useRef(null)
+  const dragPendingRef = useRef(null)
 
   useEffect(() => {
     if (!isOpening) return
@@ -59,28 +61,47 @@ export default function AppWindow({
 
   useEffect(() => {
     if (!isDragging) return
+    const applyTransform = () => {
+      dragRafRef.current = null
+      const pe = dragPendingRef.current
+      if (!pe || !winRef.current) return
+      const dx = pe.clientX - dragRef.current.startX
+      const dy = pe.clientY - dragRef.current.startY
+      winRef.current.style.transform = `translate(${dx}px, ${dy}px)`
+    }
     const handleMove = (e) => {
-      const dx = e.clientX - dragRef.current.startX
-      const dy = e.clientY - dragRef.current.startY
-      if (winRef.current) {
-        winRef.current.style.transform = `translate(${dx}px, ${dy}px)`
+      dragPendingRef.current = { clientX: e.clientX, clientY: e.clientY }
+      if (dragRafRef.current == null) {
+        dragRafRef.current = requestAnimationFrame(applyTransform)
       }
     }
     const handleUp = (e) => {
+      if (dragRafRef.current != null) {
+        cancelAnimationFrame(dragRafRef.current)
+        dragRafRef.current = null
+      }
+      dragPendingRef.current = null
       const dx = e.clientX - dragRef.current.startX
       const dy = e.clientY - dragRef.current.startY
-      if (winRef.current) {
-        winRef.current.style.transform = ''
+      const newX = dragRef.current.startLeft + dx
+      const newY = dragRef.current.startTop + dy
+      const el = winRef.current
+      if (el) {
+        el.style.left = `${newX}px`
+        el.style.top = `${newY}px`
+        el.style.transform = ''
       }
-      onPositionChange?.({
-        x: dragRef.current.startLeft + dx,
-        y: dragRef.current.startTop + dy,
+      onPositionChange?.({ x: newX, y: newY })
+      requestAnimationFrame(() => {
+        setIsDragging(false)
       })
-      setIsDragging(false)
     }
     document.addEventListener('mousemove', handleMove)
     document.addEventListener('mouseup', handleUp)
     return () => {
+      if (dragRafRef.current != null) cancelAnimationFrame(dragRafRef.current)
+      dragRafRef.current = null
+      dragPendingRef.current = null
       document.removeEventListener('mousemove', handleMove)
       document.removeEventListener('mouseup', handleUp)
     }
@@ -196,7 +217,7 @@ export default function AppWindow({
     <div
       ref={winRef}
       id={`app-window-${id}`}
-      className={`app-window ${isMaximized ? 'app-window--maximized' : ''} ${isFocused ? 'app-window--focused' : ''} ${isDragging ? 'app-window--dragging' : ''} ${isClosing ? 'app-window--closing' : ''} ${isMinimizing ? 'app-window--minimizing' : ''} ${isOpening ? 'app-window--opening' : ''}`}
+      className={`app-window ${isMaximized ? 'app-window--maximized' : ''} ${isFocused ? 'app-window--focused' : ''} ${isDragging ? 'app-window--dragging' : ''} ${isResizing ? 'app-window--resizing' : ''} ${isClosing ? 'app-window--closing' : ''} ${isMinimizing ? 'app-window--minimizing' : ''} ${isOpening ? 'app-window--opening' : ''}`}
       style={style}
       onClick={onFocus}
       onTransitionEnd={isOpening ? handleOpeningTransitionEnd : undefined}

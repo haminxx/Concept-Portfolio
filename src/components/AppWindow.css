@@ -22,10 +22,15 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.app-window--dragging {
+.app-window--dragging,
+.app-window--resizing {
   will-change: transform;
   cursor: grabbing;
   transition: box-shadow 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.app-window--resizing {
+  cursor: default;
 }
 
 .app-window--maximized {
