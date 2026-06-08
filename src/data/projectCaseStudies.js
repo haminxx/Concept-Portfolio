@@ -42,6 +42,43 @@ const PROJECT_METRICS = {
     { value: '92%', label: 'Visual match', sub: 'Garment similarity from embeddings' },
     { value: '1-thumb', label: 'Capture flow', sub: 'Mobile-first outfit posting UX' },
   ],
+  'tiktok-travel-hub': [
+    { value: '12', label: 'User testers', sub: 'College students who use short-form video for discovery' },
+    { value: '3', label: 'Prototype iterations', sub: 'From reply browsing to destination guides' },
+  ],
+}
+
+const CASE_STUDY_CONTENT = {
+  'tiktok-travel-hub': {
+    tagline: 'Helping TikTok Users Explore Travel Content',
+    subtitle:
+      'A UX case study about turning TikTok travel searches into organized destination guides.',
+    quote:
+      'Travelers, international students, and new visitors need a faster way to find useful destination information because current short-form video search makes them piece together advice from scattered videos.',
+    role: 'UX Case Study · Team project',
+    sections: [
+      {
+        title: 'Overview',
+        body: 'TikTok already has travel content, but it is scattered across search results, hashtags, and algorithm recommendations. I designed a Cultural Travel Hub that helps users search a destination, read quick travel notes, filter by categories, scan videos in a grid, and open full-screen TikTok videos.',
+      },
+      {
+        title: 'Problem',
+        body: 'Many people already use TikTok to search for travel ideas, food spots, local tips, and cultural content. However, this information is often scattered across random videos, hashtags, search results, and algorithm recommendations—making it hard to quickly understand a place before traveling, studying abroad, or moving somewhere new.',
+      },
+      {
+        title: 'Project Pivot',
+        body: 'This project started as a TikTok video reply browsing feature, but feedback showed that the idea was too broad and mostly focused on engagement. We shifted toward a more specific problem: helping people understand a destination before they travel, study abroad, or move somewhere new.',
+      },
+      {
+        title: 'User Research',
+        body: 'We tested the prototype with college students who use short-form video platforms or online tools to search for information. We asked how they find travel tips, what information they want before going somewhere new, and whether they preferred text summaries, video grids, or full-screen videos.',
+      },
+      {
+        title: 'Team',
+        body: 'Nicholas Campos, Ran Ji, Chris Davies, and Chuck Davies — extending TikTok with a Cultural Travel Hub for travelers, international students, and new visitors exploring destinations through organized short-form video guides.',
+      },
+    ],
+  },
 }
 
 const DEFAULT_METRICS = [
@@ -56,17 +93,21 @@ export function buildCaseStudy(project) {
   const full = getChromeProjectById(project.id) ?? project
   const metrics = PROJECT_METRICS[full.id] ?? DEFAULT_METRICS
   const tags = getProjectTags(full)
+  const extra = CASE_STUDY_CONTENT[full.id]
 
   return {
     id: full.id,
-    quote: getProjectDetails(full),
+    quote: extra?.quote ?? getProjectDetails(full),
     name: full.title,
-    role: tags[0] ?? getCategoryLabel(full.category),
+    role: extra?.role ?? tags[0] ?? getCategoryLabel(full.category),
     category: full.category,
     image: full.image,
     year: full.year,
     link: full.link,
     metrics,
+    tagline: extra?.tagline ?? null,
+    subtitle: extra?.subtitle ?? null,
+    sections: extra?.sections ?? [],
   }
 }
 

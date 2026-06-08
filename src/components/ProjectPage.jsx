@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Dithering } from '@paper-design/shaders-react'
 import { ArrowUpRight } from 'lucide-react'
 
@@ -8,6 +9,10 @@ import { ProjectFilterSwitcher } from '@/components/ui/project-filter-switcher'
 import './ProjectPage.css'
 
 const FALLBACK_IMAGE = '/images/chrome-shortcuts/project.png'
+const PREVIEW_WIDTH = 280
+const PREVIEW_HEIGHT = 180
+const PREVIEW_OFFSET_X = 20
+const PREVIEW_OFFSET_Y = -100
 
 function mapToShowcaseProjects(projects) {
   return projects.map((project) => ({
@@ -20,13 +25,18 @@ function mapToShowcaseProjects(projects) {
   }))
 }
 
-function ProjectShowcase({ isDarkMode, projects, onProjectSelect }) {
+function ProjectShowcase({ isDarkMode, projects, onProjectSelect, isInteractionLocked }) {
   const [hoveredIndex, setHoveredIndex] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const containerRef = useRef(null)
   const animationRef = useRef(null)
+  const smoothPositionRef = useRef(smoothPosition)
+
+  useEffect(() => {
+    smoothPositionRef.current = smoothPosition
+  }, [smoothPosition])
 
   useEffect(() => {
     const lerp = (start, end, factor) => start + (end - start) * factor
@@ -51,13 +61,39 @@ function ProjectShowcase({ isDarkMode, projects, onProjectSelect }) {
   }
 
   const handleMouseEnter = (index) => {
+    if (isInteractionLocked) return
     setHoveredIndex(index)
     setIsVisible(true)
   }
 
   const handleMouseLeave = () => {
+    if (isInteractionLocked) return
     setHoveredIndex(null)
     setIsVisible(false)
+  }
+
+  const handleProjectClick = (project, index) => {
+    if (isInteractionLocked) return
+
+    const pos = smoothPositionRef.current
+    const showcaseRect = containerRef.current?.getBoundingClientRect()
+
+    if (!showcaseRect) {
+      onProjectSelect?.(project.id, null)
+      return
+    }
+
+    const origin = {
+      x: showcaseRect.left + pos.x + PREVIEW_OFFSET_X,
+      y: showcaseRect.top + pos.y + PREVIEW_OFFSET_Y,
+      width: PREVIEW_WIDTH,
+      height: PREVIEW_HEIGHT,
+      image: project.image || FALLBACK_IMAGE,
+    }
+
+    setHoveredIndex(index)
+    setIsVisible(true)
+    onProjectSelect?.(project.id, origin)
   }
 
   const mutedText = isDarkMode ? 'text-white/55' : 'text-black/55'
@@ -79,9 +115,9 @@ function ProjectShowcase({ isDarkMode, projects, onProjectSelect }) {
       <div
         className="pointer-events-none absolute left-0 top-0 z-50 overflow-hidden rounded-xl shadow-2xl"
         style={{
-          transform: `translate3d(${smoothPosition.x + 20}px, ${smoothPosition.y - 100}px, 0)`,
-          opacity: isVisible ? 1 : 0,
-          scale: isVisible ? 1 : 0.8,
+          transform: `translate3d(${smoothPosition.x + PREVIEW_OFFSET_X}px, ${smoothPosition.y + PREVIEW_OFFSET_Y}px, 0)`,
+          opacity: isVisible && !isInteractionLocked ? 1 : 0,
+          scale: isVisible && !isInteractionLocked ? 1 : 0.8,
           transition:
             'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), scale 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
@@ -112,9 +148,10 @@ function ProjectShowcase({ isDarkMode, projects, onProjectSelect }) {
               type="button"
               key={project.id ?? project.title}
               className="group block w-full text-left cursor-pointer"
-              onClick={() => onProjectSelect?.(project.id)}
+              onClick={() => handleProjectClick(project, index)}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
+              disabled={isInteractionLocked}
             >
               <div className={`relative py-5 border-t transition-all duration-300 ease-out ${borderColor}`}>
                 <div
@@ -171,8 +208,16 @@ export default function ProjectPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selectedProjectId, setSelectedProjectId] = useState(null)
-  const [isFilterFloating, setIsFilterFloating] = useState(false)
+  const [expandOrigin, setExpandOrigin] = useState(null)
+  const [pageBounds, setPageBounds] = useState(null)
+  const [caseStudyPhase, setCaseStudyPhase] = useState('idle')
+  const pageRef = useRef(null)
   const scrollRef = useRef(null)
+  const caseStudyPhaseRef = useRef(caseStudyPhase)
+
+  useEffect(() => {
+    caseStudyPhaseRef.current = caseStudyPhase
+  }, [caseStudyPhase])
 
   const projects = useMemo(
     () => mapToShowcaseProjects(getProjectsByFilter(filter)),
@@ -187,55 +232,111 @@ export default function ProjectPage() {
     [isDarkMode]
   )
 
-  useEffect(() => {
-    const scrollEl = scrollRef.current
-    if (!scrollEl) return undefined
-
-    const onScroll = () => {
-      setIsFilterFloating(scrollEl.scrollTop > 20)
-    }
-
-    onScroll()
-    scrollEl.addEventListener('scroll', onScroll, { passive: true })
-    return () => scrollEl.removeEventListener('scroll', onScroll)
-  }, [])
-
   const selectedProject = useMemo(
     () => (selectedProjectId ? getChromeProjectById(selectedProjectId) : null),
     [selectedProjectId]
   )
 
+  const isCaseStudyActive = caseStudyPhase !== 'idle'
+  const showCaseStudyContent = caseStudyPhase === 'open'
+
+  const readPageBounds = useCallback(() => {
+    const pageEl = pageRef.current
+    if (!pageEl) {
+      return { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }
+    }
+    const rect = pageEl.getBoundingClientRect()
+    return { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!isCaseStudyActive) return undefined
+
+    const updateBounds = () => setPageBounds(readPageBounds())
+    updateBounds()
+    window.addEventListener('resize', updateBounds)
+    return () => window.removeEventListener('resize', updateBounds)
+  }, [isCaseStudyActive, readPageBounds])
+
   const handleFilterChange = (nextFilter) => {
     setFilter(nextFilter)
     setSelectedProjectId(null)
+    setExpandOrigin(null)
+    setPageBounds(null)
+    setCaseStudyPhase('idle')
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
   const handleBackToList = () => {
+    setCaseStudyPhase('closing')
+  }
+
+  const finishClose = () => {
     setSelectedProjectId(null)
+    setExpandOrigin(null)
+    setPageBounds(null)
+    setCaseStudyPhase('idle')
     if (scrollRef.current) scrollRef.current.scrollTop = 0
   }
 
-  const handleProjectSelect = (projectId) => {
+  const handleProjectSelect = (projectId, origin) => {
+    setPageBounds(readPageBounds())
     setSelectedProjectId(projectId)
+    setExpandOrigin(origin)
+    setCaseStudyPhase('expanding')
     if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }
+
+  const handleExpandComplete = () => {
+    if (caseStudyPhaseRef.current === 'expanding') {
+      setCaseStudyPhase('open')
+    }
+  }
+
+  const handleCloseComplete = () => {
+    if (caseStudyPhaseRef.current === 'closing') {
+      finishClose()
+    }
   }
 
   const mutedText = isDarkMode ? 'text-white/55' : 'text-black/55'
   const baseText = isDarkMode ? 'text-white' : 'text-black'
 
+  const expandFrom = expandOrigin ?? {
+    x: pageBounds?.x ?? 0,
+    y: pageBounds?.y ?? 0,
+    width: PREVIEW_WIDTH,
+    height: PREVIEW_HEIGHT,
+  }
+
+  const expandTransition = {
+    duration: 0.55,
+    ease: [0.4, 0, 0.2, 1],
+  }
+
   return (
-    <div className="projects-page relative h-full overflow-hidden flex">
+    <div
+      ref={pageRef}
+      className="projects-page relative h-full overflow-hidden flex"
+      data-theme={isDarkMode ? 'dark' : 'light'}
+    >
       <div
         className={`flex-[2] min-w-0 h-full flex flex-col overflow-hidden font-mono relative z-10 ${
           isDarkMode ? 'bg-black text-white' : 'bg-white text-black'
         }`}
       >
         <header
-          className={`flex-shrink-0 flex items-center justify-end px-6 py-4 border-b ${
+          className={`projects-page__header flex-shrink-0 border-b ${
             isDarkMode ? 'border-white/12' : 'border-black/12'
           }`}
         >
+          <div className="projects-page__header-filter">
+            <ProjectFilterSwitcher
+              value={filter}
+              onValueChange={handleFilterChange}
+              isDarkMode={isDarkMode}
+            />
+          </div>
           <button
             onClick={() => setIsDarkMode((prev) => !prev)}
             className={`flex-shrink-0 p-2 rounded-full transition-colors ${
@@ -271,29 +372,7 @@ export default function ProjectPage() {
         </header>
 
         <div ref={scrollRef} className="projects-page__scroll flex-1 min-h-0">
-          <div
-            className={`projects-page__filter-anchor ${
-              isFilterFloating ? 'projects-page__filter-anchor--floating' : ''
-            }`}
-            data-theme={isDarkMode ? 'dark' : 'light'}
-          >
-            <div className="projects-page__filter-card">
-              <ProjectFilterSwitcher
-                value={filter}
-                onValueChange={handleFilterChange}
-                isDarkMode={isDarkMode}
-              />
-            </div>
-          </div>
-
-          {selectedProject ? (
-            <ProjectCaseStudyDetail
-              key={selectedProject.id}
-              project={selectedProject}
-              onBack={handleBackToList}
-              isDarkMode={isDarkMode}
-            />
-          ) : projects.length === 0 ? (
+          {projects.length === 0 ? (
             <div className="projects-page__empty">
               <p className={`projects-page__empty-title ${baseText}`}>Coming soon</p>
               <p className={`projects-page__empty-note ${mutedText}`}>
@@ -306,12 +385,18 @@ export default function ProjectPage() {
               isDarkMode={isDarkMode}
               projects={projects}
               onProjectSelect={handleProjectSelect}
+              isInteractionLocked={isCaseStudyActive}
             />
           )}
         </div>
       </div>
 
-      <div className="flex-[1] min-w-0 h-full relative overflow-hidden">
+      <div
+        className={`flex-[1] min-w-0 h-full relative overflow-hidden transition-opacity duration-300 ${
+          isCaseStudyActive ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+        aria-hidden={isCaseStudyActive}
+      >
         <Dithering
           style={{ height: '100%', width: '100%' }}
           colorBack={ditheringColors.colorBack}
@@ -326,6 +411,80 @@ export default function ProjectPage() {
           speed={0.1}
         />
       </div>
+
+      <AnimatePresence>
+        {isCaseStudyActive && selectedProject && pageBounds ? (
+          <motion.div
+            key="case-study-overlay"
+            className={`projects-page__case-study-overlay ${
+              isDarkMode ? 'projects-page__case-study-overlay--dark' : 'projects-page__case-study-overlay--light'
+            }`}
+            style={{ position: 'absolute' }}
+            initial={{
+              left: expandFrom.x - pageBounds.x,
+              top: expandFrom.y - pageBounds.y,
+              width: expandFrom.width,
+              height: expandFrom.height,
+              borderRadius: 12,
+            }}
+            animate={
+              caseStudyPhase === 'closing'
+                ? {
+                    left: expandFrom.x - pageBounds.x,
+                    top: expandFrom.y - pageBounds.y,
+                    width: expandFrom.width,
+                    height: expandFrom.height,
+                    borderRadius: 12,
+                    opacity: 0,
+                  }
+                : {
+                    left: 0,
+                    top: 0,
+                    width: pageBounds.width,
+                    height: pageBounds.height,
+                    borderRadius: 0,
+                    opacity: 1,
+                  }
+            }
+            exit={{
+              opacity: 0,
+              transition: { duration: 0.25 },
+            }}
+            transition={expandTransition}
+            onAnimationComplete={() => {
+              if (caseStudyPhase === 'expanding') handleExpandComplete()
+              if (caseStudyPhase === 'closing') handleCloseComplete()
+            }}
+          >
+            {expandOrigin?.image ? (
+              <motion.img
+                src={expandOrigin.image}
+                alt=""
+                aria-hidden
+                className="projects-page__case-study-expand-image"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: showCaseStudyContent ? 0 : 1 }}
+                transition={{ duration: 0.35, delay: showCaseStudyContent ? 0 : 0 }}
+              />
+            ) : null}
+
+            <motion.div
+              className="projects-page__case-study-inner"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: showCaseStudyContent ? 1 : 0 }}
+              transition={{ duration: 0.35, delay: showCaseStudyContent ? 0.1 : 0 }}
+            >
+              <ProjectCaseStudyDetail
+                project={selectedProject}
+                onBack={handleBackToList}
+                isDarkMode={isDarkMode}
+                fullscreen
+                showContent={showCaseStudyContent}
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }

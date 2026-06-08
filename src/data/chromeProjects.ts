@@ -1,6 +1,6 @@
 import type { Project } from '@/components/ui/project-showcase'
 
-export type ProjectCategory = 'hackathon' | 'side' | 'all'
+export type ProjectCategory = 'hackathon' | 'side' | 'study-case' | 'all'
 export type ProjectFilter = 'all' | 'hackathon' | 'side' | 'study-case'
 
 export interface ProcessStep {
@@ -206,6 +206,24 @@ const CHROME_PROJECTS: ChromeProject[] = [
       { title: 'Mobile-first UX', description: 'Camera capture flow optimized for one-thumb use.' },
     ],
   },
+  {
+    id: 'tiktok-travel-hub',
+    title: 'TikTok Cultural Travel Hub',
+    description:
+      'Helping TikTok users explore travel content—search a destination, scan curated videos, and read quick travel notes before they go.',
+    details:
+      'TikTok already has travel content, but it is scattered across search results, hashtags, and algorithm recommendations. I designed a Cultural Travel Hub that helps users search a destination, read quick travel notes, filter by categories, scan videos in a grid, and open full-screen TikTok videos.',
+    year: '2025',
+    link: DEFAULT_LINK,
+    image: '/images/chrome-shortcuts/project.png',
+    category: 'study-case',
+    tags: ['Study Case'],
+    process: [
+      { title: 'Problem framing', description: 'Mapped scattered short-form travel search to a structured destination guide.' },
+      { title: 'Prototype testing', description: 'College student sessions on text summaries vs video grids vs full-screen playback.' },
+      { title: 'Pivot to guides', description: 'Shifted from reply browsing to pre-travel destination understanding.' },
+    ],
+  },
 ]
 
 const ALL_TAB_ORDER = [
@@ -222,12 +240,14 @@ const ALL_TAB_ORDER = [
 
 const HACKATHON_TAB_ORDER = ['forma', 'quarte', 'clarte'] as const
 const SIDE_TAB_ORDER = ['fitout', 'clover', 'kine', 'stash', 'los'] as const
+const STUDY_CASE_TAB_ORDER = ['tiktok-travel-hub'] as const
 
 const projectById = new Map(CHROME_PROJECTS.map((project) => [project.id, project]))
 
 const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   hackathon: 'Hack-a-thon',
   side: 'Side projects',
+  'study-case': 'Study Case',
   all: 'Featured',
 }
 
@@ -252,6 +272,7 @@ export function getProjectTags(project: ChromeProject): string[] {
   if (project.tags?.length) return project.tags
   if (project.category === 'hackathon') return ['Hack-a-thon']
   if (project.category === 'side') return ['Side projects']
+  if (project.category === 'study-case') return ['Study Case']
   if (project.category === 'all') return ['Side projects', 'Hack-a-thon']
   return [getCategoryLabel(project.category)]
 }
@@ -275,7 +296,7 @@ export function getProjectCounts(): Record<ProjectFilter, number> {
     all: ALL_TAB_ORDER.length,
     hackathon: HACKATHON_TAB_ORDER.length,
     side: SIDE_TAB_ORDER.length,
-    'study-case': 0,
+    'study-case': STUDY_CASE_TAB_ORDER.length,
   }
 }
 
@@ -286,8 +307,7 @@ export function getProjectsByFilter(filter: ProjectFilter): Project[] {
     case 'side':
       return orderProjects(SIDE_TAB_ORDER)
     case 'study-case':
-      // No study cases yet — intentionally empty.
-      return []
+      return orderProjects(STUDY_CASE_TAB_ORDER)
     case 'all':
     default:
       return orderProjects(ALL_TAB_ORDER)

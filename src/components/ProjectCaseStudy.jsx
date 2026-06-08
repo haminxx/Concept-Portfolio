@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import CountUp from 'react-countup'
-import { ArrowLeft, ArrowUpRight, Layers, Sparkles, Trophy } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, BookOpen, Layers, Sparkles, Trophy } from 'lucide-react'
 
 import { buildCaseStudies, buildCaseStudy } from '@/data/projectCaseStudies'
 
@@ -39,6 +39,8 @@ function CategoryIcon({ category, className }) {
       return <Trophy className={className} aria-hidden />
     case 'side':
       return <Layers className={className} aria-hidden />
+    case 'study-case':
+      return <BookOpen className={className} aria-hidden />
     default:
       return <Sparkles className={className} aria-hidden />
   }
@@ -52,6 +54,7 @@ function themeClasses(isDarkMode) {
     quoteBg: isDarkMode ? 'bg-white/5' : 'bg-black/5',
     backHover: isDarkMode ? 'hover:bg-white/10' : 'hover:bg-black/10',
     linkHover: isDarkMode ? 'hover:text-white' : 'hover:text-black',
+    sectionBg: isDarkMode ? 'bg-white/[0.03]' : 'bg-black/[0.03]',
   }
 }
 
@@ -78,21 +81,16 @@ function MetricStat({ value, label, sub, isDarkMode, prefersReducedMotion, inVie
   )
 }
 
-function CaseStudyItem({ item, index, isDarkMode, prefersReducedMotion }) {
-  const reversed = index % 2 === 1
+function CaseStudyHero({ item, isDarkMode, prefersReducedMotion, fullscreen = false }) {
   const theme = themeClasses(isDarkMode)
 
   return (
-    <article
-      className={`grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 items-start py-10 ${
-        index > 0 ? `border-t ${isDarkMode ? 'border-white/12' : 'border-black/12'}` : ''
-      }`}
-    >
-      <div
-        className={`lg:col-span-2 space-y-6 ${reversed ? 'lg:order-2' : 'lg:order-1'}`}
-      >
+    <article className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
+      <div className="lg:col-span-2 space-y-6">
         <div
-          className={`relative overflow-hidden rounded-2xl ring-1 ${theme.ring} transition-transform duration-500 ease-out hover:scale-[1.02]`}
+          className={`relative overflow-hidden rounded-2xl ring-1 ${theme.ring} ${
+            fullscreen ? '' : 'transition-transform duration-500 ease-out hover:scale-[1.02]'
+          }`}
         >
           <img
             src={item.image}
@@ -131,11 +129,7 @@ function CaseStudyItem({ item, index, isDarkMode, prefersReducedMotion }) {
         </blockquote>
       </div>
 
-      <div
-        className={`flex flex-col justify-center gap-10 py-2 ${
-          reversed ? 'lg:order-1' : 'lg:order-2'
-        }`}
-      >
+      <div className="flex flex-col justify-center gap-10 py-2">
         {item.metrics.slice(0, 2).map((metric) => (
           <MetricStat
             key={`${item.id}-${metric.label}`}
@@ -149,6 +143,41 @@ function CaseStudyItem({ item, index, isDarkMode, prefersReducedMotion }) {
         ))}
       </div>
     </article>
+  )
+}
+
+function CaseStudySections({ sections, isDarkMode }) {
+  if (!sections?.length) return null
+
+  const theme = themeClasses(isDarkMode)
+
+  return (
+    <div className="mt-12 space-y-6">
+      {sections.map((section) => (
+        <section
+          key={section.title}
+          className={`rounded-2xl p-5 sm:p-6 ring-1 ${theme.ring} ${theme.sectionBg}`}
+        >
+          <h3 className={`text-sm font-medium uppercase tracking-wide mb-3 ${theme.muted}`}>
+            {section.title}
+          </h3>
+          <p className={`text-sm sm:text-base leading-relaxed ${theme.base}`}>{section.body}</p>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+function CaseStudyItem({ item, index, isDarkMode, prefersReducedMotion }) {
+  return (
+    <div
+      className={`py-10 ${
+        index > 0 ? `border-t ${isDarkMode ? 'border-white/12' : 'border-black/12'}` : ''
+      }`}
+    >
+      <CaseStudyHero item={item} isDarkMode={isDarkMode} prefersReducedMotion={prefersReducedMotion} />
+      <CaseStudySections sections={item.sections} isDarkMode={isDarkMode} />
+    </div>
   )
 }
 
@@ -180,42 +209,79 @@ export function ProjectCaseStudyList({ projects, isDarkMode }) {
   )
 }
 
-export function ProjectCaseStudyDetail({ project, onBack, isDarkMode }) {
+export function ProjectCaseStudyDetail({
+  project,
+  onBack,
+  isDarkMode,
+  fullscreen = false,
+  showContent = true,
+}) {
   const prefersReducedMotion = usePrefersReducedMotion()
   const item = buildCaseStudy(project)
   const theme = themeClasses(isDarkMode)
   const externalLink = item.link?.startsWith('http') ? item.link : null
 
+  const containerClass = fullscreen
+    ? 'projects-page__case-study-content h-full overflow-y-auto overflow-x-hidden'
+    : 'w-full max-w-2xl mx-auto px-6 py-8 sm:py-10'
+
+  const innerClass = fullscreen ? 'max-w-5xl mx-auto px-6 sm:px-10 py-8 sm:py-10' : ''
+
   return (
-    <section className="w-full max-w-2xl mx-auto px-6 py-8 sm:py-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors ${theme.muted} ${theme.backHover} ${theme.linkHover}`}
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back to projects
-        </button>
-        {externalLink ? (
-          <a
-            href={externalLink}
-            target="_blank"
-            rel="noreferrer"
-            className={`inline-flex items-center gap-1.5 text-sm transition-colors ${theme.muted} ${theme.linkHover}`}
-          >
-            View project
-            <ArrowUpRight className="h-4 w-4" aria-hidden />
-          </a>
+    <div className={containerClass}>
+      <div className={innerClass}>
+        {showContent ? (
+          <>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={onBack}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors ${theme.muted} ${theme.backHover} ${theme.linkHover}`}
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Back to projects
+              </button>
+              {externalLink ? (
+                <a
+                  href={externalLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center gap-1.5 text-sm transition-colors ${theme.muted} ${theme.linkHover}`}
+                >
+                  View project
+                  <ArrowUpRight className="h-4 w-4" aria-hidden />
+                </a>
+              ) : null}
+            </div>
+
+            {(item.tagline || item.subtitle) && (
+              <header className="mb-8 space-y-2">
+                {item.tagline ? (
+                  <p className={`text-xs font-medium uppercase tracking-wide ${theme.muted}`}>
+                    {item.tagline}
+                  </p>
+                ) : null}
+                <h1 className={`text-2xl sm:text-3xl font-semibold tracking-tight ${theme.base}`}>
+                  {item.name}
+                </h1>
+                {item.subtitle ? (
+                  <p className={`text-sm sm:text-base leading-relaxed max-w-3xl ${theme.muted}`}>
+                    {item.subtitle}
+                  </p>
+                ) : null}
+              </header>
+            )}
+
+            <CaseStudyHero
+              item={item}
+              isDarkMode={isDarkMode}
+              prefersReducedMotion={prefersReducedMotion}
+              fullscreen={fullscreen}
+            />
+            <CaseStudySections sections={item.sections} isDarkMode={isDarkMode} />
+          </>
         ) : null}
       </div>
-
-      <CaseStudyItem
-        item={item}
-        index={0}
-        isDarkMode={isDarkMode}
-        prefersReducedMotion={prefersReducedMotion}
-      />
-    </section>
+    </div>
   )
 }
