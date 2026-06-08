@@ -6,4 +6,42 @@
   isolation: isolate;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.projects-page__scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.projects-page__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.projects-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 5rem;
+  text-align: center;
+}
+
+.projects-page__empty-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.projects-page__empty-note {
+  margin: 0;
+  font-size: 0.9375rem;
 }

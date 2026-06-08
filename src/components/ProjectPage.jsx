@@ -2,21 +2,29 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Dithering } from '@paper-design/shaders-react'
 import { ArrowUpRight } from 'lucide-react'
 
-import { getChromeProjects } from '@/data/chromeProjects'
+import { getProjectsByFilter } from '@/data/chromeProjects'
 import './ProjectPage.css'
 
 const FALLBACK_IMAGE = '/images/chrome-shortcuts/project.png'
 
-/** Real portfolio projects mapped to the showcase shape. */
-const PROJECTS = getChromeProjects().map((project) => ({
-  title: project.title,
-  description: project.description,
-  year: project.year,
-  link: project.link || '#',
-  image: project.image || FALLBACK_IMAGE,
-}))
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'hackathon', label: 'Hackathon' },
+  { value: 'side', label: 'Side Project' },
+  { value: 'study-case', label: 'Study Case' },
+]
 
-function ProjectShowcase({ isDarkMode }) {
+function mapToShowcaseProjects(projects) {
+  return projects.map((project) => ({
+    title: project.title,
+    description: project.description,
+    year: project.year,
+    link: project.link || '#',
+    image: project.image || FALLBACK_IMAGE,
+  }))
+}
+
+function ProjectShowcase({ isDarkMode, projects }) {
   const [hoveredIndex, setHoveredIndex] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 })
@@ -83,7 +91,7 @@ function ProjectShowcase({ isDarkMode }) {
         }}
       >
         <div className={`relative w-[280px] h-[180px] rounded-xl overflow-hidden ${previewBg}`}>
-          {PROJECTS.map((project, index) => (
+          {projects.map((project, index) => (
             <img
               key={project.title}
               src={project.image || FALLBACK_IMAGE}
@@ -101,7 +109,7 @@ function ProjectShowcase({ isDarkMode }) {
       </div>
 
       <div className="space-y-0">
-        {PROJECTS.map((project, index) => {
+        {projects.map((project, index) => {
           const isHovered = hoveredIndex === index
           return (
             <a
@@ -166,6 +174,13 @@ function ProjectShowcase({ isDarkMode }) {
 
 export default function ProjectPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
+  const [filter, setFilter] = useState('all')
+  const scrollRef = useRef(null)
+
+  const projects = useMemo(
+    () => mapToShowcaseProjects(getProjectsByFilter(filter)),
+    [filter]
+  )
 
   const ditheringColors = useMemo(
     () => ({
@@ -175,50 +190,103 @@ export default function ProjectPage() {
     [isDarkMode]
   )
 
+  const handleFilterChange = (nextFilter) => {
+    setFilter(nextFilter)
+    if (scrollRef.current) scrollRef.current.scrollTop = 0
+  }
+
+  const mutedText = isDarkMode ? 'text-white/55' : 'text-black/55'
+  const baseText = isDarkMode ? 'text-white' : 'text-black'
+  const activeTab = isDarkMode ? 'bg-white/12 text-white' : 'bg-black/8 text-black'
+  const inactiveTab = isDarkMode
+    ? 'text-white/55 hover:text-white hover:bg-white/6'
+    : 'text-black/55 hover:text-black hover:bg-black/6'
+
   return (
     <div className="projects-page relative h-full overflow-hidden flex">
       <div
-        className={`w-1/2 h-full overflow-y-auto font-mono relative z-10 ${
+        className={`flex-[2] min-w-0 h-full flex flex-col overflow-hidden font-mono relative z-10 ${
           isDarkMode ? 'bg-black text-white' : 'bg-white text-black'
         }`}
       >
-        <button
-          onClick={() => setIsDarkMode((prev) => !prev)}
-          className={`absolute top-6 right-6 z-50 p-2 rounded-full transition-colors ${
-            isDarkMode ? 'hover:bg-white/10' : 'hover:bg-black/10'
+        <header
+          className={`flex-shrink-0 flex items-center justify-between gap-4 px-6 py-5 border-b ${
+            isDarkMode ? 'border-white/12' : 'border-black/12'
           }`}
-          aria-label="Toggle theme"
         >
-          {isDarkMode ? (
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-            </svg>
-          ) : (
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          )}
-        </button>
+          <div
+            className="flex flex-wrap items-center gap-1"
+            role="tablist"
+            aria-label="Filter projects by category"
+          >
+            {FILTER_OPTIONS.map((option) => {
+              const isActive = filter === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => handleFilterChange(option.value)}
+                  className={`px-3 py-1.5 text-xs font-medium tracking-wide rounded-full transition-colors ${
+                    isActive ? activeTab : inactiveTab
+                  }`}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
 
-        <ProjectShowcase isDarkMode={isDarkMode} />
+          <button
+            onClick={() => setIsDarkMode((prev) => !prev)}
+            className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+              isDarkMode ? 'hover:bg-white/10' : 'hover:bg-black/10'
+            }`}
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+              </svg>
+            ) : (
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
+        </header>
+
+        <div ref={scrollRef} className="projects-page__scroll flex-1 min-h-0">
+          {projects.length === 0 ? (
+            <div className="projects-page__empty">
+              <p className={`projects-page__empty-title ${baseText}`}>Coming soon</p>
+              <p className={`projects-page__empty-note ${mutedText}`}>
+                No study cases to show just yet.
+              </p>
+            </div>
+          ) : (
+            <ProjectShowcase key={filter} isDarkMode={isDarkMode} projects={projects} />
+          )}
+        </div>
       </div>
 
-      <div className="w-1/2 h-full relative">
+      <div className="flex-[1] min-w-0 h-full relative overflow-hidden">
         <Dithering
           style={{ height: '100%', width: '100%' }}
           colorBack={ditheringColors.colorBack}
