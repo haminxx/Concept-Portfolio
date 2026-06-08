@@ -8,5 +8,8 @@ service cloud.firestore {
     match /notes/{docId} {
       allow read, write: if true;
     }
+    match /todos/{docId} {
+      allow read, write: if true;
+    }
   }
 }
