@@ -1,466 +1,304 @@
-import { useState, useCallback, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Grid3X3, LayoutGrid, Heart, ChevronLeft, Images, PanelLeft } from 'lucide-react'
-import {
-  GALLERY_SIZE,
-  getImagePath,
-  getGalleryPhoto,
-  getGalleryAlbums,
-} from '../lib/gallery'
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight, Grid3X3, LayoutGrid, X, ZoomIn } from 'lucide-react'
+import { GALLERY_PHOTOS } from '../config/galleryManifest.js'
 import { ADD_PHOTO_WIDGET_EVENT } from '../lib/photoWidgetRegistry'
+import { cn } from '../lib/utils'
 import './GalleryWindow.css'
 
-const FAVORITES_KEY = 'gallery-favorites'
+/**
+ * Real gallery data is sourced from src/config/galleryManifest.js (45 photos in
+ * public/gallery/photo-*.png). `id` is the stable manifest index so the lightbox
+ * "add to desktop" action keeps working with photo widgets. Generic "Photo N"
+ * titles map to the "Backgrounds" category; the hand-titled imports map to
+ * "Inspiration".
+ */
+const galleryImages = GALLERY_PHOTOS.map((photo, index) => ({
+  id: index,
+  url: photo.src,
+  title: photo.title,
+  category: /^Photo \d+$/.test(photo.title) ? 'Backgrounds' : 'Inspiration',
+}))
 
-function loadFavorites() {
-  try {
-    const raw = localStorage.getItem(FAVORITES_KEY)
-    if (!raw) return new Set()
-    const arr = JSON.parse(raw)
-    return new Set(Array.isArray(arr) ? arr : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function saveFavorites(set) {
-  try {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify([...set]))
-  } catch {
-    // ignore
-  }
-}
-
-function GalleryImage({ index, src, isFavorite, onToggleFavorite, onClick }) {
-  const [hasError, setHasError] = useState(false)
-
-  if (hasError) {
-    return <div className="gallery-window__cell-placeholder" />
-  }
-
+function Badge({ children, className }) {
   return (
-    <div
-      className="gallery-window__cell-wrap"
-      onClick={() => onClick?.(index)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.(index)}
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground',
+        className,
+      )}
     >
-      <img
-        src={src}
-        alt=""
-        className="gallery-window__cell-img"
-        onError={() => setHasError(true)}
-      />
-      <button
-        type="button"
-        className={`gallery-window__heart ${isFavorite ? 'gallery-window__heart--active' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation()
-          onToggleFavorite(index)
-        }}
-        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={2} />
-      </button>
-    </div>
+      {children}
+    </span>
+  )
+}
+
+function FilterButton({ active, className, ...props }) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'border border-border bg-transparent text-foreground hover:bg-accent',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+function IconButton({ className, ...props }) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        'flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10',
+        className,
+      )}
+      {...props}
+    />
   )
 }
 
 export default function GalleryWindow() {
-  const albums = useMemo(() => getGalleryAlbums(), [])
-  const [activeSection, setActiveSection] = useState('albums')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  /** 'root' = album tiles; 'detail' = photos inside one album */
-  const [albumBrowse, setAlbumBrowse] = useState('root')
-  const [activeAlbumId, setActiveAlbumId] = useState(null)
-  const [viewMode, setViewMode] = useState('grid')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState('date')
-  const [favorites, setFavoritesState] = useState(loadFavorites)
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(null)
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [filter, setFilter] = useState('All')
 
-  const setFavorites = useCallback((fn) => {
-    setFavoritesState((prev) => {
-      const next = typeof fn === 'function' ? fn(prev) : fn
-      saveFavorites(next)
-      return next
-    })
-  }, [])
+  const categories = ['All', ...new Set(galleryImages.map((img) => img.category))]
+  const filteredImages =
+    filter === 'All' ? galleryImages : galleryImages.filter((img) => img.category === filter)
 
-  const toggleFavorite = useCallback(
-    (index) => {
-      setFavorites((prev) => {
-        const next = new Set(prev)
-        if (next.has(index)) next.delete(index)
-        else next.add(index)
-        return next
-      })
-    },
-    [setFavorites],
-  )
+  const selectedImageData = galleryImages.find((img) => img.id === selectedImage)
 
-  const goAlbumRoot = useCallback(() => {
-    setAlbumBrowse('root')
-    setActiveAlbumId(null)
-  }, [])
+  const handleNext = () => {
+    if (selectedImage === null || filteredImages.length === 0) return
+    const currentIndex = filteredImages.findIndex((img) => img.id === selectedImage)
+    const nextIndex = (currentIndex + 1) % filteredImages.length
+    setSelectedImage(filteredImages[nextIndex].id)
+  }
 
-  const openAlbumFromSidebar = useCallback((albumId) => {
-    setActiveSection('albums')
-    setAlbumBrowse('detail')
-    setActiveAlbumId(albumId)
-    setSidebarOpen(false)
-  }, [])
+  const handlePrev = () => {
+    if (selectedImage === null || filteredImages.length === 0) return
+    const currentIndex = filteredImages.findIndex((img) => img.id === selectedImage)
+    const prevIndex = (currentIndex - 1 + filteredImages.length) % filteredImages.length
+    setSelectedImage(filteredImages[prevIndex].id)
+  }
 
-  const openAlbumFromGrid = useCallback((albumId) => {
-    setAlbumBrowse('detail')
-    setActiveAlbumId(albumId)
-    setSidebarOpen(false)
-  }, [])
-
-  const indices = useMemo(() => {
-    if (activeSection === 'favorites') {
-      return [...favorites].sort((a, b) => a - b)
+  const handleCardKeyDown = (event, imageId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      setSelectedImage(imageId)
     }
-    if (activeSection === 'albums' && albumBrowse === 'detail' && activeAlbumId) {
-      const al = albums.find((a) => a.id === activeAlbumId)
-      return al?.photoIndexes?.length ? [...al.photoIndexes] : []
-    }
-    if (activeSection === 'recents') {
-      return Array.from({ length: GALLERY_SIZE }, (_, i) => i).slice(0, 18)
-    }
-    return Array.from({ length: GALLERY_SIZE }, (_, i) => i)
-  }, [
-    activeSection,
-    albumBrowse,
-    activeAlbumId,
-    favorites,
-    albums,
-  ])
+  }
 
-  let filteredIndices = searchQuery.trim()
-    ? indices.filter((i) => {
-        const meta = getGalleryPhoto(i)
-        const name = meta?.title ?? `photo-${i + 1}`
-        return (
-          name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          `photo-${i + 1}`.includes(searchQuery.toLowerCase())
-        )
-      })
-    : [...indices]
-
-  filteredIndices = [...filteredIndices].sort((a, b) => {
-    const metaA = getGalleryPhoto(a)
-    const metaB = getGalleryPhoto(b)
-    if (sortBy === 'name') {
-      return (metaA?.title ?? '').localeCompare(metaB?.title ?? '')
+  useEffect(() => {
+    if (selectedImage === null) return undefined
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setSelectedImage(null)
+      else if (event.key === 'ArrowRight') handleNext()
+      else if (event.key === 'ArrowLeft') handlePrev()
     }
-    return (metaB?.date ?? '').localeCompare(metaA?.date ?? '')
-  })
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedImage, filter])
 
-  const showAlbumPicker =
-    activeSection === 'albums' && albumBrowse === 'root' && !searchQuery.trim()
-
-  const toolbarTitle = (() => {
-    if (activeSection === 'all') return 'Library'
-    if (activeSection === 'recents') return 'Recents'
-    if (activeSection === 'favorites') return 'Favorites'
-    if (activeSection === 'albums' && albumBrowse === 'root') return 'Albums'
-    if (activeSection === 'albums' && activeAlbumId) {
-      return albums.find((a) => a.id === activeAlbumId)?.title ?? 'Album'
-    }
-    return 'Photos'
-  })()
+  const addToDesktop = () => {
+    if (selectedImage === null) return
+    window.dispatchEvent(
+      new CustomEvent(ADD_PHOTO_WIDGET_EVENT, { detail: { galleryIndex: selectedImage } }),
+    )
+  }
 
   return (
-    <div
-      className={`gallery-window${sidebarOpen ? ' gallery-window--sidebar-open' : ''}`}
+    <section
+      className="gallery-window flex h-full flex-col bg-background text-foreground"
+      aria-labelledby="gallery-heading"
     >
-      <button
-        type="button"
-        className="gallery-window__sidebar-toggle"
-        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
-        onClick={() => setSidebarOpen((o) => !o)}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="shrink-0 px-6 pb-3 pt-6 text-center"
       >
-        <PanelLeft size={20} strokeWidth={2} />
-      </button>
-      <div
-        className="gallery-window__sidebar-scrim"
-        aria-hidden
-        onClick={() => setSidebarOpen(false)}
-      />
-      <aside className="gallery-window__sidebar">
-        <div className="gallery-window__sidebar-brand">
-          <Images size={20} strokeWidth={1.75} aria-hidden />
-          <span>Photos</span>
-        </div>
-        <p className="gallery-window__sidebar-heading">Library</p>
-        <nav className="gallery-window__nav">
-          <button
-            type="button"
-            className={`gallery-window__nav-item ${activeSection === 'all' ? 'gallery-window__nav-item--active' : ''}`}
-            onClick={() => {
-              setActiveSection('all')
-              goAlbumRoot()
-              setSidebarOpen(false)
-            }}
-          >
-            All Photos
-          </button>
-          <button
-            type="button"
-            className={`gallery-window__nav-item ${activeSection === 'recents' ? 'gallery-window__nav-item--active' : ''}`}
-            onClick={() => {
-              setActiveSection('recents')
-              goAlbumRoot()
-              setSidebarOpen(false)
-            }}
-          >
-            Recents
-          </button>
-          <button
-            type="button"
-            className={`gallery-window__nav-item ${activeSection === 'favorites' ? 'gallery-window__nav-item--active' : ''}`}
-            onClick={() => {
-              setActiveSection('favorites')
-              goAlbumRoot()
-              setSidebarOpen(false)
-            }}
-          >
-            Favorites
-          </button>
-        </nav>
-        <p className="gallery-window__sidebar-heading gallery-window__sidebar-heading--albums">
-          My Albums
+        <Badge className="mb-3">
+          <Grid3X3 className="h-3 w-3" />
+          Gallery
+        </Badge>
+        <h2 id="gallery-heading" className="mb-1 text-2xl font-bold tracking-tight">
+          My Portfolio
+        </h2>
+        <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
+          A collection of visuals and creative work
         </p>
-        <button
-          type="button"
-          className={`gallery-window__nav-item gallery-window__nav-item--albums-top ${activeSection === 'albums' && albumBrowse === 'root' ? 'gallery-window__nav-item--active' : ''}`}
-          onClick={() => {
-            setActiveSection('albums')
-            goAlbumRoot()
-            setSidebarOpen(false)
-          }}
-        >
-          Albums
-        </button>
-        <ul className="gallery-window__album-list">
-          {albums.map((album) => (
-            <li key={album.id}>
-              <button
-                type="button"
-                className={`gallery-window__album-item ${activeSection === 'albums' && activeAlbumId === album.id ? 'gallery-window__album-item--active' : ''}`}
-                onClick={() => openAlbumFromSidebar(album.id)}
-              >
-                <span className="gallery-window__album-item-title">{album.title}</span>
-                <span className="gallery-window__album-item-count">
-                  {album.photoIndexes?.length ?? 0}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-      <main className="gallery-window__main">
-        <header className="gallery-window__toolbar">
-          <div className="gallery-window__toolbar-left">
-            {activeSection === 'albums' && albumBrowse === 'detail' && (
-              <button
-                type="button"
-                className="gallery-window__back"
-                onClick={goAlbumRoot}
-                aria-label="Back to albums"
-              >
-                <ChevronLeft size={20} strokeWidth={2} />
-                <span>Albums</span>
-              </button>
-            )}
-            <h1 className="gallery-window__toolbar-title">{toolbarTitle}</h1>
-          </div>
-          <div className="gallery-window__search-wrap">
-            <Search size={16} className="gallery-window__search-icon" />
-            <input
-              type="search"
-              placeholder="Search your library…"
-              className="gallery-window__search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="gallery-window__view-options">
-            <select
-              className="gallery-window__sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              aria-label="Sort by"
-            >
-              <option value="date">Date</option>
-              <option value="name">Name</option>
-            </select>
-            <button
-              type="button"
-              className={`gallery-window__view-btn ${viewMode === 'grid' ? 'gallery-window__view-btn--active' : ''}`}
-              aria-label="Grid view"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid3X3 size={18} />
-            </button>
-            <button
-              type="button"
-              className={`gallery-window__view-btn ${viewMode === 'list' ? 'gallery-window__view-btn--active' : ''}`}
-              aria-label="List view"
-              onClick={() => setViewMode('list')}
-            >
-              <LayoutGrid size={18} />
-            </button>
-          </div>
-        </header>
+      </motion.div>
 
-        <div className="gallery-window__stage">
-          <AnimatePresence mode="wait">
-            {showAlbumPicker ? (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="shrink-0 flex flex-wrap justify-center gap-2 px-6 pb-4"
+        role="group"
+        aria-label="Gallery categories"
+      >
+        {categories.map((category) => (
+          <FilterButton
+            key={category}
+            active={filter === category}
+            onClick={() => setFilter(category)}
+            aria-pressed={filter === category}
+          >
+            {category}
+          </FilterButton>
+        ))}
+      </motion.div>
+
+      <div className="gallery-window__scroll min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+        <motion.div
+          layout
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          role="list"
+          aria-label="Gallery items"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredImages.map((image, index) => (
               <motion.div
-                key="albums-root"
-                className="gallery-window__album-picker"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                key={image.id}
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+                role="listitem"
               >
-                <p className="gallery-window__picker-subtitle">Browse by album</p>
-                <div className="gallery-window__album-picker-grid">
-                  {albums.map((album) => {
-                    const first = album.photoIndexes?.[0]
-                    const cover = first != null ? getImagePath(first) : null
-                    return (
-                      <motion.button
-                        key={album.id}
-                        type="button"
-                        className="gallery-window__album-tile"
-                        onClick={() => openAlbumFromGrid(album.id)}
-                        layout
-                        initial={{ opacity: 0, scale: 0.96 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.22 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="gallery-window__album-tile-cover">
-                          {cover ? (
-                            <img src={cover} alt="" className="gallery-window__album-tile-img" />
-                          ) : (
-                            <div className="gallery-window__album-tile-empty" />
-                          )}
-                        </div>
-                        <span className="gallery-window__album-tile-title">{album.title}</span>
-                        <span className="gallery-window__album-tile-sub">
-                          {album.photoIndexes?.length ?? 0} items
-                        </span>
-                      </motion.button>
-                    )
-                  })}
+                <div
+                  className="group relative cursor-pointer overflow-hidden rounded-xl border border-border transition-all hover:border-ring hover:shadow-xl"
+                  onClick={() => setSelectedImage(image.id)}
+                  onKeyDown={(event) => handleCardKeyDown(event, image.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View details for ${image.title}`}
+                >
+                  <div className="relative aspect-square overflow-hidden">
+                    <motion.img
+                      src={image.url}
+                      alt={image.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 p-3 backdrop-blur-sm"
+                      aria-hidden="true"
+                    >
+                      <ZoomIn className="mb-2 h-7 w-7 text-white" />
+                      <h3 className="mb-2 text-center text-base font-semibold text-white">
+                        {image.title}
+                      </h3>
+                      <Badge>{image.category}</Badge>
+                    </motion.div>
+                  </div>
                 </div>
               </motion.div>
-            ) : (
-              <motion.div
-                key={`grid-${activeSection}-${activeAlbumId ?? 'x'}`}
-                className={`gallery-window__grid ${viewMode === 'list' ? 'gallery-window__grid--list' : ''}${activeSection === 'all' && !searchQuery.trim() ? ' gallery-window__grid--all-photos' : ''}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {activeSection === 'recents' && !searchQuery && (
-                  <p className="gallery-window__section-hint">Recently added</p>
-                )}
-                {activeSection === 'favorites' && !searchQuery && (
-                  <p className="gallery-window__section-hint">
-                    Tap the heart on any photo to add it here
-                  </p>
-                )}
-                {activeSection === 'albums' && albumBrowse === 'detail' && activeAlbumId && !searchQuery && (
-                  <p className="gallery-window__section-hint">
-                    {albums.find((a) => a.id === activeAlbumId)?.title}
-                  </p>
-                )}
-                {searchQuery && (
-                  <p className="gallery-window__section-hint">
-                    {filteredIndices.length} result{filteredIndices.length !== 1 ? 's' : ''}
-                  </p>
-                )}
-                {filteredIndices.map((i) => (
-                  <motion.div
-                    key={i}
-                    className="gallery-window__cell"
-                    layout
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <GalleryImage
-                      index={i}
-                      src={getImagePath(i)}
-                      isFavorite={favorites.has(i)}
-                      onToggleFavorite={toggleFavorite}
-                      onClick={setSelectedPhotoIndex}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
+            ))}
           </AnimatePresence>
-        </div>
-      </main>
-      {selectedPhotoIndex != null && (
-        <div
-          className="gallery-window__lightbox"
-          onClick={() => setSelectedPhotoIndex(null)}
-          onKeyDown={(e) => e.key === 'Escape' && setSelectedPhotoIndex(null)}
-          role="button"
-          tabIndex={0}
-          aria-label="Close"
-        >
+        </motion.div>
+      </div>
+
+      <AnimatePresence>
+        {selectedImage !== null && selectedImageData && (
           <motion.div
-            className="gallery-window__lightbox-inner"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-6"
+            onClick={() => setSelectedImage(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gallery-dialog-title"
+            aria-describedby="gallery-dialog-description"
           >
-            <div className="gallery-window__lightbox-toolbar">
-              <button
-                type="button"
-                className="gallery-window__lightbox-add-desktop"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  window.dispatchEvent(
-                    new CustomEvent(ADD_PHOTO_WIDGET_EVENT, {
-                      detail: { galleryIndex: selectedPhotoIndex },
-                    }),
-                  )
-                }}
-                aria-label="Add photo to desktop"
-                title="Add to desktop"
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative flex max-h-[90vh] max-w-5xl flex-col items-center"
+            >
+              <div className="absolute right-2 top-2 z-10 flex gap-2">
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    addToDesktop()
+                  }}
+                  aria-label="Add photo to desktop"
+                  title="Add to desktop"
+                >
+                  <LayoutGrid className="h-5 w-5" />
+                </IconButton>
+                <IconButton
+                  onClick={() => setSelectedImage(null)}
+                  aria-label="Close gallery dialog"
+                >
+                  <X className="h-5 w-5" />
+                </IconButton>
+              </div>
+              {filteredImages.length > 1 && (
+                <>
+                  <IconButton
+                    className="absolute left-1 top-1/2 -translate-y-1/2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePrev()
+                    }}
+                    aria-label="View previous image"
+                  >
+                    <ChevronLeft className="h-7 w-7" />
+                  </IconButton>
+                  <IconButton
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleNext()
+                    }}
+                    aria-label="View next image"
+                  >
+                    <ChevronRight className="h-7 w-7" />
+                  </IconButton>
+                </>
+              )}
+              <motion.img
+                key={selectedImage}
+                src={selectedImageData.url}
+                alt={selectedImageData.title}
+                className="max-h-[78vh] w-auto rounded-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mt-4 text-center text-white"
+                id="gallery-dialog-description"
               >
-                <LayoutGrid size={20} strokeWidth={2} aria-hidden />
-              </button>
-              <button
-                type="button"
-                className="gallery-window__lightbox-close"
-                onClick={() => setSelectedPhotoIndex(null)}
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <img
-              src={getImagePath(selectedPhotoIndex)}
-              alt={getGalleryPhoto(selectedPhotoIndex)?.title ?? `Photo ${selectedPhotoIndex + 1}`}
-              className="gallery-window__lightbox-img"
-            />
+                <h3 className="mb-2 text-lg font-semibold" id="gallery-dialog-title">
+                  {selectedImageData.title}
+                </h3>
+                <Badge>{selectedImageData.category}</Badge>
+              </motion.div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
-    </div>
+        )}
+      </AnimatePresence>
+    </section>
   )
 }
