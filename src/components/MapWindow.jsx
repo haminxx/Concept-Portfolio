@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import {
   Search,
   LayoutGrid,
@@ -10,11 +10,12 @@ import {
   Locate,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Navigation,
+  Navigation2,
   Car,
   Footprints,
   Bike,
-  Bus,
   MapPin,
   Map as MapIcon,
   Layers,
@@ -25,13 +26,27 @@ import {
   ShoppingCart,
   Coffee,
   Store,
+  Binoculars,
+  Maximize2,
+  Share,
+  GripVertical,
+  Clock,
 } from 'lucide-react'
-import { Map, MapMarker, MarkerContent, MapRoute } from './ui/maplibre-map'
+import { Map, MapMarker, MarkerContent, MapRoute, MapHighlight } from './ui/maplibre-map'
 import { useLanguage } from '../context/LanguageContext'
+import {
+  POI_PLACES,
+  POI_CATEGORIES,
+  POI_MIN_ZOOM,
+  HIGHLIGHT_AREAS,
+  FEATURED_MARKER,
+  GUIDES_REGION,
+  GUIDES_FEATURED,
+  GUIDES_SECTIONS,
+} from './mapData'
 import './MapWindow.css'
 
 /* ── Base styles ── */
-const POSITRON = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
 const VOYAGER = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json'
 const SATELLITE_STYLE = {
   version: 8,
@@ -45,15 +60,12 @@ const SATELLITE_STYLE = {
   },
   layers: [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }],
 }
-
 const STYLE_DEFS = {
   explore: { light: VOYAGER, dark: VOYAGER },
   satellite: { light: SATELLITE_STYLE, dark: SATELLITE_STYLE },
 }
+const INITIAL_VIEW = { center: [-117.234, 32.8801], zoom: 12.5 }
 
-const INITIAL_VIEW = { center: [-117.726, 33.575], zoom: 10 }
-
-/* ── Find Nearby categories (Apple Maps style) ── */
 const CATEGORIES = [
   { id: 'fast food', label: 'Fast Food', icon: Beef, color: '#FF9F0A' },
   { id: 'restaurant', label: 'Restaurants', icon: UtensilsCrossed, color: '#FF9500' },
@@ -63,19 +75,32 @@ const CATEGORIES = [
   { id: 'cafe', label: 'Coffee', icon: Coffee, color: '#FF9500' },
   { id: 'convenience', label: 'Convenience', icon: Store, color: '#30D158' },
 ]
-
 const NAV_ITEMS = [
   { id: 'search', label: 'Search', icon: Search },
   { id: 'guides', label: 'Guides', icon: LayoutGrid },
   { id: 'directions', label: 'Directions', icon: CornerUpRight },
 ]
-
 const TRANSPORT_MODES = [
   { id: 'driving', label: 'Drive', icon: Car },
   { id: 'walking', label: 'Walk', icon: Footprints },
   { id: 'cycling', label: 'Cycle', icon: Bike },
-  { id: 'transit', label: 'Transit', icon: Bus },
 ]
+
+/* ── Recents persistence ── */
+const RECENTS_KEY = 'map-recents-v2'
+function loadRecents() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENTS_KEY)) || []
+  } catch {
+    return []
+  }
+}
+function saveRecent(place) {
+  const list = loadRecents().filter((r) => r.name !== place.name)
+  const next = [{ name: place.name, address: place.address, lng: place.lng, lat: place.lat }, ...list].slice(0, 6)
+  localStorage.setItem(RECENTS_KEY, JSON.stringify(next))
+  return next
+}
 
 /* ── Geocode (Nominatim) ── */
 async function geocode(query) {
@@ -131,49 +156,57 @@ export default function MapWindow() {
   const [styleKey, setStyleKey] = useState('explore')
   const [styleMenuOpen, setStyleMenuOpen] = useState(false)
   const [bearing, setBearing] = useState(0)
+  const [zoom, setZoom] = useState(INITIAL_VIEW.zoom)
+  const [recents, setRecents] = useState(loadRecents)
 
   /* ── Search state ── */
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
-  const [searchView, setSearchView] = useState('main') // main | results | detail
+  const [searchView, setSearchView] = useState('main')
   const [selected, setSelected] = useState(null)
 
   /* ── Directions state ── */
-  const [dirFrom, setDirFrom] = useState('')
+  const [dirFrom, setDirFrom] = useState('My Location')
   const [dirTo, setDirTo] = useState('')
   const [dirProfile, setDirProfile] = useState('driving')
   const [route, setRoute] = useState(null)
   const [routeLoading, setRouteLoading] = useState(false)
   const [endpoints, setEndpoints] = useState(null)
 
+  /* ── Street view state ── */
+  const [svDragging, setSvDragging] = useState(false)
+  const [svDragPos, setSvDragPos] = useState({ x: 0, y: 0 })
+  const [streetView, setStreetView] = useState(null) // { lng, lat, heading }
+  const [svExpanded, setSvExpanded] = useState(false)
+  const svDraggingRef = useRef(false)
+
   const styles = useMemo(() => STYLE_DEFS[styleKey], [styleKey])
 
-  /* ── Track bearing for compass ── */
+  /* ── Track bearing + zoom ── */
   useEffect(() => {
     if (!mapObj) return undefined
     const onRotate = () => setBearing(mapObj.getBearing())
+    const onZoom = () => setZoom(mapObj.getZoom())
     mapObj.on('rotate', onRotate)
     mapObj.on('rotateend', onRotate)
+    mapObj.on('zoom', onZoom)
     onRotate()
+    onZoom()
     return () => {
       mapObj.off('rotate', onRotate)
       mapObj.off('rotateend', onRotate)
+      mapObj.off('zoom', onZoom)
     }
   }, [mapObj])
 
   /* ── Map helpers ── */
   const flyTo = useCallback(
-    (lng, lat, zoom = 15) => {
-      mapObj?.flyTo({ center: [lng, lat], zoom, duration: 1200, essential: true })
-    },
+    (lng, lat, z = 15) => mapObj?.flyTo({ center: [lng, lat], zoom: z, duration: 1200, essential: true }),
     [mapObj],
   )
-
   const zoomIn = useCallback(() => mapObj?.zoomTo(mapObj.getZoom() + 1, { duration: 300 }), [mapObj])
   const zoomOut = useCallback(() => mapObj?.zoomTo(mapObj.getZoom() - 1, { duration: 300 }), [mapObj])
-
-  const setMapBearing = useCallback((deg) => mapObj?.easeTo({ bearing: deg, duration: 450 }), [mapObj])
   const resetNorth = useCallback(() => mapObj?.easeTo({ bearing: 0, pitch: 0, duration: 450 }), [mapObj])
 
   const locateUser = useCallback(() => {
@@ -186,13 +219,9 @@ export default function MapWindow() {
   }, [flyTo])
 
   /* ── Nav handling ── */
-  const handleNavClick = useCallback(
-    (id) => {
-      setActiveSection((prev) => (prev === id && railExpanded ? null : id))
-      if (!railExpanded) setActiveSection(id)
-    },
-    [railExpanded],
-  )
+  const handleNavClick = useCallback((id) => {
+    setActiveSection((prev) => (prev === id ? null : id))
+  }, [])
 
   /* ── Search ── */
   const runSearch = useCallback(async (q) => {
@@ -212,7 +241,9 @@ export default function MapWindow() {
     (place) => {
       setSelected(place)
       setSearchView('detail')
+      setActiveSection('search')
       flyTo(place.lng, place.lat, 15)
+      setRecents(saveRecent(place))
     },
     [flyTo],
   )
@@ -266,7 +297,7 @@ export default function MapWindow() {
               [data.coords[0][0], data.coords[0][1]],
             ],
           )
-          mapObj.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 360, right: 80 }, duration: 900 })
+          mapObj.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 380, right: 80 }, duration: 900 })
         }
       }
     } catch {
@@ -277,16 +308,64 @@ export default function MapWindow() {
 
   const startDirectionsFromPlace = useCallback(() => {
     if (!selected) return
-    setDirFrom('My location')
+    setDirFrom('My Location')
     setDirTo(selected.address || selected.name)
     setActiveSection('directions')
   }, [selected])
 
   const routeCoords = route?.coords && route.coords.length >= 2 ? route.coords : null
 
+  /* ── Street view drag ── */
+  const placeStreetView = useCallback(
+    (clientX, clientY) => {
+      if (!mapObj) return
+      const container = mapObj.getContainer()
+      const rect = container.getBoundingClientRect()
+      const x = clientX - rect.left
+      const y = clientY - rect.top
+      if (x < 0 || y < 0 || x > rect.width || y > rect.height) return
+      const lngLat = mapObj.unproject([x, y])
+      setStreetView({ lng: lngLat.lng, lat: lngLat.lat, heading: 0 })
+      setSvExpanded(false)
+    },
+    [mapObj],
+  )
+
+  const startSvDrag = useCallback((e) => {
+    e.preventDefault()
+    svDraggingRef.current = true
+    setSvDragging(true)
+    setSvDragPos({ x: e.clientX, y: e.clientY })
+  }, [])
+
+  useEffect(() => {
+    if (!svDragging) return undefined
+    const onMove = (e) => setSvDragPos({ x: e.clientX, y: e.clientY })
+    const onUp = (e) => {
+      svDraggingRef.current = false
+      setSvDragging(false)
+      placeStreetView(e.clientX, e.clientY)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [svDragging, placeStreetView])
+
+  const svUrl = streetView
+    ? `https://maps.google.com/maps?q=&layer=c&cbll=${streetView.lat},${streetView.lng}&cbp=11,${streetView.heading || 0},0,0,0&output=svembed`
+    : null
+
+  /* POIs visible only when zoomed in enough */
+  const showPois = zoom >= POI_MIN_ZOOM
+
   /* ════════════════════════════ Render ════════════════════════════ */
   return (
-    <div className={`mw ${railExpanded ? 'mw--rail-expanded' : 'mw--rail-collapsed'}`}>
+    <div
+      className={`mw ${railExpanded ? 'mw--rail-expanded' : 'mw--rail-collapsed'}${activeSection ? ' mw--panel-open' : ''}`}
+    >
       {/* Map base */}
       <Map
         ref={setMapObj}
@@ -297,6 +376,45 @@ export default function MapWindow() {
         zoom={INITIAL_VIEW.zoom}
         attributionControl={false}
       >
+        {/* Highlighted areas */}
+        {HIGHLIGHT_AREAS.map((area) => (
+          <MapHighlight key={area.id} coordinates={area.coordinates} color={area.color} />
+        ))}
+
+        {/* Featured / home marker */}
+        <MapMarker longitude={FEATURED_MARKER.lng} latitude={FEATURED_MARKER.lat}>
+          <MarkerContent>
+            <span className="mw__featured" title={FEATURED_MARKER.name}>
+              {FEATURED_MARKER.initials}
+            </span>
+          </MarkerContent>
+        </MapMarker>
+
+        {/* Zoom-gated POIs */}
+        {showPois &&
+          POI_PLACES.map((poi) => {
+            const cat = POI_CATEGORIES[poi.category] || POI_CATEGORIES.default
+            return (
+              <MapMarker
+                key={poi.id}
+                longitude={poi.lng}
+                latitude={poi.lat}
+                anchor="left"
+                onClick={() => selectPlace({ name: poi.name, address: poi.name, lng: poi.lng, lat: poi.lat })}
+              >
+                <MarkerContent>
+                  <span className="mw__poi">
+                    <span className="mw__poi-ico" style={{ background: cat.color }}>
+                      <cat.icon size={12} strokeWidth={2.2} />
+                    </span>
+                    <span className="mw__poi-label">{poi.name}</span>
+                  </span>
+                </MarkerContent>
+              </MapMarker>
+            )
+          })}
+
+        {/* Search / route markers */}
         {selected && (
           <MapMarker longitude={selected.lng} latitude={selected.lat}>
             <MarkerContent>
@@ -319,6 +437,22 @@ export default function MapWindow() {
           </>
         )}
         {routeCoords && <MapRoute coordinates={routeCoords} color="#0a84ff" width={6} />}
+
+        {/* Street-view pegman on map */}
+        {streetView && (
+          <MapMarker
+            longitude={streetView.lng}
+            latitude={streetView.lat}
+            draggable
+            onDragEnd={({ lng, lat }) => setStreetView((sv) => ({ ...sv, lng, lat }))}
+          >
+            <MarkerContent>
+              <span className="mw__pegman">
+                <Binoculars size={15} strokeWidth={2} />
+              </span>
+            </MarkerContent>
+          </MapMarker>
+        )}
       </Map>
 
       {/* ── Left icon rail ── */}
@@ -357,6 +491,22 @@ export default function MapWindow() {
           ))}
         </div>
 
+        {railExpanded && recents.length > 0 && (
+          <div className="mw__rail-recents">
+            <p className="mw__rail-recents-head">
+              Recents <ChevronRight size={13} strokeWidth={2.4} />
+            </p>
+            {recents.slice(0, 4).map((r, i) => (
+              <button key={i} type="button" className="mw__rail-recent" onClick={() => selectPlace(r)}>
+                <span className="mw__rail-recent-ico">
+                  <Clock size={13} strokeWidth={2} />
+                </span>
+                <span className="mw__rail-recent-name">{r.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {railExpanded && (
           <div className="mw__rail-footer">
             <span className="mw__rail-footer-top">Have a Business on Maps?</span>
@@ -374,15 +524,28 @@ export default function MapWindow() {
               {activeSection === 'guides' && 'Guides'}
               {activeSection === 'directions' && 'Directions'}
             </h2>
-            <button
-              type="button"
-              className="mw__panel-close"
-              onClick={() => setActiveSection(null)}
-              aria-label="Close panel"
-            >
-              <X size={16} strokeWidth={2.2} />
-            </button>
+            <div className="mw__panel-head-actions">
+              {activeSection === 'directions' && (
+                <button type="button" className="mw__panel-icon-btn" aria-label="Share">
+                  <Share size={15} strokeWidth={2} />
+                </button>
+              )}
+              <button
+                type="button"
+                className="mw__panel-icon-btn"
+                onClick={() => setActiveSection(null)}
+                aria-label="Close panel"
+              >
+                <X size={16} strokeWidth={2.2} />
+              </button>
+            </div>
           </header>
+
+          {activeSection === 'guides' && (
+            <div className="mw__panel-subtitle">
+              {GUIDES_REGION} <ChevronDown size={15} strokeWidth={2.4} />
+            </div>
+          )}
 
           <div className="mw__panel-body">
             {/* ═══ SEARCH ═══ */}
@@ -474,28 +637,73 @@ export default function MapWindow() {
             {/* ═══ GUIDES ═══ */}
             {activeSection === 'guides' && (
               <div className="mw__guides">
-                <p className="mw__section-title">My Guides</p>
-                <p className="mw__empty">Curated place collections will appear here.</p>
+                <div className="mw__guide-hero" style={{ backgroundImage: `url(${GUIDES_FEATURED.image})` }}>
+                  <div className="mw__guide-hero-text">
+                    <span className="mw__guide-brand">🌲 {GUIDES_FEATURED.brand}</span>
+                    <span className="mw__guide-hero-title">{GUIDES_FEATURED.title}</span>
+                  </div>
+                </div>
+
+                {GUIDES_SECTIONS.map((sec) => (
+                  <div key={sec.id} className="mw__guide-section">
+                    <p className="mw__guide-section-title">
+                      {sec.title} <ChevronRight size={15} strokeWidth={2.4} />
+                    </p>
+                    <div className="mw__guide-cards">
+                      {sec.cards.map((card) => (
+                        <div
+                          key={card.id}
+                          className="mw__guide-card"
+                          style={{ backgroundImage: `url(${card.image})` }}
+                        >
+                          <div className="mw__guide-card-text">
+                            <span className="mw__guide-card-brand">{card.brand}</span>
+                            <span className="mw__guide-card-title">{card.title}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
             {/* ═══ DIRECTIONS ═══ */}
             {activeSection === 'directions' && (
               <>
+                <div className="mw__segment">
+                  {TRANSPORT_MODES.map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      className={`mw__segment-btn${dirProfile === mode.id ? ' mw__segment-btn--active' : ''}`}
+                      onClick={() => setDirProfile(mode.id)}
+                      aria-label={mode.label}
+                    >
+                      <mode.icon size={18} strokeWidth={2} />
+                    </button>
+                  ))}
+                </div>
+
                 <div className="mw__dir-card">
                   <div className="mw__dir-field">
-                    <span className="mw__dir-dot mw__dir-dot--from" />
+                    <span className="mw__dir-dot mw__dir-dot--from">
+                      <Navigation2 size={11} strokeWidth={2.4} fill="currentColor" />
+                    </span>
                     <input
                       type="text"
                       className="mw__dir-input"
-                      placeholder="From (or 'My location')"
+                      placeholder="My Location"
                       value={dirFrom}
                       onChange={(e) => setDirFrom(e.target.value)}
                     />
+                    <GripVertical size={15} className="mw__dir-grip" />
                   </div>
-                  <div className="mw__dir-divider" />
+                  <div className="mw__dir-connector" />
                   <div className="mw__dir-field">
-                    <span className="mw__dir-dot mw__dir-dot--to" />
+                    <span className="mw__dir-dot mw__dir-dot--to">
+                      <Plus size={11} strokeWidth={3} />
+                    </span>
                     <input
                       type="text"
                       className="mw__dir-input"
@@ -504,21 +712,23 @@ export default function MapWindow() {
                       onChange={(e) => setDirTo(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleDirections()}
                     />
+                    <GripVertical size={15} className="mw__dir-grip" />
+                  </div>
+                  <div className="mw__dir-field mw__dir-field--add">
+                    <span className="mw__dir-dot mw__dir-dot--add">
+                      <Plus size={11} strokeWidth={3} />
+                    </span>
+                    <span className="mw__dir-addstop">Add Stop</span>
                   </div>
                 </div>
 
-                <div className="mw__modes">
-                  {TRANSPORT_MODES.map((mode) => (
-                    <button
-                      key={mode.id}
-                      type="button"
-                      className={`mw__mode${dirProfile === mode.id ? ' mw__mode--active' : ''}`}
-                      onClick={() => setDirProfile(mode.id)}
-                    >
-                      <mode.icon size={16} strokeWidth={1.9} />
-                      <span>{mode.label}</span>
-                    </button>
-                  ))}
+                <div className="mw__chips">
+                  <button type="button" className="mw__chip">
+                    Now <ChevronDown size={13} strokeWidth={2.4} />
+                  </button>
+                  <button type="button" className="mw__chip">
+                    Avoid <ChevronDown size={13} strokeWidth={2.4} />
+                  </button>
                 </div>
 
                 <button
@@ -596,45 +806,19 @@ export default function MapWindow() {
           </button>
         </div>
 
-        {/* Interactive compass */}
-        <div className="mw__compass" style={{ '--mw-bearing': `${-bearing}deg` }}>
-          <button
-            type="button"
-            className="mw__compass-dir mw__compass-dir--n"
-            onClick={() => setMapBearing(0)}
-            aria-label="Face north"
-          >
-            N
-          </button>
-          <button
-            type="button"
-            className="mw__compass-dir mw__compass-dir--e"
-            onClick={() => setMapBearing(90)}
-            aria-label="Face east"
-          >
-            E
-          </button>
-          <button
-            type="button"
-            className="mw__compass-dir mw__compass-dir--s"
-            onClick={() => setMapBearing(180)}
-            aria-label="Face south"
-          >
-            S
-          </button>
-          <button
-            type="button"
-            className="mw__compass-dir mw__compass-dir--w"
-            onClick={() => setMapBearing(270)}
-            aria-label="Face west"
-          >
-            W
-          </button>
-          <button type="button" className="mw__compass-needle" onClick={resetNorth} aria-label="Reset to north">
-            <span className="mw__compass-needle-n" />
-            <span className="mw__compass-needle-s" />
-          </button>
-        </div>
+        {/* Minimal interactive compass */}
+        <button
+          type="button"
+          className="mw__compass"
+          style={{ '--mw-bearing': `${-bearing}deg` }}
+          onClick={resetNorth}
+          aria-label="Reset bearing to north"
+        >
+          <span className="mw__compass-dial">
+            <span className="mw__compass-n" />
+            <span className="mw__compass-s" />
+          </span>
+        </button>
       </div>
 
       {/* ── Bottom-right zoom ── */}
@@ -647,6 +831,53 @@ export default function MapWindow() {
           <Minus size={18} strokeWidth={2.2} />
         </button>
       </div>
+
+      {/* ── Bottom-left street-view binoculars ── */}
+      {!streetView && (
+        <button
+          type="button"
+          className={`mw__sv-grab${svDragging ? ' mw__sv-grab--dragging' : ''}`}
+          onPointerDown={startSvDrag}
+          aria-label="Drag to view street level"
+          title="Drag onto the map for Street View"
+        >
+          <Binoculars size={18} strokeWidth={1.9} />
+        </button>
+      )}
+
+      {/* Drag ghost */}
+      {svDragging && (
+        <span className="mw__sv-ghost" style={{ left: svDragPos.x, top: svDragPos.y }}>
+          <Binoculars size={18} strokeWidth={2} />
+        </span>
+      )}
+
+      {/* Street-view card */}
+      {streetView && svUrl && (
+        <div className={`mw__sv-card${svExpanded ? ' mw__sv-card--expanded' : ''}`}>
+          <iframe
+            key={`${streetView.lng},${streetView.lat}`}
+            title="Street View"
+            className="mw__sv-frame"
+            src={svUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+          <div className="mw__sv-controls">
+            <button
+              type="button"
+              className="mw__sv-ctrl"
+              onClick={() => setSvExpanded((v) => !v)}
+              aria-label="Expand"
+            >
+              <Maximize2 size={16} strokeWidth={2.2} />
+            </button>
+            <button type="button" className="mw__sv-done" onClick={() => setStreetView(null)}>
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

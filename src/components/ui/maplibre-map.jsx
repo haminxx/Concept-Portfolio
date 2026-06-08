@@ -205,13 +205,14 @@ export function MapMarker({
   onClick,
   onMouseEnter,
   onMouseLeave,
+  onDragEnd,
   draggable = false,
   ...markerOptions
 }) {
   const { map } = useMap()
 
-  const callbacksRef = useRef({ onClick, onMouseEnter, onMouseLeave })
-  callbacksRef.current = { onClick, onMouseEnter, onMouseLeave }
+  const callbacksRef = useRef({ onClick, onMouseEnter, onMouseLeave, onDragEnd })
+  callbacksRef.current = { onClick, onMouseEnter, onMouseLeave, onDragEnd }
 
   const marker = useMemo(() => {
     const markerInstance = new MapLibreGL.Marker({
@@ -224,6 +225,10 @@ export function MapMarker({
     el?.addEventListener('click', (e) => callbacksRef.current.onClick?.(e))
     el?.addEventListener('mouseenter', (e) => callbacksRef.current.onMouseEnter?.(e))
     el?.addEventListener('mouseleave', (e) => callbacksRef.current.onMouseLeave?.(e))
+    markerInstance.on('dragend', () => {
+      const lngLat = markerInstance.getLngLat()
+      callbacksRef.current.onDragEnd?.({ lng: lngLat.lng, lat: lngLat.lat })
+    })
 
     return markerInstance
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -365,6 +370,56 @@ export function MapRoute({
     map.setPaintProperty(layerId, 'line-opacity', opacity)
     if (map.getLayer(casingId)) map.setPaintProperty(casingId, 'line-width', width + 3)
   }, [isLoaded, map, layerId, casingId, color, width, opacity])
+
+  return null
+}
+
+export function MapHighlight({ id: propId, coordinates, color = '#0a84ff', fillOpacity = 0.18 }) {
+  const { map, isLoaded } = useMap()
+  const autoId = useId()
+  const id = propId ?? autoId
+  const sourceId = `hl-source-${id}`
+  const fillId = `hl-fill-${id}`
+  const lineId = `hl-line-${id}`
+
+  useEffect(() => {
+    if (!isLoaded || !map || !coordinates) return undefined
+
+    const data = { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates } }
+    map.addSource(sourceId, { type: 'geojson', data })
+    map.addLayer({
+      id: fillId,
+      type: 'fill',
+      source: sourceId,
+      paint: { 'fill-color': color, 'fill-opacity': fillOpacity },
+    })
+    map.addLayer({
+      id: lineId,
+      type: 'line',
+      source: sourceId,
+      layout: { 'line-join': 'round' },
+      paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.7 },
+    })
+
+    return () => {
+      try {
+        if (map.getLayer(lineId)) map.removeLayer(lineId)
+        if (map.getLayer(fillId)) map.removeLayer(fillId)
+        if (map.getSource(sourceId)) map.removeSource(sourceId)
+      } catch {
+        /* ignore */
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, map])
+
+  useEffect(() => {
+    if (!isLoaded || !map) return
+    const source = map.getSource(sourceId)
+    if (source && coordinates) {
+      source.setData({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates } })
+    }
+  }, [isLoaded, map, coordinates, sourceId])
 
   return null
 }
