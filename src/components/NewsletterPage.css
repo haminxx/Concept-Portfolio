@@ -6,15 +6,10 @@
 .newsletter-page {
   --background: #ffffff;
   --foreground: #202124;
-  --muted: #dadce0;
+  --muted: #f1f3f4;
   --muted-foreground: #5f6368;
   --border: #e8eaed;
-
-  /* Tailwind v4 semantic tokens scoped to the newsletter surface */
-  --color-background: #ffffff;
-  --color-foreground: #202124;
-  --color-muted-foreground: #5f6368;
-  --color-muted: #dadce0;
+  --surface: #f8f9fa;
 
   position: relative;
   display: flex;
@@ -27,97 +22,20 @@
   overflow: hidden;
 }
 
-.newsletter-page__menu-toggle {
-  position: absolute;
-  top: 0.875rem;
-  left: 0.875rem;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 0.625rem;
-  color: var(--foreground);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  transform: translateX(0);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease,
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+[data-theme='dark'] .newsletter-page {
+  --background: #1a1a1c;
+  --foreground: #ececec;
+  --muted: #2a2a2e;
+  --muted-foreground: rgba(236, 236, 236, 0.55);
+  --border: rgba(255, 255, 255, 0.1);
+  --surface: #232327;
 }
 
-/* Push the toggle out with the side menu so it stays attached to the menu edge. */
-.newsletter-page__menu-toggle[aria-expanded='true'] {
-  transform: translateX(min(22.5rem, 90vw));
+.chrome-landing__content:has(.newsletter-page) {
+  background: var(--background, #fff);
 }
 
-.newsletter-page__menu-toggle:hover {
-  background: #fff;
-  border-color: #d2d4d7;
-  box-shadow: 0 1px 4px rgba(60, 64, 67, 0.12);
-}
-
-.newsletter-page__menu-toggle:focus-visible {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
-}
-
-.newsletter-page__sidebar-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 110;
-  background: rgba(32, 33, 36, 0.18);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-}
-
-.newsletter-page__sidebar-backdrop--visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.newsletter-page__sidebar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 115;
-  display: flex;
-  flex-direction: column;
-  width: min(22.5rem, 90vw);
-  height: 100%;
-  border-right: 1px solid var(--border);
-  background: var(--background);
-  box-shadow: 4px 0 24px rgba(60, 64, 67, 0.08);
-  transform: translateX(-100%);
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-  overflow: visible;
-}
-
-.newsletter-page__sidebar-inner {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: visible;
-  padding-bottom: 1rem;
-}
-
-.newsletter-page__sidebar--open {
-  transform: translateX(0);
-}
-
-.newsletter-page__sidebar .group\/reveal {
-  border-bottom: 1px solid var(--border);
-}
-
-.newsletter-page__sidebar .group\/reveal:last-child {
-  border-bottom: none;
-}
-
+/* ---- Scroll container (the island's scroll target) ---- */
 .newsletter-page__scroll {
   flex: 1;
   min-height: 0;
@@ -131,36 +49,30 @@
   display: none;
 }
 
-.newsletter-page__article {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  font-size: 1.0625rem;
-  line-height: 1.7;
-  color: #3c4043;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.newsletter-page__article::-webkit-scrollbar {
-  display: none;
+.newsletter-page__content {
+  min-height: 100%;
 }
 
 .newsletter-page__main {
-  max-width: 42rem;
+  max-width: 44rem;
   margin: 0 auto;
-  padding: 3.25rem 1.5rem 7rem;
+  padding: 3.25rem 1.5rem 8rem;
 }
 
 @media (min-width: 640px) {
   .newsletter-page__main {
-    padding: 3rem 2rem 7.5rem;
+    padding: 3rem 2rem 8.5rem;
   }
 }
 
+/* ---- Header ---- */
 .newsletter-page__header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.25rem;
+}
+
+.newsletter-page__header--left {
+  text-align: left;
 }
 
 .newsletter-page__eyebrow {
@@ -172,7 +84,7 @@
   color: var(--muted-foreground);
 }
 
-.newsletter-page__article h1 {
+.newsletter-page h1 {
   margin: 0 0 0.75rem;
   font-size: clamp(1.875rem, 4vw, 2.5rem);
   font-weight: 800;
@@ -182,122 +94,381 @@
 }
 
 .newsletter-page__subtitle {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 34rem;
   font-size: 1.125rem;
+  line-height: 1.6;
   color: var(--muted-foreground);
 }
 
+.newsletter-page__header--left .newsletter-page__subtitle {
+  margin: 0;
+}
+
+/* ---- Chapter index ---- */
+.newsletter-page__index {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.newsletter-page__index-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  text-align: left;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.newsletter-page__index-card:hover {
+  border-color: #1a73e8;
+  box-shadow: 0 6px 20px rgba(60, 64, 67, 0.1);
+  transform: translateY(-2px);
+}
+
+[data-theme='dark'] .newsletter-page__index-card:hover {
+  border-color: #5b9dff;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+}
+
+.newsletter-page__index-card:focus-visible {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25);
+}
+
+.newsletter-page__index-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1a73e8;
+}
+
+[data-theme='dark'] .newsletter-page__index-number {
+  color: #6aa6ff;
+}
+
+.newsletter-page__index-title {
+  font-size: 1.3125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.newsletter-page__index-blurb {
+  font-size: 0.9875rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.newsletter-page__index-meta {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* ---- Back / chapter nav ---- */
+.newsletter-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.newsletter-page__back:hover {
+  border-color: #1a73e8;
+  background: var(--muted);
+}
+
+/* ---- Per-chapter sub-section table of contents ---- */
+.newsletter-page__chapter-toc {
+  margin: 1.75rem 0 2.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.newsletter-page__chapter-toc-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.newsletter-page__chapter-toc ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.newsletter-page__chapter-toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.newsletter-page__chapter-toc a:hover {
+  background: var(--muted);
+  color: #1a73e8;
+}
+
+.newsletter-page__chapter-toc-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+/* ---- Article body ---- */
+.newsletter-page__article {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.newsletter-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scroll-margin-top: 1.5rem;
+}
+
 .newsletter-page__article h2 {
-  margin: 1.75rem 0 0;
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--foreground);
-}
-
-.newsletter-page__article h3 {
-  margin: 1.25rem 0 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.newsletter-page__article h4 {
-  margin: 1rem 0 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--foreground);
+  scroll-margin-top: 1.5rem;
 }
 
 .newsletter-page__article p {
   margin: 0;
+  color: var(--foreground);
 }
 
-.newsletter-page__article code {
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.375rem;
-  background: #f1f3f4;
-  font-size: 0.875em;
-  color: #c5221f;
+[data-theme='dark'] .newsletter-page__article p {
+  color: rgba(236, 236, 236, 0.82);
 }
 
-.newsletter-page__callout {
-  padding: 1.25rem 1.5rem;
-  border-radius: 0.875rem;
-  border: 1px solid var(--border);
-  background: #f8f9fa;
-}
-
-.newsletter-page__callout p {
-  margin: 0;
-  font-size: 0.9875rem;
-}
-
-.newsletter-page__feature {
-  margin: 0.5rem 0;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  background: #f8f9fa;
-}
-
-.newsletter-page__feature h3 {
-  margin: 0 0 0.75rem;
-}
-
-.newsletter-page__feature p {
-  margin: 0;
-  color: var(--muted-foreground);
-}
-
-.newsletter-page__divider {
-  margin: 2rem 0 1.5rem;
-  border: none;
+.newsletter-page__chapter-footer {
+  margin-top: 1rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border);
 }
 
-.newsletter-page__subscribe-note {
-  text-align: center;
-  color: var(--muted-foreground);
-  font-size: 0.9375rem;
+.newsletter-page__chapter-footer .newsletter-page__back {
+  margin-bottom: 0;
 }
 
-.newsletter-page__subscribe {
+/* =====================================================================
+   Dynamic Island TOC
+   Positioned ABSOLUTE within the newsletter page (not fixed to viewport),
+   so it floats at the bottom-center of the Safari content area.
+   ===================================================================== */
+.dynamic-island-toc {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.dynamic-island-toc__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(20, 20, 22, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto;
+  cursor: default;
+}
+
+.dynamic-island-toc__island {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  border-radius: 999px;
+  background: rgba(28, 28, 30, 0.92);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  overflow: hidden;
+  max-width: min(22rem, calc(100% - 2rem));
+}
+
+.dynamic-island-toc__island--expanded {
+  border-radius: 1.25rem;
+  width: min(22rem, calc(100% - 2rem));
+}
+
+/* ---- Collapsed pill ---- */
+.dynamic-island-toc__pill {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.9rem 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.dynamic-island-toc__pill-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  text-align: left;
+}
+
+.dynamic-island-toc__pill-count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---- Expanded panel ---- */
+.dynamic-island-toc__panel {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+.dynamic-island-toc__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem 0.65rem;
+}
+
+.dynamic-island-toc__panel-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.dynamic-island-toc__close {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  margin-top: 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
 }
 
-.newsletter-page__subscribe input {
-  min-width: min(100%, 16rem);
-  padding: 0.625rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.625rem;
-  font-size: 0.9375rem;
-  color: var(--foreground);
-  caret-color: #1a73e8;
-  background: #fff;
+.dynamic-island-toc__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.newsletter-page__subscribe input:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+.dynamic-island-toc__list::-webkit-scrollbar {
+  display: none;
 }
 
-.newsletter-page__subscribe button {
-  padding: 0.625rem 1.25rem;
+.dynamic-island-toc__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 0.625rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #fff;
-  background: #1a73e8;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.875rem;
+  text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.newsletter-page__subscribe button:hover {
-  background: #1557b0;
+.dynamic-island-toc__item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.dynamic-island-toc__item--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.dynamic-island-toc__item-dot {
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.dynamic-island-toc__item--active .dynamic-island-toc__item-dot {
+  background: #0a84ff;
+  transform: scale(1.4);
+}
+
+.dynamic-island-toc__item-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Progress ring ---- */
+.dynamic-island-toc__progress-track {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.dynamic-island-toc__progress-indicator {
+  stroke: #0a84ff;
+  transition: stroke-dashoffset 0.1s linear;
 }
