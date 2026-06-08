@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
-import maplibregl from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Search,
-  MapPin,
+  LayoutGrid,
+  CornerUpRight,
+  PanelLeft,
   X,
   Plus,
   Minus,
@@ -13,59 +13,89 @@ import {
   Navigation,
   Car,
   Footprints,
+  Bike,
   Bus,
-  Clock,
-  Compass,
+  MapPin,
+  Map as MapIcon,
+  Layers,
+  Beef,
   UtensilsCrossed,
   Fuel,
-  Coffee,
-  ShoppingCart,
-  ShoppingBag,
   Hotel,
-  Phone,
-  Globe,
-  Share2,
-  Bike,
+  ShoppingCart,
+  Coffee,
+  Store,
 } from 'lucide-react'
-import { loadMapKit } from '../lib/mapkitLoader'
+import { Map, MapMarker, MarkerContent, MapRoute } from './ui/maplibre-map'
 import { useLanguage } from '../context/LanguageContext'
 import './MapWindow.css'
 
-/* ── Env ── */
-const MAPKIT_TOKEN = (import.meta.env.VITE_MAPKIT_TOKEN || '').trim()
-const DARK_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-
-/* ── Recents ── */
-const RECENTS_KEY = 'map-recents'
-function loadRecents() {
-  try { return JSON.parse(localStorage.getItem(RECENTS_KEY)) || [] } catch { return [] }
+/* ── Base styles ── */
+const POSITRON = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+const VOYAGER = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json'
+const SATELLITE_STYLE = {
+  version: 8,
+  sources: {
+    satellite: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: 'Esri, Maxar, Earthstar Geographics',
+    },
+  },
+  layers: [{ id: 'satellite', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 }],
 }
-function saveRecent(place) {
-  const list = loadRecents().filter((r) => r.name !== place.name)
-  const next = [place, ...list].slice(0, 8)
-  localStorage.setItem(RECENTS_KEY, JSON.stringify(next))
-  return next
+
+const STYLE_DEFS = {
+  explore: { light: VOYAGER, dark: VOYAGER },
+  satellite: { light: SATELLITE_STYLE, dark: SATELLITE_STYLE },
 }
 
-/* ── Geocode fallback (Nominatim) ── */
-async function geocodeNominatim(query) {
+const INITIAL_VIEW = { center: [-117.726, 33.575], zoom: 10 }
+
+/* ── Find Nearby categories (Apple Maps style) ── */
+const CATEGORIES = [
+  { id: 'fast food', label: 'Fast Food', icon: Beef, color: '#FF9F0A' },
+  { id: 'restaurant', label: 'Restaurants', icon: UtensilsCrossed, color: '#FF9500' },
+  { id: 'fuel', label: 'Gas Stations', icon: Fuel, color: '#0A84FF' },
+  { id: 'hotel', label: 'Hotels', icon: Hotel, color: '#BF5AF2' },
+  { id: 'supermarket', label: 'Groceries', icon: ShoppingCart, color: '#FFD60A' },
+  { id: 'cafe', label: 'Coffee', icon: Coffee, color: '#FF9500' },
+  { id: 'convenience', label: 'Convenience', icon: Store, color: '#30D158' },
+]
+
+const NAV_ITEMS = [
+  { id: 'search', label: 'Search', icon: Search },
+  { id: 'guides', label: 'Guides', icon: LayoutGrid },
+  { id: 'directions', label: 'Directions', icon: CornerUpRight },
+]
+
+const TRANSPORT_MODES = [
+  { id: 'driving', label: 'Drive', icon: Car },
+  { id: 'walking', label: 'Walk', icon: Footprints },
+  { id: 'cycling', label: 'Cycle', icon: Bike },
+  { id: 'transit', label: 'Transit', icon: Bus },
+]
+
+/* ── Geocode (Nominatim) ── */
+async function geocode(query) {
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6`,
-    { headers: { 'Accept-Language': 'en', 'User-Agent': 'PortfolioMap/1.0' } },
+    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&addressdetails=1`,
+    { headers: { 'Accept-Language': 'en' } },
   )
   const data = await res.json()
   if (!Array.isArray(data)) return []
   return data.map((d) => ({
-    name: d.display_name.split(',')[0],
+    name: d.name || d.display_name.split(',')[0],
     address: d.display_name,
     lng: parseFloat(d.lon),
     lat: parseFloat(d.lat),
   }))
 }
 
-/* ── Route fallback (OSRM) ── */
+/* ── Route (OSRM) ── */
 async function routeOSRM(fromLat, fromLng, toLat, toLng, profile = 'driving') {
-  const osrmProfile = profile === 'walking' ? 'foot' : profile === 'cycling' ? 'bicycle' : 'car'
+  const osrmProfile = profile === 'walking' ? 'foot' : profile === 'cycling' ? 'bike' : 'driving'
   const url = `https://router.project-osrm.org/route/v1/${osrmProfile}/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson&steps=true`
   const res = await fetch(url)
   const data = await res.json()
@@ -79,288 +109,73 @@ async function routeOSRM(fromLat, fromLng, toLat, toLng, profile = 'driving') {
   }
 }
 
-/* ── Explore Nearby categories ── */
-const CATEGORIES = [
-  { id: 'restaurants', label: 'Restaurants', icon: UtensilsCrossed, color: '#FF6B35' },
-  { id: 'gas stations', label: 'Gas', icon: Fuel, color: '#007AFF' },
-  { id: 'coffee', label: 'Coffee', icon: Coffee, color: '#A0522D' },
-  { id: 'groceries', label: 'Groceries', icon: ShoppingCart, color: '#34C759' },
-  { id: 'shopping', label: 'Shopping', icon: ShoppingBag, color: '#FF2D55' },
-  { id: 'hotels', label: 'Hotels', icon: Hotel, color: '#AF52DE' },
-]
+const fmtDist = (m) => {
+  if (!m) return ''
+  const mi = m / 1609.34
+  return mi < 10 ? `${mi.toFixed(1)} mi` : `${Math.round(mi)} mi`
+}
+const fmtTime = (s) => {
+  if (!s) return ''
+  const m = Math.round(s / 60)
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr ${m % 60} min`
+}
 
 /* ════════════════════════════════════════════ */
 export default function MapWindow() {
   const { t } = useLanguage()
-  const containerRef = useRef(null)
-  const mapRef = useRef(null)
-  const engineRef = useRef('libre')
-  const markersRef = useRef([])
-  const routeLayerRef = useRef(null)
+  const [mapObj, setMapObj] = useState(null)
 
-  /* ── UI state ── */
-  const [tab, setTab] = useState('search')
-  const [panel, setPanel] = useState('main')
+  /* ── Chrome state ── */
+  const [railExpanded, setRailExpanded] = useState(true)
+  const [activeSection, setActiveSection] = useState('search')
+  const [styleKey, setStyleKey] = useState('explore')
+  const [styleMenuOpen, setStyleMenuOpen] = useState(false)
+  const [bearing, setBearing] = useState(0)
+
+  /* ── Search state ── */
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [searchView, setSearchView] = useState('main') // main | results | detail
   const [selected, setSelected] = useState(null)
-  const [recents, setRecents] = useState(loadRecents)
 
-  /* directions */
+  /* ── Directions state ── */
   const [dirFrom, setDirFrom] = useState('')
   const [dirTo, setDirTo] = useState('')
   const [dirProfile, setDirProfile] = useState('driving')
   const [route, setRoute] = useState(null)
   const [routeLoading, setRouteLoading] = useState(false)
+  const [endpoints, setEndpoints] = useState(null)
+
+  const styles = useMemo(() => STYLE_DEFS[styleKey], [styleKey])
+
+  /* ── Track bearing for compass ── */
+  useEffect(() => {
+    if (!mapObj) return undefined
+    const onRotate = () => setBearing(mapObj.getBearing())
+    mapObj.on('rotate', onRotate)
+    mapObj.on('rotateend', onRotate)
+    onRotate()
+    return () => {
+      mapObj.off('rotate', onRotate)
+      mapObj.off('rotateend', onRotate)
+    }
+  }, [mapObj])
 
   /* ── Map helpers ── */
-  const clearMarkers = useCallback(() => {
-    markersRef.current.forEach((m) => m.remove?.() || m.map?.removeAnnotation?.(m))
-    markersRef.current = []
-  }, [])
+  const flyTo = useCallback(
+    (lng, lat, zoom = 15) => {
+      mapObj?.flyTo({ center: [lng, lat], zoom, duration: 1200, essential: true })
+    },
+    [mapObj],
+  )
 
-  const clearRoute = useCallback(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (engineRef.current === 'libre') {
-      if (map.getSource?.('route')) {
-        try { map.removeLayer('route-line'); map.removeSource('route') } catch { /* ok */ }
-      }
-    } else if (routeLayerRef.current) {
-      map.removeOverlay?.(routeLayerRef.current)
-      routeLayerRef.current = null
-    }
-  }, [])
+  const zoomIn = useCallback(() => mapObj?.zoomTo(mapObj.getZoom() + 1, { duration: 300 }), [mapObj])
+  const zoomOut = useCallback(() => mapObj?.zoomTo(mapObj.getZoom() - 1, { duration: 300 }), [mapObj])
 
-  const flyTo = useCallback((lng, lat, zoom = 14) => {
-    const map = mapRef.current
-    if (!map) return
-    if (engineRef.current === 'libre') {
-      map.flyTo({ center: [lng, lat], zoom, duration: 1200, essential: true })
-    } else {
-      map.setCenterAnimated(new window.mapkit.Coordinate(lat, lng))
-    }
-  }, [])
+  const setMapBearing = useCallback((deg) => mapObj?.easeTo({ bearing: deg, duration: 450 }), [mapObj])
+  const resetNorth = useCallback(() => mapObj?.easeTo({ bearing: 0, pitch: 0, duration: 450 }), [mapObj])
 
-  const addMarker = useCallback((lng, lat, title) => {
-    const map = mapRef.current
-    if (!map) return
-    if (engineRef.current === 'libre') {
-      const el = document.createElement('div')
-      el.className = 'mw-marker'
-      const m = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map)
-      markersRef.current.push(m)
-    } else {
-      const mk = window.mapkit
-      const ann = new mk.MarkerAnnotation(new mk.Coordinate(lat, lng), { title, color: '#007AFF' })
-      map.addAnnotation(ann)
-      markersRef.current.push(ann)
-    }
-  }, [])
-
-  const drawRoute = useCallback((coords) => {
-    const map = mapRef.current
-    if (!map || !coords?.length) return
-    clearRoute()
-    if (engineRef.current === 'libre') {
-      if (!map.isStyleLoaded?.()) return
-      map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } })
-      map.addLayer({ id: 'route-line', type: 'line', source: 'route', paint: { 'line-color': '#007AFF', 'line-width': 4, 'line-opacity': 0.85 }, layout: { 'line-cap': 'round', 'line-join': 'round' } })
-      const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]))
-      map.fitBounds(bounds, { padding: 60, duration: 800 })
-    } else {
-      const mk = window.mapkit
-      const style = new mk.Style({ lineWidth: 5, strokeColor: '#007AFF', strokeOpacity: 0.85 })
-      const points = coords.map(([lng, lat]) => new mk.Coordinate(lat, lng))
-      const overlay = new mk.PolylineOverlay(points, { style })
-      map.addOverlay(overlay)
-      routeLayerRef.current = overlay
-      map.showItems([overlay])
-    }
-  }, [clearRoute])
-
-  /* ── Init map engine ── */
-  useEffect(() => {
-    if (!containerRef.current) return
-    let cancelled = false
-
-    ;(async () => {
-      const mapkitReady = MAPKIT_TOKEN ? await loadMapKit(MAPKIT_TOKEN) : false
-
-      if (cancelled) return
-
-      if (mapkitReady && window.mapkit) {
-        engineRef.current = 'mapkit'
-        const mk = window.mapkit
-        const map = new mk.Map(containerRef.current, {
-          center: new mk.Coordinate(33.575, -117.726),
-          colorScheme: mk.Map.ColorSchemes.Dark,
-          mapType: mk.Map.MapTypes.Standard,
-          showsCompass: mk.FeatureVisibility.Hidden,
-          showsMapTypeControl: false,
-          showsZoomControl: false,
-          padding: new mk.Padding(0, 0, 0, 0),
-        })
-        mapRef.current = map
-      } else {
-        engineRef.current = 'libre'
-        const map = new maplibregl.Map({
-          container: containerRef.current,
-          style: DARK_STYLE,
-          center: [-117.726, 33.575],
-          zoom: 10,
-          attributionControl: false,
-          fadeDuration: 0,
-        })
-        map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left')
-        mapRef.current = map
-      }
-    })()
-
-    return () => {
-      cancelled = true
-      if (mapRef.current) {
-        if (engineRef.current === 'libre') mapRef.current.remove()
-        else mapRef.current.destroy?.()
-        mapRef.current = null
-      }
-    }
-  }, [])
-
-  /* ── Search ── */
-  const handleSearch = useCallback(async (overrideQuery) => {
-    const q = (typeof overrideQuery === 'string' ? overrideQuery : query).trim()
-    if (!q) return
-    setSearching(true)
-    setTab('search')
-    setPanel('results')
-
-    try {
-      if (engineRef.current === 'mapkit' && window.mapkit) {
-        const search = new window.mapkit.Search()
-        const data = await new Promise((resolve) => {
-          search.search(q, (err, resp) => {
-            if (err || !resp?.places) { resolve([]); return }
-            resolve(resp.places.map((p) => ({
-              name: p.name,
-              address: p.formattedAddress || '',
-              lat: p.coordinate.latitude,
-              lng: p.coordinate.longitude,
-              phone: p.telephone || '',
-              url: p.urls?.[0] || '',
-            })))
-          })
-        })
-        setResults(data)
-      } else {
-        const data = await geocodeNominatim(q)
-        setResults(data)
-      }
-    } catch {
-      setResults([])
-    }
-    setSearching(false)
-  }, [query])
-
-  /* ── Category search ── */
-  const handleCategorySearch = useCallback((categoryId) => {
-    setQuery(categoryId)
-    handleSearch(categoryId)
-  }, [handleSearch])
-
-  /* ── Select place ── */
-  const selectPlace = useCallback((place) => {
-    setSelected(place)
-    setPanel('detail')
-    clearMarkers()
-    flyTo(place.lng, place.lat, 15)
-    addMarker(place.lng, place.lat, place.name)
-    setRecents(saveRecent(place))
-  }, [flyTo, addMarker, clearMarkers])
-
-  /* ── Directions ── */
-  const handleDirections = useCallback(async () => {
-    if (!dirFrom.trim() || !dirTo.trim()) return
-    setRouteLoading(true)
-    setRoute(null)
-    clearMarkers()
-    clearRoute()
-
-    try {
-      let fromCoord, toCoord
-      if (dirFrom.toLowerCase() === 'my location') {
-        const pos = await new Promise((res, rej) =>
-          navigator.geolocation.getCurrentPosition(
-            (p) => res({ lat: p.coords.latitude, lng: p.coords.longitude }),
-            rej, { enableHighAccuracy: true, timeout: 8000 },
-          ),
-        )
-        fromCoord = pos
-      } else {
-        const r = await geocodeNominatim(dirFrom)
-        if (r[0]) fromCoord = r[0]
-      }
-      const toResults = await geocodeNominatim(dirTo)
-      if (toResults[0]) toCoord = toResults[0]
-
-      if (!fromCoord || !toCoord) { setRouteLoading(false); return }
-
-      addMarker(fromCoord.lng, fromCoord.lat, 'Start')
-      addMarker(toCoord.lng, toCoord.lat, 'End')
-
-      if (engineRef.current === 'mapkit' && window.mapkit) {
-        const mk = window.mapkit
-        const dirs = new mk.Directions()
-        const transportType = dirProfile === 'walking' ? mk.Directions.Transport.Walking
-          : dirProfile === 'transit' ? mk.Directions.Transport.Automobile
-          : mk.Directions.Transport.Automobile
-        const request = {
-          origin: new mk.Coordinate(fromCoord.lat, fromCoord.lng),
-          destination: new mk.Coordinate(toCoord.lat, toCoord.lng),
-          transportType,
-        }
-        const data = await new Promise((resolve) => {
-          dirs.route(request, (err, resp) => {
-            if (err || !resp?.routes?.[0]) { resolve(null); return }
-            const r = resp.routes[0]
-            resolve({
-              distance: r.distance,
-              duration: r.expectedTravelTime,
-              steps: r.steps?.map((s) => s.instructions).filter(Boolean) || [],
-              coords: r.polyline?.points?.map((p) => [p.longitude, p.latitude]) || [],
-            })
-          })
-        })
-        if (data) { setRoute(data); drawRoute(data.coords) }
-      } else {
-        const data = await routeOSRM(fromCoord.lat, fromCoord.lng, toCoord.lat, toCoord.lng, dirProfile)
-        if (data) { setRoute(data); drawRoute(data.coords) }
-      }
-    } catch { /* ignore */ }
-    setRouteLoading(false)
-  }, [dirFrom, dirTo, dirProfile, clearMarkers, clearRoute, addMarker, drawRoute])
-
-  /* ── Start directions from detail ── */
-  const startDirectionsFromPlace = useCallback(() => {
-    if (!selected) return
-    setDirFrom('My location')
-    setDirTo(selected.address || selected.name)
-    setTab('directions')
-    setPanel('main')
-  }, [selected])
-
-  /* ── Back to main ── */
-  const backToMain = useCallback(() => {
-    setPanel('main')
-    setResults([])
-    setSelected(null)
-    clearMarkers()
-    clearRoute()
-    setRoute(null)
-  }, [clearMarkers, clearRoute])
-
-  /* ── Locate ── */
   const locateUser = useCallback(() => {
     if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
@@ -370,296 +185,468 @@ export default function MapWindow() {
     )
   }, [flyTo])
 
-  /* ── Zoom ── */
-  const zoomIn = useCallback(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (engineRef.current === 'libre') map.zoomIn()
+  /* ── Nav handling ── */
+  const handleNavClick = useCallback(
+    (id) => {
+      setActiveSection((prev) => (prev === id && railExpanded ? null : id))
+      if (!railExpanded) setActiveSection(id)
+    },
+    [railExpanded],
+  )
+
+  /* ── Search ── */
+  const runSearch = useCallback(async (q) => {
+    const term = q.trim()
+    if (!term) return
+    setSearching(true)
+    setSearchView('results')
+    try {
+      setResults(await geocode(term))
+    } catch {
+      setResults([])
+    }
+    setSearching(false)
   }, [])
 
-  const zoomOut = useCallback(() => {
-    const map = mapRef.current
-    if (!map) return
-    if (engineRef.current === 'libre') map.zoomOut()
+  const selectPlace = useCallback(
+    (place) => {
+      setSelected(place)
+      setSearchView('detail')
+      flyTo(place.lng, place.lat, 15)
+    },
+    [flyTo],
+  )
+
+  const backToSearchMain = useCallback(() => {
+    setSearchView('main')
+    setResults([])
+    setSelected(null)
   }, [])
 
-  /* ── Format helpers ── */
-  const fmtDist = (m) => { if (!m) return ''; const mi = m / 1609.34; return mi < 10 ? `${mi.toFixed(1)} mi` : `${Math.round(mi)} mi` }
-  const fmtTime = (s) => { if (!s) return ''; const m = Math.round(s / 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} hr ${m % 60} min` }
+  /* ── Directions ── */
+  const handleDirections = useCallback(async () => {
+    if (!dirFrom.trim() || !dirTo.trim()) return
+    setRouteLoading(true)
+    setRoute(null)
+    setEndpoints(null)
+    try {
+      let fromCoord
+      let toCoord
+      if (dirFrom.trim().toLowerCase() === 'my location') {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(
+            (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+            reject,
+            { enableHighAccuracy: true, timeout: 8000 },
+          ),
+        )
+        fromCoord = pos
+      } else {
+        const r = await geocode(dirFrom)
+        if (r[0]) fromCoord = r[0]
+      }
+      const toResults = await geocode(dirTo)
+      if (toResults[0]) toCoord = toResults[0]
+      if (!fromCoord || !toCoord) {
+        setRouteLoading(false)
+        return
+      }
+      setEndpoints({ from: fromCoord, to: toCoord })
+      const data = await routeOSRM(fromCoord.lat, fromCoord.lng, toCoord.lat, toCoord.lng, dirProfile)
+      if (data) {
+        setRoute(data)
+        if (mapObj && data.coords.length) {
+          const bounds = data.coords.reduce(
+            (b, c) => [
+              [Math.min(b[0][0], c[0]), Math.min(b[0][1], c[1])],
+              [Math.max(b[1][0], c[0]), Math.max(b[1][1], c[1])],
+            ],
+            [
+              [data.coords[0][0], data.coords[0][1]],
+              [data.coords[0][0], data.coords[0][1]],
+            ],
+          )
+          mapObj.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: 360, right: 80 }, duration: 900 })
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    setRouteLoading(false)
+  }, [dirFrom, dirTo, dirProfile, mapObj])
+
+  const startDirectionsFromPlace = useCallback(() => {
+    if (!selected) return
+    setDirFrom('My location')
+    setDirTo(selected.address || selected.name)
+    setActiveSection('directions')
+  }, [selected])
+
+  const routeCoords = route?.coords && route.coords.length >= 2 ? route.coords : null
 
   /* ════════════════════════════ Render ════════════════════════════ */
   return (
-    <div className="mw">
-      {/* Full map canvas */}
-      <div ref={containerRef} className="mw__canvas" />
+    <div className={`mw ${railExpanded ? 'mw--rail-expanded' : 'mw--rail-collapsed'}`}>
+      {/* Map base */}
+      <Map
+        ref={setMapObj}
+        theme="light"
+        styles={styles}
+        className="mw__map"
+        center={INITIAL_VIEW.center}
+        zoom={INITIAL_VIEW.zoom}
+        attributionControl={false}
+      >
+        {selected && (
+          <MapMarker longitude={selected.lng} latitude={selected.lat}>
+            <MarkerContent>
+              <span className="mw__pin" />
+            </MarkerContent>
+          </MapMarker>
+        )}
+        {endpoints && (
+          <>
+            <MapMarker longitude={endpoints.from.lng} latitude={endpoints.from.lat}>
+              <MarkerContent>
+                <span className="mw__pin mw__pin--start" />
+              </MarkerContent>
+            </MapMarker>
+            <MapMarker longitude={endpoints.to.lng} latitude={endpoints.to.lat}>
+              <MarkerContent>
+                <span className="mw__pin mw__pin--end" />
+              </MarkerContent>
+            </MapMarker>
+          </>
+        )}
+        {routeCoords && <MapRoute coordinates={routeCoords} color="#0a84ff" width={6} />}
+      </Map>
 
-      {/* ── Sidebar (docked left, matches maps.apple.com) ── */}
-      <aside className="mw__sidebar">
-        {/* Brand header */}
-        <div className="mw__nav-header">
-          <span className="mw__brand">Maps</span>
-        </div>
+      {/* ── Left icon rail ── */}
+      <nav className="mw__rail">
+        <button
+          type="button"
+          className="mw__rail-toggle"
+          onClick={() => setRailExpanded((v) => !v)}
+          aria-label="Toggle sidebar"
+        >
+          <PanelLeft size={18} strokeWidth={1.9} />
+        </button>
 
-        {/* Tab bar */}
-        <div className="mw__tabs">
-          {[
-            { id: 'search', icon: Search, label: 'Search' },
-            { id: 'guides', icon: Compass, label: 'Guides' },
-            { id: 'directions', icon: Navigation, label: 'Directions' },
-          ].map(({ id, icon: Icon, label }) => (
+        {railExpanded && (
+          <div className="mw__brand">
+            <span className="mw__brand-apple"></span>
+            <span className="mw__brand-name">Maps</span>
+            <span className="mw__brand-beta">BETA</span>
+          </div>
+        )}
+
+        <div className="mw__rail-items">
+          {NAV_ITEMS.map((item) => (
             <button
-              key={id}
+              key={item.id}
               type="button"
-              className={`mw__tab${tab === id ? ' mw__tab--active' : ''}`}
-              onClick={() => { setTab(id); setPanel('main') }}
+              className={`mw__rail-item${activeSection === item.id ? ' mw__rail-item--active' : ''}`}
+              onClick={() => handleNavClick(item.id)}
+              aria-label={item.label}
             >
-              <Icon size={16} strokeWidth={1.75} />
-              <span>{label}</span>
+              <span className="mw__rail-item-ico">
+                <item.icon size={18} strokeWidth={1.9} />
+              </span>
+              {railExpanded && <span className="mw__rail-item-label">{item.label}</span>}
             </button>
           ))}
         </div>
 
-        <div className="mw__tabs-sep" />
+        {railExpanded && (
+          <div className="mw__rail-footer">
+            <span className="mw__rail-footer-top">Have a Business on Maps?</span>
+            <span className="mw__rail-footer-link">Manage Your Business ↗</span>
+          </div>
+        )}
+      </nav>
 
-        {/* Scrollable content */}
-        <div className="mw__content">
+      {/* ── Secondary frosted panel ── */}
+      {activeSection && (
+        <section className="mw__panel">
+          <header className="mw__panel-head">
+            <h2 className="mw__panel-title">
+              {activeSection === 'search' && 'Search'}
+              {activeSection === 'guides' && 'Guides'}
+              {activeSection === 'directions' && 'Directions'}
+            </h2>
+            <button
+              type="button"
+              className="mw__panel-close"
+              onClick={() => setActiveSection(null)}
+              aria-label="Close panel"
+            >
+              <X size={16} strokeWidth={2.2} />
+            </button>
+          </header>
 
-          {/* ═══ Search tab: main ═══ */}
-          {tab === 'search' && panel === 'main' && (
-            <>
-              <div className="mw__search-bar">
-                <Search size={15} strokeWidth={2} className="mw__search-ico" />
-                <input
-                  type="text"
-                  className="mw__search-input"
-                  placeholder={t('map.searchPlaceholder')}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                {query && (
-                  <button type="button" className="mw__clear-btn" onClick={() => setQuery('')}>
-                    <X size={11} strokeWidth={2.5} />
-                  </button>
-                )}
-              </div>
-
-              {/* Explore Nearby */}
-              <div className="mw__explore">
-                <p className="mw__section-title">Explore Nearby</p>
-                <div className="mw__categories">
-                  {CATEGORIES.map(({ id, label, icon: CatIcon, color }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className="mw__category"
-                      onClick={() => handleCategorySearch(id)}
-                    >
-                      <div className="mw__category-icon" style={{ background: color }}>
-                        <CatIcon size={18} strokeWidth={1.75} />
-                      </div>
-                      <span>{label}</span>
+          <div className="mw__panel-body">
+            {/* ═══ SEARCH ═══ */}
+            {activeSection === 'search' && (
+              <>
+                <div className="mw__search-bar">
+                  <Search size={16} strokeWidth={2} className="mw__search-ico" />
+                  <input
+                    type="text"
+                    className="mw__search-input"
+                    placeholder={t('map.searchPlaceholder') || 'Apple Maps'}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && runSearch(query)}
+                  />
+                  {query && (
+                    <button type="button" className="mw__clear" onClick={() => setQuery('')} aria-label="Clear">
+                      <X size={11} strokeWidth={2.5} />
                     </button>
-                  ))}
+                  )}
                 </div>
-              </div>
 
-              {/* Recents */}
-              {recents.length > 0 && (
-                <div className="mw__section">
-                  <p className="mw__section-title">Recents</p>
-                  {recents.map((r, i) => (
-                    <button key={i} type="button" className="mw__place-row" onClick={() => selectPlace(r)}>
-                      <Clock size={14} strokeWidth={1.75} className="mw__row-ico" />
-                      <div className="mw__row-info">
-                        <span className="mw__row-name">{r.name}</span>
-                        <span className="mw__row-addr">{r.address}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ═══ Search tab: results ═══ */}
-          {tab === 'search' && panel === 'results' && (
-            <div className="mw__panel-slide">
-              <button type="button" className="mw__back" onClick={backToMain}>
-                <ChevronLeft size={18} strokeWidth={2} />
-                <span>Search</span>
-              </button>
-              <p className="mw__section-title">{searching ? 'Searching\u2026' : `${results.length} Results`}</p>
-              {results.map((r, i) => (
-                <button key={i} type="button" className="mw__place-row" onClick={() => selectPlace(r)}>
-                  <MapPin size={14} strokeWidth={1.75} className="mw__row-ico" />
-                  <div className="mw__row-info">
-                    <span className="mw__row-name">{r.name}</span>
-                    <span className="mw__row-addr">{r.address}</span>
+                {searchView === 'main' && (
+                  <div className="mw__nearby">
+                    <p className="mw__section-title">Find Nearby</p>
+                    <div className="mw__nearby-list">
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className="mw__nearby-row"
+                          onClick={() => {
+                            setQuery(cat.label)
+                            runSearch(cat.id)
+                          }}
+                        >
+                          <span className="mw__nearby-ico" style={{ background: cat.color }}>
+                            <cat.icon size={16} strokeWidth={2} />
+                          </span>
+                          <span className="mw__nearby-label">{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <ChevronRight size={14} className="mw__row-chevron" />
+                )}
+
+                {searchView === 'results' && (
+                  <div className="mw__slide">
+                    <button type="button" className="mw__back" onClick={backToSearchMain}>
+                      <ChevronLeft size={17} strokeWidth={2.2} />
+                      <span>Find Nearby</span>
+                    </button>
+                    <p className="mw__section-title">{searching ? 'Searching…' : `${results.length} Results`}</p>
+                    {results.map((r, i) => (
+                      <button key={i} type="button" className="mw__place-row" onClick={() => selectPlace(r)}>
+                        <MapPin size={15} strokeWidth={1.9} className="mw__row-ico" />
+                        <span className="mw__row-info">
+                          <span className="mw__row-name">{r.name}</span>
+                          <span className="mw__row-addr">{r.address}</span>
+                        </span>
+                        <ChevronRight size={15} className="mw__row-chevron" />
+                      </button>
+                    ))}
+                    {!searching && results.length === 0 && <p className="mw__empty">No results found.</p>}
+                  </div>
+                )}
+
+                {searchView === 'detail' && selected && (
+                  <div className="mw__slide">
+                    <button type="button" className="mw__back" onClick={backToSearchMain}>
+                      <ChevronLeft size={17} strokeWidth={2.2} />
+                      <span>Results</span>
+                    </button>
+                    <h3 className="mw__detail-name">{selected.name}</h3>
+                    <p className="mw__detail-addr">{selected.address}</p>
+                    <div className="mw__detail-actions">
+                      <button type="button" className="mw__action mw__action--primary" onClick={startDirectionsFromPlace}>
+                        <span className="mw__action-ico">
+                          <Navigation size={18} strokeWidth={2} />
+                        </span>
+                        <span>Directions</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ═══ GUIDES ═══ */}
+            {activeSection === 'guides' && (
+              <div className="mw__guides">
+                <p className="mw__section-title">My Guides</p>
+                <p className="mw__empty">Curated place collections will appear here.</p>
+              </div>
+            )}
+
+            {/* ═══ DIRECTIONS ═══ */}
+            {activeSection === 'directions' && (
+              <>
+                <div className="mw__dir-card">
+                  <div className="mw__dir-field">
+                    <span className="mw__dir-dot mw__dir-dot--from" />
+                    <input
+                      type="text"
+                      className="mw__dir-input"
+                      placeholder="From (or 'My location')"
+                      value={dirFrom}
+                      onChange={(e) => setDirFrom(e.target.value)}
+                    />
+                  </div>
+                  <div className="mw__dir-divider" />
+                  <div className="mw__dir-field">
+                    <span className="mw__dir-dot mw__dir-dot--to" />
+                    <input
+                      type="text"
+                      className="mw__dir-input"
+                      placeholder="To"
+                      value={dirTo}
+                      onChange={(e) => setDirTo(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleDirections()}
+                    />
+                  </div>
+                </div>
+
+                <div className="mw__modes">
+                  {TRANSPORT_MODES.map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      className={`mw__mode${dirProfile === mode.id ? ' mw__mode--active' : ''}`}
+                      onClick={() => setDirProfile(mode.id)}
+                    >
+                      <mode.icon size={16} strokeWidth={1.9} />
+                      <span>{mode.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="mw__go"
+                  onClick={handleDirections}
+                  disabled={routeLoading || !dirFrom.trim() || !dirTo.trim()}
+                >
+                  {routeLoading ? 'Routing…' : 'Get Directions'}
                 </button>
-              ))}
-              {!searching && results.length === 0 && (
-                <p className="mw__empty">No results found.</p>
-              )}
-            </div>
-          )}
 
-          {/* ═══ Search tab: place detail ═══ */}
-          {tab === 'search' && panel === 'detail' && selected && (
-            <div className="mw__panel-slide">
-              <button type="button" className="mw__back" onClick={backToMain}>
-                <ChevronLeft size={18} strokeWidth={2} />
-                <span>Search</span>
-              </button>
-              <div className="mw__detail">
-                <h2 className="mw__detail-name">{selected.name}</h2>
-                <p className="mw__detail-addr">{selected.address}</p>
-
-                {/* Action buttons */}
-                <div className="mw__actions">
-                  <button type="button" className="mw__action mw__action--primary" onClick={startDirectionsFromPlace}>
-                    <div className="mw__action-icon">
-                      <Navigation size={18} strokeWidth={2} />
+                {route && (
+                  <div className="mw__route">
+                    <div className="mw__route-summary">
+                      <span className="mw__route-time">{fmtTime(route.duration)}</span>
+                      <span className="mw__route-dist">{fmtDist(route.distance)}</span>
                     </div>
-                    <span>Directions</span>
-                  </button>
-                  {selected.phone && (
-                    <button type="button" className="mw__action" onClick={() => window.open(`tel:${selected.phone}`)}>
-                      <div className="mw__action-icon">
-                        <Phone size={18} strokeWidth={2} />
-                      </div>
-                      <span>Call</span>
-                    </button>
-                  )}
-                  {selected.url && (
-                    <button type="button" className="mw__action" onClick={() => window.open(selected.url, '_blank')}>
-                      <div className="mw__action-icon">
-                        <Globe size={18} strokeWidth={2} />
-                      </div>
-                      <span>Website</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="mw__action"
-                    onClick={() => {
-                      try { navigator.share?.({ title: selected.name, text: selected.address }) } catch { /* ok */ }
-                    }}
-                  >
-                    <div className="mw__action-icon">
-                      <Share2 size={18} strokeWidth={2} />
-                    </div>
-                    <span>Share</span>
-                  </button>
-                </div>
+                    {route.steps.length > 0 && (
+                      <ol className="mw__route-steps">
+                        {route.steps.slice(0, 20).map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
-                {selected.phone && <p className="mw__detail-meta">{selected.phone}</p>}
-              </div>
-            </div>
-          )}
-
-          {/* ═══ Guides tab ═══ */}
-          {tab === 'guides' && (
-            <>
-              <p className="mw__section-title" style={{ marginTop: 4 }}>Guides</p>
-              <p className="mw__empty">Curated guides coming soon.</p>
-            </>
-          )}
-
-          {/* ═══ Directions tab ═══ */}
-          {tab === 'directions' && (
-            <>
-              <div className="mw__dir-inputs">
-                <div className="mw__dir-field">
-                  <span className="mw__dir-dot mw__dir-dot--from" />
-                  <input
-                    type="text"
-                    className="mw__dir-input"
-                    placeholder="From (or 'My location')"
-                    value={dirFrom}
-                    onChange={(e) => setDirFrom(e.target.value)}
-                  />
-                </div>
-                <div className="mw__dir-field">
-                  <span className="mw__dir-dot mw__dir-dot--to" />
-                  <input
-                    type="text"
-                    className="mw__dir-input"
-                    placeholder="To"
-                    value={dirTo}
-                    onChange={(e) => setDirTo(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="mw__modes">
-                {[
-                  { id: 'driving', icon: Car, label: 'Drive' },
-                  { id: 'walking', icon: Footprints, label: 'Walk' },
-                  { id: 'transit', icon: Bus, label: 'Transit' },
-                  { id: 'cycling', icon: Bike, label: 'Cycle' },
-                ].map(({ id, icon: Icon, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`mw__mode${dirProfile === id ? ' mw__mode--active' : ''}`}
-                    onClick={() => setDirProfile(id)}
-                  >
-                    <Icon size={16} strokeWidth={1.75} />
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
-
+      {/* ── Top-right controls ── */}
+      <div className="mw__top-right">
+        <div className="mw__ctrl-group">
+          <button
+            type="button"
+            className={`mw__ctrl-btn${styleMenuOpen ? ' mw__ctrl-btn--active' : ''}`}
+            onClick={() => setStyleMenuOpen((v) => !v)}
+            aria-label="Map style"
+          >
+            <Layers size={17} strokeWidth={1.9} />
+          </button>
+          {styleMenuOpen && (
+            <div className="mw__style-menu">
               <button
                 type="button"
-                className="mw__go-btn"
-                onClick={handleDirections}
-                disabled={routeLoading || !dirFrom.trim() || !dirTo.trim()}
+                className={`mw__style-opt${styleKey === 'explore' ? ' mw__style-opt--active' : ''}`}
+                onClick={() => {
+                  setStyleKey('explore')
+                  setStyleMenuOpen(false)
+                }}
               >
-                {routeLoading ? 'Routing\u2026' : 'Get Directions'}
+                <MapIcon size={16} strokeWidth={1.9} />
+                <span>Explore</span>
               </button>
-
-              {route && (
-                <div className="mw__route">
-                  <div className="mw__route-summary">
-                    <span className="mw__route-time">{fmtTime(route.duration)}</span>
-                    <span className="mw__route-dist">{fmtDist(route.distance)}</span>
-                  </div>
-                  {route.steps.length > 0 && (
-                    <ol className="mw__route-steps">
-                      {route.steps.slice(0, 15).map((s, i) => (
-                        <li key={i} className="mw__route-step">{s}</li>
-                      ))}
-                    </ol>
-                  )}
-                </div>
-              )}
-            </>
+              <button
+                type="button"
+                className={`mw__style-opt${styleKey === 'satellite' ? ' mw__style-opt--active' : ''}`}
+                onClick={() => {
+                  setStyleKey('satellite')
+                  setStyleMenuOpen(false)
+                }}
+              >
+                <Layers size={16} strokeWidth={1.9} />
+                <span>Satellite</span>
+              </button>
+            </div>
           )}
         </div>
-      </aside>
 
-      {/* ── Map controls (top-right, matching maps.apple.com) ── */}
-      <div className="mw__controls">
-        <button type="button" className="mw__ctrl-btn" aria-label="Compass">
-          <Compass size={16} strokeWidth={1.75} />
-        </button>
-        <div className="mw__ctrl-sep" />
-        <button type="button" className="mw__ctrl-btn" onClick={zoomIn} aria-label="Zoom in">
-          <Plus size={16} strokeWidth={2} />
-        </button>
-        <div className="mw__ctrl-sep" />
-        <button type="button" className="mw__ctrl-btn" onClick={zoomOut} aria-label="Zoom out">
-          <Minus size={16} strokeWidth={2} />
-        </button>
+        <div className="mw__ctrl-group">
+          <button type="button" className="mw__ctrl-btn" onClick={locateUser} aria-label="Current location">
+            <Locate size={17} strokeWidth={1.9} />
+          </button>
+        </div>
+
+        {/* Interactive compass */}
+        <div className="mw__compass" style={{ '--mw-bearing': `${-bearing}deg` }}>
+          <button
+            type="button"
+            className="mw__compass-dir mw__compass-dir--n"
+            onClick={() => setMapBearing(0)}
+            aria-label="Face north"
+          >
+            N
+          </button>
+          <button
+            type="button"
+            className="mw__compass-dir mw__compass-dir--e"
+            onClick={() => setMapBearing(90)}
+            aria-label="Face east"
+          >
+            E
+          </button>
+          <button
+            type="button"
+            className="mw__compass-dir mw__compass-dir--s"
+            onClick={() => setMapBearing(180)}
+            aria-label="Face south"
+          >
+            S
+          </button>
+          <button
+            type="button"
+            className="mw__compass-dir mw__compass-dir--w"
+            onClick={() => setMapBearing(270)}
+            aria-label="Face west"
+          >
+            W
+          </button>
+          <button type="button" className="mw__compass-needle" onClick={resetNorth} aria-label="Reset to north">
+            <span className="mw__compass-needle-n" />
+            <span className="mw__compass-needle-s" />
+          </button>
+        </div>
       </div>
 
-      <button type="button" className="mw__locate-btn" onClick={locateUser} aria-label="My location">
-        <Locate size={16} strokeWidth={2} />
-      </button>
+      {/* ── Bottom-right zoom ── */}
+      <div className="mw__zoom">
+        <button type="button" className="mw__zoom-btn" onClick={zoomIn} aria-label="Zoom in">
+          <Plus size={18} strokeWidth={2.2} />
+        </button>
+        <span className="mw__zoom-sep" />
+        <button type="button" className="mw__zoom-btn" onClick={zoomOut} aria-label="Zoom out">
+          <Minus size={18} strokeWidth={2.2} />
+        </button>
+      </div>
     </div>
   )
 }
