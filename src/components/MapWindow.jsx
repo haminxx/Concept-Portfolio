@@ -32,14 +32,12 @@ import {
   GripVertical,
   Clock,
 } from 'lucide-react'
-import { Map, MapMarker, MarkerContent, MapRoute, MapHighlight } from './ui/maplibre-map'
+import { Map, MapMarker, MarkerContent, MapRoute } from './ui/maplibre-map'
 import { useLanguage } from '../context/LanguageContext'
 import {
   POI_PLACES,
   POI_CATEGORIES,
   POI_MIN_ZOOM,
-  HIGHLIGHT_AREAS,
-  FEATURED_MARKER,
   GUIDES_REGION,
   GUIDES_FEATURED,
   GUIDES_SECTIONS,
@@ -151,8 +149,8 @@ export default function MapWindow() {
   const [mapObj, setMapObj] = useState(null)
 
   /* ── Chrome state ── */
-  const [railExpanded, setRailExpanded] = useState(true)
-  const [activeSection, setActiveSection] = useState('search')
+  const [railExpanded, setRailExpanded] = useState(false)
+  const [activeSection, setActiveSection] = useState(null)
   const [styleKey, setStyleKey] = useState('explore')
   const [styleMenuOpen, setStyleMenuOpen] = useState(false)
   const [bearing, setBearing] = useState(0)
@@ -376,20 +374,6 @@ export default function MapWindow() {
         zoom={INITIAL_VIEW.zoom}
         attributionControl={false}
       >
-        {/* Highlighted areas */}
-        {HIGHLIGHT_AREAS.map((area) => (
-          <MapHighlight key={area.id} coordinates={area.coordinates} color={area.color} />
-        ))}
-
-        {/* Featured / home marker */}
-        <MapMarker longitude={FEATURED_MARKER.lng} latitude={FEATURED_MARKER.lat}>
-          <MarkerContent>
-            <span className="mw__featured" title={FEATURED_MARKER.name}>
-              {FEATURED_MARKER.initials}
-            </span>
-          </MarkerContent>
-        </MapMarker>
-
         {/* Zoom-gated POIs */}
         {showPois &&
           POI_PLACES.map((poi) => {
