@@ -220,3 +220,117 @@
   color: #8e8e93;
   font-size: 15px;
 }
+
+/* --- View tabs (Notes / Todos) --- */
+.notes-window__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 12px 0;
+}
+
+.notes-window__tab {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6e6e73;
+  cursor: pointer;
+}
+
+.notes-window__tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.notes-window__tab--active {
+  background: #fff;
+  color: #1d1d1f;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.notes-window__todo-hint {
+  margin: 12px 4px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #8e8e93;
+}
+
+/* --- Todos editor (main area) --- */
+.notes-window__todos {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 16px;
+}
+
+.notes-window__todos-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.notes-window__todos-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+}
+
+.notes-window__todo-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.notes-window__todo-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notes-window__todo-node {
+  margin: 0;
+}
+
+.notes-window__todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.notes-window__todo-row .notes-window__item-input {
+  font-size: 14px;
+}
+
+.notes-window__todo-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #6e6e73;
+  cursor: pointer;
+}
+
+.notes-window__todo-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1d1d1f;
+}
+
+.notes-window__todo-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}

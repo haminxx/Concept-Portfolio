@@ -14,6 +14,10 @@ import {
   Snowflake,
   CloudFog,
   CloudSun,
+  Plus,
+  Trash2,
+  Circle,
+  CheckCircle2,
 } from 'lucide-react'
 import ColorPicker from './ui/color-picker'
 import BackgroundMotionSlider from './ui/BackgroundMotionSlider'
@@ -22,12 +26,18 @@ import { useDesktopBackground } from '../context/DesktopBackgroundContext'
 import { getImagePath } from '../lib/gallery'
 import { loadPhotoWidgetState, savePhotoWidgetState } from '../lib/photoWidgetStorage'
 import {
-  loadNotesStore,
-  getPinnedChecklistItems,
-  setPinnedChecklistItemDone,
-  NOTES_CHANGED_EVENT,
-} from '../lib/notesStorage'
-import { subscribeNotesStore } from '../lib/notesFirestoreSync'
+  loadTodosStore,
+  saveTodosStore,
+  toggleTodo,
+  addTodo,
+  deleteTodo,
+  collectParentIds,
+  TODOS_CHANGED_EVENT,
+  TODOS_STORAGE_KEY,
+} from '../lib/todosStorage'
+import { subscribeTodosStore } from '../lib/todosFirestoreSync'
+import { Collection } from 'react-aria-components'
+import { Tree, TreeItem, TreeItemContent, TreeItemExpandButton } from './ui/tree'
 import {
   STATIC_WIDGET_IDS,
   NON_RESIZABLE_WIDGET_IDS,
@@ -225,6 +235,70 @@ function YearProgressWidget({ now, surfaceForeground, liquidGlass }) {
   )
 }
 
+/** Single row of the desktop Todo tree (recursive via react-aria Collection). */
+function TodoTreeRow({ node, onToggle, onAdd, onDelete }) {
+  const hasChildren = Array.isArray(node.children) && node.children.length > 0
+  return (
+    <TreeItem textValue={node.text || 'Untitled'} className="desktop-widgets__todo-row">
+      <TreeItemContent>
+        {hasChildren ? (
+          <TreeItemExpandButton className="desktop-widgets__todo-chevron" />
+        ) : (
+          <span className="desktop-widgets__todo-chevron-spacer" aria-hidden />
+        )}
+        <button
+          type="button"
+          className="desktop-widgets__todo-check"
+          aria-label={node.done ? 'Mark todo incomplete' : 'Mark todo complete'}
+          aria-pressed={node.done}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onToggle(node.id, !node.done)}
+        >
+          {node.done ? (
+            <CheckCircle2 size={15} strokeWidth={2} />
+          ) : (
+            <Circle size={15} strokeWidth={2} />
+          )}
+        </button>
+        <span
+          className={
+            node.done
+              ? 'desktop-widgets__todo-text desktop-widgets__todo-text--done'
+              : 'desktop-widgets__todo-text'
+          }
+        >
+          {node.text || '—'}
+        </span>
+        <span className="desktop-widgets__todo-actions">
+          <button
+            type="button"
+            className="desktop-widgets__todo-action"
+            aria-label="Add subtask"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onAdd(node.id)}
+          >
+            <Plus size={13} strokeWidth={2.2} />
+          </button>
+          <button
+            type="button"
+            className="desktop-widgets__todo-action desktop-widgets__todo-action--danger"
+            aria-label="Delete todo"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => onDelete(node.id)}
+          >
+            <Trash2 size={13} strokeWidth={2.2} />
+          </button>
+        </span>
+      </TreeItemContent>
+      <Collection items={node.children ?? []}>
+        {(child) => (
+          <TodoTreeRow node={child} onToggle={onToggle} onAdd={onAdd} onDelete={onDelete} />
+        )}
+      </Collection>
+    </TreeItem>
+  )
+}
+
 function rectsOverlap(a, b) {
   return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom)
 }
@@ -385,7 +459,10 @@ export default function DesktopWidgets({
   const [layoutMetrics, setLayoutMetrics] = useState(() => inferLayoutMetricsFromWindow())
   const [photoImportFor, setPhotoImportFor] = useState(null)
   const [photoData, setPhotoData] = useState(() => readInitialPhotoMap(loadPhotoWidgetIdList()))
-  const [notesStore, setNotesStore] = useState(() => loadNotesStore())
+  const [todosStore, setTodosStore] = useState(() => loadTodosStore())
+  const [todoExpanded, setTodoExpanded] = useState(
+    () => new Set(collectParentIds(loadTodosStore().todos)),
+  )
   const dragRef = useRef(null)
   const [draggingId, setDraggingId] = useState(null)
   const [resizingWidgetId, setResizingWidgetId] = useState(null)
@@ -470,17 +547,17 @@ export default function DesktopWidgets({
   }, [])
 
   useEffect(() => {
-    const sync = () => setNotesStore(loadNotesStore())
-    window.addEventListener(NOTES_CHANGED_EVENT, sync)
+    const sync = () => setTodosStore(loadTodosStore())
+    window.addEventListener(TODOS_CHANGED_EVENT, sync)
     const onStorage = (e) => {
-      if (e.key === 'portfolio-notes-v1') sync()
+      if (e.key === TODOS_STORAGE_KEY) sync()
     }
     window.addEventListener('storage', onStorage)
-    const unsubNotesFs = subscribeNotesStore()
+    const unsubTodosFs = subscribeTodosStore()
     return () => {
-      window.removeEventListener(NOTES_CHANGED_EVENT, sync)
+      window.removeEventListener(TODOS_CHANGED_EVENT, sync)
       window.removeEventListener('storage', onStorage)
-      unsubNotesFs()
+      unsubTodosFs()
     }
   }, [])
 
@@ -839,14 +916,39 @@ export default function DesktopWidgets({
     setPhotoImportFor(null)
   }, [])
 
-  const pinnedItems = useMemo(
-    () => getPinnedChecklistItems(notesStore.pinnedNoteId, notesStore.notes),
-    [notesStore],
+  const applyTodos = useCallback((next) => {
+    setTodosStore(next)
+    saveTodosStore(next)
+  }, [])
+
+  const handleToggleTodo = useCallback(
+    (id, done) => {
+      applyTodos(toggleTodo(loadTodosStore(), id, done))
+    },
+    [applyTodos],
   )
 
-  const togglePinnedItem = useCallback((itemId, done) => {
-    setPinnedChecklistItemDone(notesStore, itemId, done)
-  }, [notesStore])
+  const handleAddTodo = useCallback(
+    (parentId = null) => {
+      const { store } = addTodo(loadTodosStore(), parentId, '')
+      if (parentId) {
+        setTodoExpanded((prev) => {
+          const next = new Set(prev)
+          next.add(parentId)
+          return next
+        })
+      }
+      applyTodos(store)
+    },
+    [applyTodos],
+  )
+
+  const handleDeleteTodo = useCallback(
+    (id) => {
+      applyTodos(deleteTodo(loadTodosStore(), id))
+    },
+    [applyTodos],
+  )
 
   const weatherNext = useMemo(() => {
     if (weather.status !== 'ready') return { conditionWord: '—', horizon: '—' }
@@ -1164,40 +1266,49 @@ export default function DesktopWidgets({
 
       <div className={cardClass('notesChecklist', 'desktop-widgets__card--notes')} style={cardStyle('notesChecklist')}>
         <div className="desktop-widgets__card-chrome">
-          <WidgetDragGrip id="notesChecklist" label="Move notes widget" onDown={handleGripPointerDown} />
-          <div className="desktop-widgets__notes-inner desktop-widgets__notes-plain">
-          {!notesStore.pinnedNoteId ? (
-            <p className="desktop-widgets__adaptive desktop-widgets__muted desktop-widgets__muted--small">
-              Open Notes and pin a note for this list.
-            </p>
-          ) : pinnedItems.length === 0 ? (
-            <p className="desktop-widgets__adaptive desktop-widgets__muted desktop-widgets__muted--small">
-              No checklist items yet.
-            </p>
-          ) : (
-            <ul className="desktop-widgets__adaptive desktop-widgets__notes-list">
-              {pinnedItems.map((it) => (
-                <li key={it.id} className="desktop-widgets__notes-item">
-                  <label className="desktop-widgets__notes-check-label">
-                    <input
-                      type="checkbox"
-                      checked={!!it.done}
-                      onChange={(e) => togglePinnedItem(it.id, e.target.checked)}
-                    />
-                    <span className={it.done ? 'desktop-widgets__notes-text desktop-widgets__notes-text--done' : 'desktop-widgets__notes-text'}>
-                      {it.text || '—'}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
+          <WidgetDragGrip id="notesChecklist" label="Move todos widget" onDown={handleGripPointerDown} />
+          <div className="desktop-widgets__notes-inner desktop-widgets__notes-plain desktop-widgets__adaptive">
+            <div className="desktop-widgets__todo-head">
+              <span className="desktop-widgets__todo-title">Todos</span>
+              <button
+                type="button"
+                className="desktop-widgets__todo-action"
+                aria-label="Add todo"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => handleAddTodo(null)}
+              >
+                <Plus size={14} strokeWidth={2.2} />
+              </button>
+            </div>
+            {todosStore.todos.length === 0 ? (
+              <p className="desktop-widgets__muted desktop-widgets__muted--small">
+                No todos yet. Tap + to add one.
+              </p>
+            ) : (
+              <Tree
+                aria-label="Todos"
+                items={todosStore.todos}
+                selectionMode="none"
+                expandedKeys={todoExpanded}
+                onExpandedChange={setTodoExpanded}
+                className="desktop-widgets__todo-tree"
+              >
+                {(node) => (
+                  <TodoTreeRow
+                    node={node}
+                    onToggle={handleToggleTodo}
+                    onAdd={handleAddTodo}
+                    onDelete={handleDeleteTodo}
+                  />
+                )}
+              </Tree>
+            )}
           </div>
         </div>
         <button
           type="button"
           className="desktop-widgets__widget-resize-handle"
-          aria-label="Resize notes widget"
+          aria-label="Resize todos widget"
           onPointerDown={(e) => handleWidgetResizePointerDown(e, 'notesChecklist')}
         />
       </div>
