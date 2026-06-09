@@ -125,6 +125,7 @@ export default function ChromeLanding({
   )
   const chromeNavReplayRef = useRef(false)
   const closingLastTabRef = useRef(false)
+  const autoOpenedChromeRef = useRef(false)
 
   const pushChromeNav = useCallback((tabId, type, title, meta) => {
     if (chromeNavReplayRef.current) return
@@ -380,6 +381,24 @@ export default function ChromeLanding({
   useEffect(() => {
     if (!desktopRevealed) return undefined
     return runBootFullscreenSequence({ revealDelayMs: bootRevealDelayMs })
+  }, [desktopRevealed, bootRevealDelayMs])
+
+  /** Open Safari once when the desktop is first revealed (not on every re-render or re-minimize). */
+  useEffect(() => {
+    if (!desktopRevealed || autoOpenedChromeRef.current) return undefined
+
+    const openSafari = () => {
+      if (autoOpenedChromeRef.current) return
+      autoOpenedChromeRef.current = true
+      setChromeMinimized(false)
+      setChromeOpening(true)
+      setChromeFocused(true)
+      setFocusedAppWindowId(null)
+    }
+
+    const delay = Math.max(0, bootRevealDelayMs)
+    const timer = window.setTimeout(openSafari, delay)
+    return () => window.clearTimeout(timer)
   }, [desktopRevealed, bootRevealDelayMs])
 
   const handleFullScreenToggle = useCallback(() => {
