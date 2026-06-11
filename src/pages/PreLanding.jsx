@@ -1,13 +1,12 @@
 import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react'
 import { AppleHelloEnglishEffect } from '@/components/ui/apple-hello-effect'
-import WordsPreloader from '@/components/ui/words-preloader'
 import { DesktopBackgroundProvider, useDesktopBackground } from '../context/DesktopBackgroundContext'
 import { requestDocumentFullscreenFromGesture } from '../utils/fullscreen'
 import './PreLanding.css'
 
 const DesktopShaderBackground = lazy(() => import('../components/ui/DesktopShaderBackground'))
 
-const PHASES = ['hello', 'words', 'exiting']
+const PHASES = ['hello', 'exiting']
 
 function PreLandingBackground() {
   const { color1, color2, speed } = useDesktopBackground()
@@ -26,11 +25,8 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const helloPauseRef = useRef(null)
 
   const phase = PHASES[phaseIndex]
-  const isWords = phase === 'words'
   const isExiting = phase === 'exiting'
-  // English hello SVG only during the handwriting phase — then fully removed.
   const showHello = phase === 'hello'
-  const showWords = isWords || isExiting
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setHelloVisible(true))
@@ -40,24 +36,18 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
   const startExit = useCallback((e) => {
     if (e) requestDocumentFullscreenFromGesture(e)
     setPhaseIndex((current) => {
-      if (current >= 2) return current
+      if (current >= 1) return current
       onExitStart?.()
-      return 2
+      return 1
     })
   }, [onExitStart])
 
-  // Handwriting finished — brief hold, then unmount hello and start other languages.
   const handleHelloComplete = useCallback(() => {
     if (helloPauseRef.current != null) window.clearTimeout(helloPauseRef.current)
     helloPauseRef.current = window.setTimeout(() => {
-      setPhaseIndex((current) => (current <= 0 ? 1 : current))
+      startExit()
       helloPauseRef.current = null
     }, 450)
-  }, [])
-
-  // Korean greeting held — fade out into desktop.
-  const handleWordsComplete = useCallback(() => {
-    startExit()
   }, [startExit])
 
   useEffect(() => {
@@ -124,12 +114,6 @@ function PreLandingContent({ onEnterDesktop, onExitStart }) {
               onAnimationComplete={handleHelloComplete}
             />
           </div>
-        )}
-        {showWords && (
-          <WordsPreloader
-            exiting={isExiting}
-            onComplete={isWords ? handleWordsComplete : undefined}
-          />
         )}
       </div>
     </div>
