@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
+import { useState, useCallback, useRef, useEffect, Suspense } from 'react'
+import { lazyWithRetry } from '../lib/lazyWithRetry'
 import DesktopCustomIcons from './DesktopCustomIcons'
 import DesktopContextMenu from './DesktopContextMenu'
 import DesktopWidgets from './DesktopWidgets'
@@ -6,7 +7,7 @@ import './Desktop.css'
 import { DESKTOP_ICON_WIDTH, DESKTOP_ICON_HEIGHT, DESKTOP_SAFE_TOP } from '../desktopConstants'
 import { useDesktopBackground } from '../context/DesktopBackgroundContext'
 
-const DesktopShaderBackground = lazy(() => import('./ui/DesktopShaderBackground'))
+const DesktopShaderBackground = lazyWithRetry(() => import('./ui/DesktopShaderBackground'))
 
 function DesktopShaderBackgroundGate() {
   const { color1, color2, speed } = useDesktopBackground()

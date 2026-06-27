@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useRef, Suspense, lazy } from 'react'
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react'
+import { lazyWithRetry } from '../lib/lazyWithRetry'
 import { AppleHelloEnglishEffect } from '@/components/ui/apple-hello-effect'
 import { DesktopBackgroundProvider, useDesktopBackground } from '../context/DesktopBackgroundContext'
 import { requestDocumentFullscreenFromGesture } from '../utils/fullscreen'
 import './PreLanding.css'
 
-const DesktopShaderBackground = lazy(() => import('../components/ui/DesktopShaderBackground'))
+const DesktopShaderBackground = lazyWithRetry(() => import('../components/ui/DesktopShaderBackground'))
 
 const PHASES = ['hello', 'exiting']
 
