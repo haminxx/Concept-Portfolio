@@ -1,82 +1,118 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 
-import { useTheme } from '../context/ThemeContext'
+import { useDesktopBackground } from '../context/DesktopBackgroundContext'
+import { foregroundOnSolid } from '../lib/colorUtils'
 import {
-  getChromeProjectById,
-  getProjectsByFilter,
-} from '../data/chromeProjects'
-import { ProjectFilterSwitcher } from './ui/project-filter-switcher'
-import { ProjectShowcase } from './ui/project-showcase.jsx'
+  GANTT_MONTH_LABELS,
+  GANTT_PROJECTS,
+  getGanttProjectById,
+} from '../data/projectGantt'
+import ProjectDetailPage from './ProjectDetailPage'
 import './ProjectPage.css'
 
-const DETAIL_THEME_BY_CATEGORY = {
-  all: 'all',
-  side: 'side',
-  hackathon: 'hackathon',
-  'study-case': 'study-case',
+const DEFAULT_PROJECTS_BG = '#f5f5f0'
+const DEFAULT_MESH_COLOR1 = '#1a1a1a'
+const DEFAULT_MESH_COLOR2 = '#000000'
+
+function resolveProjectsBackground(color1, color2) {
+  const isDefaultMesh =
+    color1 === DEFAULT_MESH_COLOR1 && color2 === DEFAULT_MESH_COLOR2
+  return isDefaultMesh ? DEFAULT_PROJECTS_BG : color2
 }
 
-export default function ProjectPage() {
-  const { nightMode } = useTheme()
-  const [activeFilter, setActiveFilter] = useState('all')
-  const [selectedProject, setSelectedProject] = useState(null)
-
-  const projects = useMemo(() => getProjectsByFilter(activeFilter), [activeFilter])
-
-  const handleProjectSelect = (project) => {
-    const projectId = project?.id
-    setSelectedProject(projectId ? getChromeProjectById(projectId) ?? project : project)
+function monthSpanPercent(startMonth, endMonth) {
+  const span = Math.max(1, endMonth - startMonth + 1)
+  return {
+    left: `${(startMonth / 12) * 100}%`,
+    width: `${(span / 12) * 100}%`,
   }
+}
 
-  const handleFilterChange = (nextFilter) => {
-    setActiveFilter(nextFilter)
-    setSelectedProject(null)
+/**
+ * @param {{
+ *   selectedProjectId?: string | null
+ *   onProjectNavigate?: (project: import('../data/projectGantt').GanttProject) => void
+ * }} props
+ */
+export default function ProjectPage({ selectedProjectId = null, onProjectNavigate }) {
+  const { color1, color2 } = useDesktopBackground()
+  const backgroundColor = useMemo(
+    () => resolveProjectsBackground(color1, color2),
+    [color1, color2],
+  )
+  const barFg = useMemo(() => foregroundOnSolid(backgroundColor), [backgroundColor])
+  const tone = barFg === '#f5f5f7' ? 'dark' : 'light'
+  const selectedProject = selectedProjectId
+    ? getGanttProjectById(selectedProjectId)
+    : null
+
+  if (selectedProject) {
+    return (
+      <div
+        className="projects-page"
+        data-tone={tone}
+        style={{ '--projects-bg': backgroundColor, '--projects-fg': barFg }}
+        aria-label={`${selectedProject.title} project`}
+      >
+        <ProjectDetailPage project={selectedProject} />
+      </div>
+    )
   }
-
-  const activeTheme =
-    DETAIL_THEME_BY_CATEGORY[selectedProject?.category] ?? activeFilter
 
   return (
     <div
       className="projects-page"
-      data-project-theme={activeTheme}
-      aria-label="Projects"
+      data-tone={tone}
+      style={{ '--projects-bg': backgroundColor, '--projects-fg': barFg }}
+      aria-label="Projects timeline"
     >
-      {selectedProject ? (
-        <section className="projects-page__detail" aria-label={`${selectedProject.title} details`}>
-          <button
-            className="projects-page__back"
-            type="button"
-            onClick={() => setSelectedProject(null)}
-          >
-            <ChevronLeft size={16} strokeWidth={2} aria-hidden />
-            Back to projects
-          </button>
+      <div className="projects-page__scroll">
+        <div className="projects-gantt">
+          <header className="projects-gantt__header">
+            <span className="projects-gantt__corner" aria-hidden="true" />
+            {GANTT_MONTH_LABELS.map((label) => (
+              <span key={label} className="projects-gantt__month">
+                {label}
+              </span>
+            ))}
+          </header>
 
-          <div className="projects-page__detail-shell">
-            <p className="projects-page__detail-kicker">Project</p>
-            <h1>{selectedProject.title}</h1>
-            <p>Project page coming soon</p>
-          </div>
-        </section>
-      ) : (
-        <div className="projects-page__scroll">
-          <div className="projects-page__toolbar">
-            <ProjectFilterSwitcher
-              value={activeFilter}
-              onValueChange={handleFilterChange}
-              isDarkMode={nightMode}
-            />
-          </div>
+          <div className="projects-gantt__body">
+            {GANTT_PROJECTS.map((project, index) => {
+              const geometry = monthSpanPercent(project.startMonth, project.endMonth)
+              const fromLeft = index % 2 === 0
 
-          <ProjectShowcase
-            projects={projects}
-            filterKey={activeFilter}
-            onProjectSelect={handleProjectSelect}
-          />
+              return (
+                <div key={project.id} className="projects-gantt__row">
+                  <div className="projects-gantt__track">
+                    <motion.button
+                      type="button"
+                      className="projects-gantt__bar"
+                      style={geometry}
+                      initial={{
+                        opacity: 0,
+                        x: fromLeft ? '-110%' : '110%',
+                      }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        duration: 0.55,
+                        delay: index * 0.07,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      onClick={() => onProjectNavigate?.(project)}
+                      aria-label={`${project.title}: ${project.description}`}
+                    >
+                      <span className="projects-gantt__bar-title">{project.title}</span>
+                      <span className="projects-gantt__bar-desc">{project.description}</span>
+                    </motion.button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

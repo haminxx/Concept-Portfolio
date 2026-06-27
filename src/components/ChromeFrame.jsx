@@ -27,6 +27,7 @@ export default function ChromeFrame({
   onWindowClose,
   isMaximized = false,
   activeTabType,
+  projectTitle,
   onNavigate,
   onBack,
   onForward,
@@ -151,7 +152,11 @@ export default function ChromeFrame({
             (About / Project / Newsletter / Contact) opens in a dropdown below
             the field on hover — see SafariSearchBar. */}
         <div className="chrome-frame__search">
-          <SafariSearchBar activeTabType={activeTabType} onNavigate={onNavigate} />
+          <SafariSearchBar
+            activeTabType={activeTabType}
+            projectTitle={projectTitle}
+            onNavigate={onNavigate}
+          />
         </div>
       </div>
     </motion.header>

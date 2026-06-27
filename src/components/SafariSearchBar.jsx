@@ -73,8 +73,12 @@ function filterDestinations(query) {
   )
 }
 
-function getDisplayLabel(activeTabType) {
+function getDisplayLabel(activeTabType, projectTitle) {
   if (!activeTabType || activeTabType === 'home') return 'Home'
+  if (activeTabType === 'project') {
+    if (projectTitle) return `Home › Project › ${projectTitle}`
+    return 'Home › Project'
+  }
   const dest = DESTINATIONS.find((d) => d.type === activeTabType)
   return dest?.label ?? activeTabType
 }
@@ -167,7 +171,7 @@ function DestinationOption({ dest, index, isHighlighted, onSelect, onHighlight }
   )
 }
 
-export default function SafariSearchBar({ activeTabType, onNavigate }) {
+export default function SafariSearchBar({ activeTabType, projectTitle, onNavigate }) {
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -273,7 +277,7 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
 
   useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer])
 
-  const idleLabel = getDisplayLabel(activeTabType)
+  const idleLabel = getDisplayLabel(activeTabType, projectTitle)
   const isActive = hovered || isFocused
   const inputValue = isActive ? query : idleLabel
   const showPlaceholder = isActive && !hasQuery

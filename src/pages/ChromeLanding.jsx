@@ -231,7 +231,9 @@ export default function ChromeLanding({
       pushChromeNav(activeTabId, shortcutType, shortcut.label)
       setTabs((prev) =>
         prev.map((t) =>
-          t.id === activeTabId ? { ...t, type: shortcutType, title: shortcut.label } : t
+          t.id === activeTabId
+            ? { ...t, type: shortcutType, title: shortcut.label, projectId: null }
+            : t
         )
       )
       setChromeMinimized(false)
@@ -286,9 +288,24 @@ export default function ChromeLanding({
     if (!tab) return
     pushChromeNav(id, 'home', 'Home')
     setTabs((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, type: 'home', title: 'Home' } : t)),
+      prev.map((t) => (t.id === id ? { ...t, type: 'home', title: 'Home', projectId: null } : t)),
     )
   }, [activeTabId, tabs, pushChromeNav])
+
+  const handleProjectNavigate = useCallback(
+    (project) => {
+      if (!project?.id) return
+      pushChromeNav(activeTabId, 'project', project.title, { projectId: project.id })
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeTabId
+            ? { ...t, type: 'project', title: project.title, projectId: project.id }
+            : t
+        )
+      )
+    },
+    [activeTabId, pushChromeNav]
+  )
 
   const handleChromeNavigate = useCallback(
     (type) => {
@@ -306,9 +323,15 @@ export default function ChromeLanding({
     const state = chromeNavStacksRef.current.get(id)
     if (!state || state.index <= 0) return
     state.index -= 1
-    const { type, title } = state.entries[state.index]
+    const { type, title, meta } = state.entries[state.index]
     chromeNavReplayRef.current = true
-    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
+    setTabs((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, type, title, projectId: meta?.projectId ?? null }
+          : t
+      )
+    )
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -319,9 +342,15 @@ export default function ChromeLanding({
     const state = chromeNavStacksRef.current.get(id)
     if (!state || state.index >= state.entries.length - 1) return
     state.index += 1
-    const { type, title } = state.entries[state.index]
+    const { type, title, meta } = state.entries[state.index]
     chromeNavReplayRef.current = true
-    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, type, title } : t)))
+    setTabs((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, type, title, projectId: meta?.projectId ?? null }
+          : t
+      )
+    )
     queueMicrotask(() => {
       chromeNavReplayRef.current = false
     })
@@ -510,6 +539,7 @@ export default function ChromeLanding({
                 onMinimize={setMinimized}
                 onWindowClose={setMinimized}
                 activeTabType={activeTab?.type}
+                projectTitle={activeTab?.projectId ? activeTab.title : null}
                 onNavigate={handleChromeNavigate}
                 onBack={handleBack}
                 onForward={handleForward}
@@ -534,7 +564,10 @@ export default function ChromeLanding({
                 ) : activeTab.type === 'newsletter' ? (
                   <NewsletterPage />
                 ) : activeTab.type === 'project' ? (
-                  <ProjectPage />
+                  <ProjectPage
+                    selectedProjectId={activeTab.projectId ?? null}
+                    onProjectNavigate={handleProjectNavigate}
+                  />
                 ) : activeTab.type === 'contact' ? (
                   <ContactPage />
                 ) : activeTab.type === 'iframe' && activeTab.url ? (
