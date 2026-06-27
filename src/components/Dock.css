@@ -12,7 +12,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: max(3px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   pointer-events: none;
   /* Prevent horizontal scroll caused by magnified icons overflowing the wrapper */
