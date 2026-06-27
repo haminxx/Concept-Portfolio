@@ -1,47 +1,33 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import GlowHorizonFM, {
+  GLOW_HORIZON_TEXT_BASE_DELAY,
+  GLOW_HORIZON_TEXT_STAGGER,
+  GLOW_HORIZON_WAVE_DURATION,
+} from '@/components/ui/glow-horizon'
 import './ChromeHome.css'
 
 const SINCE_TEXT = 'Since 2003'
-const NAME_TEXT = 'Christian'
+const NAME_TEXT = 'Christian Lee'
 
-const CHAR_STAGGER = 0.045
-const CHAR_DURATION = 0.55
-const CHAR_EASE = [0.22, 1, 0.36, 1]
+const TEXT_EASE = [0.22, 1, 0.36, 1]
+const SINCE_DELAY = GLOW_HORIZON_TEXT_BASE_DELAY
+const NAME_DELAY = GLOW_HORIZON_TEXT_BASE_DELAY + GLOW_HORIZON_TEXT_STAGGER
 
-const SINCE_CHAR_COUNT = SINCE_TEXT.length
-const NAME_CHAR_COUNT = NAME_TEXT.length
-
-/** Christian starts shortly after the last "Since" char begins moving. */
-const NAME_BASE_DELAY =
-  (SINCE_CHAR_COUNT - 1) * CHAR_STAGGER + CHAR_DURATION * 0.28
-
-const TEXT_ANIM_END =
-  NAME_BASE_DELAY + (NAME_CHAR_COUNT - 1) * CHAR_STAGGER + CHAR_DURATION
-
-const LINE_START_DELAY = TEXT_ANIM_END + 0.28
+const LINE_START_DELAY =
+  NAME_DELAY + 0.72 + GLOW_HORIZON_TEXT_STAGGER * 0.5
 const LINE_DRAW_DURATION = 1.65
 
-function StaggeredText({ text, className, baseDelay = 0 }) {
+function GlassFadeText({ text, className, delay = 0 }) {
   return (
-    <span className={className} aria-label={text}>
-      {text.split('').map((char, index) => (
-        <span key={`${char}-${index}`} className="chrome-home__char-wrap" aria-hidden="true">
-          <motion.span
-            className="chrome-home__char"
-            initial={{ y: '115%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{
-              duration: CHAR_DURATION,
-              delay: baseDelay + index * CHAR_STAGGER,
-              ease: CHAR_EASE,
-            }}
-          >
-            {char === ' ' ? '\u00A0' : char}
-          </motion.span>
-        </span>
-      ))}
-    </span>
+    <motion.div
+      className="chrome-home__glass-pill"
+      initial={{ opacity: 0, y: 14, filter: 'blur(10px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.78, delay, ease: TEXT_EASE }}
+    >
+      <span className={className}>{text}</span>
+    </motion.div>
   )
 }
 
@@ -78,35 +64,13 @@ function computeGuideMetrics(containerEl, heroEl) {
 
   const gap = Math.max(18, Math.min(36, width * 0.04))
   const laneY = hero.bottom + gap
-  const upperLaneY = hero.top - gap
 
-  const spaceLeft = hero.left
-  const spaceRight = width - hero.right
-  const detourX =
-    spaceLeft >= spaceRight
-      ? Math.max(gap, hero.left - gap)
-      : Math.min(width - gap, hero.right + gap)
-
-  const startInsideHero = startX > hero.left - gap && startX < hero.right + gap
-
-  let pathD
-  if (!startInsideHero) {
-    pathD = [
-      `M ${startX} ${startY}`,
-      `L ${startX} ${laneY}`,
-      `L ${endX} ${laneY}`,
-      `L ${endX} ${endY}`,
-    ].join(' ')
-  } else {
-    pathD = [
-      `M ${startX} ${startY}`,
-      `L ${startX} ${laneY}`,
-      `L ${detourX} ${laneY}`,
-      `L ${detourX} ${upperLaneY}`,
-      `L ${endX} ${upperLaneY}`,
-      `L ${endX} ${endY}`,
-    ].join(' ')
-  }
+  const pathD = [
+    `M ${startX} ${startY}`,
+    `L ${startX} ${laneY}`,
+    `L ${endX} ${laneY}`,
+    `L ${endX} ${endY}`,
+  ].join(' ')
 
   const arrowSize = Math.max(7, Math.min(11, width * 0.018))
   const arrowY = endY - arrowSize * 0.35
@@ -222,7 +186,7 @@ function GuideLine({ containerRef, heroRef }) {
           transition={{
             delay: LINE_DRAW_DURATION * 0.82,
             duration: 0.38,
-            ease: CHAR_EASE,
+            ease: TEXT_EASE,
           }}
         />
       </svg>
@@ -236,33 +200,24 @@ export default function ChromeHome() {
 
   return (
     <div ref={containerRef} className="chrome-home">
-      <video
-        className="chrome-home__video"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        src="/videos/home-bg.mp4"
-      />
-      <div className="chrome-home__overlay" aria-hidden="true" />
+      <GlowHorizonFM variant="top" />
 
       <GuideLine containerRef={containerRef} heroRef={heroRef} />
 
       <div ref={heroRef} className="chrome-home__hero">
         <div className="chrome-home__since">
-          <StaggeredText
+          <GlassFadeText
             text={SINCE_TEXT}
             className="chrome-home__since-text"
-            baseDelay={0}
+            delay={SINCE_DELAY}
           />
         </div>
 
         <div className="chrome-home__name">
-          <StaggeredText
+          <GlassFadeText
             text={NAME_TEXT}
             className="chrome-home__name-line"
-            baseDelay={NAME_BASE_DELAY}
+            delay={NAME_DELAY}
           />
         </div>
       </div>
@@ -272,4 +227,12 @@ export default function ChromeHome() {
       </span>
     </div>
   )
+}
+
+export {
+  GLOW_HORIZON_WAVE_DURATION,
+  GLOW_HORIZON_TEXT_BASE_DELAY,
+  GLOW_HORIZON_TEXT_STAGGER,
+  SINCE_DELAY,
+  NAME_DELAY,
 }
