@@ -13,7 +13,7 @@ import { cn } from '../lib/utils'
 import './SafariSearchBar.css'
 
 /**
- * Real in-app destinations. `home` is excluded from the hover fly-out (it is the
+ * Real in-app destinations. `home` is excluded from the hover nav dropdown (it is the
  * default state) but IS searchable in the typed-results dropdown.
  */
 const DESTINATIONS = [
@@ -59,11 +59,9 @@ const DESTINATIONS = [
   },
 ]
 
-const FLYOUT_SHORTCUTS = DESTINATIONS.filter((d) => d.flyout)
+const NAV_ITEMS = DESTINATIONS.filter((d) => d.flyout)
 const DEFAULT_PLACEHOLDER = 'Search or jump to a page'
-
-/** Spring used for the staggered shortcut fly-out. */
-const FLYOUT_SPRING = { type: 'spring', stiffness: 520, damping: 30, mass: 0.7 }
+const HOVER_LEAVE_DELAY_MS = 120
 
 function filterDestinations(query) {
   const q = query.trim().toLowerCase()
@@ -87,8 +85,7 @@ function stopWindowDrag(e) {
 
 /**
  * Animated placeholder that swaps text with a blur/translate transition
- * (Spotlight "SpotlightPlaceholder" feel). Re-keys on `text` so hovering a
- * shortcut smoothly cross-fades the placeholder to that shortcut's label.
+ * (Spotlight "SpotlightPlaceholder" feel).
  */
 function SpotlightPlaceholder({ text }) {
   return (
@@ -109,35 +106,64 @@ function SpotlightPlaceholder({ text }) {
   )
 }
 
-/**
- * One shortcut "flying out" to the RIGHT of the search field (original Apple
- * Spotlight behaviour). Each circular button starts collapsed behind the field
- * (translated left) and fans out to its flex position with a per-index spring
- * stagger; on exit it translates back to the right and collapses.
- */
-function ShortcutButton({ item, index, isHighlighted, onSelect, onHoverChange }) {
-  const Icon = item.icon
+function DestinationOption({ dest, index, isHighlighted, onSelect, onHighlight }) {
+  const Icon = dest.icon
 
   return (
-    <motion.button
-      type="button"
-      className={cn(
-        'safari-search-bar__shortcut',
-        isHighlighted && 'safari-search-bar__shortcut--active',
-      )}
-      initial={{ opacity: 0, scale: 0.7, x: -(64 * (index + 1)) }}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      exit={{ opacity: 0, scale: 0.7, x: 64 * (index + 1) }}
-      transition={{ ...FLYOUT_SPRING, delay: index * 0.04 }}
-      onMouseEnter={() => onHoverChange(item.label)}
-      onMouseLeave={() => onHoverChange(null)}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => onSelect(item)}
-      title={item.label}
-      aria-label={item.label}
+    <motion.li
+      role="presentation"
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      transition={{
+        delay: index * 0.035,
+        duration: 0.22,
+        ease: [0.22, 1, 0.36, 1],
+      }}
     >
-      <Icon size={17} strokeWidth={1.9} aria-hidden="true" />
-    </motion.button>
+      <button
+        id={`safari-search-option-${index}`}
+        type="button"
+        role="option"
+        aria-selected={isHighlighted}
+        className={cn(
+          'safari-search-bar__option',
+          isHighlighted && 'safari-search-bar__option--highlighted',
+        )}
+        onMouseEnter={() => onHighlight(index)}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => onSelect(dest)}
+      >
+        <span className="safari-search-bar__option-main">
+          <Icon
+            className="safari-search-bar__option-icon"
+            size={15}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+          <span className="safari-search-bar__option-text">
+            <span className="safari-search-bar__option-label">{dest.label}</span>
+            <span className="safari-search-bar__option-desc">{dest.description}</span>
+          </span>
+        </span>
+        <span className="safari-search-bar__option-trailing">
+          <AnimatePresence initial={false}>
+            {isHighlighted && (
+              <motion.span
+                className="safari-search-bar__option-chevron"
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -4 }}
+                transition={{ duration: 0.16 }}
+              >
+                <ChevronRight size={14} strokeWidth={2.25} />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </span>
+      </button>
+    </motion.li>
   )
 }
 
@@ -146,15 +172,14 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
   const [isFocused, setIsFocused] = useState(false)
   const [hovered, setHovered] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
-  const [hoveredShortcutLabel, setHoveredShortcutLabel] = useState(null)
   const inputRef = useRef(null)
   const wrapRef = useRef(null)
+  const leaveTimerRef = useRef(null)
 
   const filtered = useMemo(() => filterDestinations(query), [query])
   const hasQuery = query.trim().length > 0
 
-  // Shortcuts fly out when the user hovers (or focuses) the search and isn't typing.
-  const showShortcuts = (hovered || isFocused) && !hasQuery
+  const showNavDropdown = (hovered || isFocused) && !hasQuery
   const showResults = hasQuery && (isFocused || hovered)
 
   const navigateTo = useCallback(
@@ -165,7 +190,6 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
       setHovered(false)
       setIsFocused(false)
       setHighlightedIndex(-1)
-      setHoveredShortcutLabel(null)
       inputRef.current?.blur()
     },
     [onNavigate],
@@ -179,15 +203,14 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
         setHovered(false)
         setQuery('')
         setHighlightedIndex(-1)
-        setHoveredShortcutLabel(null)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isFocused, hovered])
 
-  // The list keyboard navigation targets whichever panel is visible.
-  const activeList = hasQuery ? filtered : FLYOUT_SHORTCUTS
+  // Keyboard navigation targets whichever panel is visible.
+  const activeList = hasQuery ? filtered : NAV_ITEMS
 
   const handleKeyDown = (e) => {
     if (e.key === 'Escape') {
@@ -195,10 +218,11 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
       setIsFocused(false)
       setHovered(false)
       setHighlightedIndex(-1)
-      setHoveredShortcutLabel(null)
       inputRef.current?.blur()
       return
     }
+
+    if (!isFocused && !hovered) return
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -226,28 +250,40 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
     setHighlightedIndex(-1)
   }
 
-  const handleShortcutHover = useCallback((label) => {
-    setHoveredShortcutLabel(label)
+  const clearLeaveTimer = useCallback(() => {
+    if (leaveTimerRef.current) {
+      window.clearTimeout(leaveTimerRef.current)
+      leaveTimerRef.current = null
+    }
   }, [])
+
+  const handleMouseEnter = () => {
+    clearLeaveTimer()
+    setHovered(true)
+  }
+
+  const handleMouseLeave = () => {
+    clearLeaveTimer()
+    leaveTimerRef.current = window.setTimeout(() => {
+      setHovered(false)
+      if (!isFocused) setHighlightedIndex(-1)
+      leaveTimerRef.current = null
+    }, HOVER_LEAVE_DELAY_MS)
+  }
+
+  useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer])
 
   const idleLabel = getDisplayLabel(activeTabType)
   const isActive = hovered || isFocused
   const inputValue = isActive ? query : idleLabel
   const showPlaceholder = isActive && !hasQuery
-  const placeholderText = hoveredShortcutLabel
-    ? `Go to ${hoveredShortcutLabel}`
-    : DEFAULT_PLACEHOLDER
 
   return (
     <div
       ref={wrapRef}
       className="safari-search-bar"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false)
-        setHoveredShortcutLabel(null)
-        if (!isFocused) setHighlightedIndex(-1)
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onMouseDown={stopWindowDrag}
       onPointerDown={stopWindowDrag}
     >
@@ -261,7 +297,7 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
       >
         <Search className="safari-search-bar__icon" size={14} strokeWidth={2} aria-hidden="true" />
         <div className="safari-search-bar__input-wrap">
-          {showPlaceholder && <SpotlightPlaceholder text={placeholderText} />}
+          {showPlaceholder && <SpotlightPlaceholder text={DEFAULT_PLACEHOLDER} />}
           <input
             ref={inputRef}
             type="search"
@@ -271,13 +307,12 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
             onChange={(e) => {
               setQuery(e.target.value)
               setHighlightedIndex(-1)
-              setHoveredShortcutLabel(null)
             }}
             onFocus={handleFocus}
             onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
             aria-label="Search or enter address"
-            aria-expanded={showShortcuts || showResults}
+            aria-expanded={showNavDropdown || showResults}
             aria-controls="safari-search-dropdown"
             autoComplete="off"
             spellCheck={false}
@@ -285,105 +320,53 @@ export default function SafariSearchBar({ activeTabType, onNavigate }) {
         </div>
       </motion.div>
 
-      {/* Quick-nav shortcuts fan out HORIZONTALLY to the RIGHT of the field
-          (original Apple Spotlight behaviour). The cluster is anchored to the
-          field's right edge and overlays the toolbar; its transparent left
-          padding is a hover bridge so it stays open while the cursor crosses
-          into it. pointer-events only engage while open so it never blocks the
-          toolbar drag area when collapsed. */}
-      <div
-        className={cn(
-          'safari-search-bar__panel',
-          showShortcuts && 'safari-search-bar__panel--open',
-        )}
-        id="safari-search-dropdown"
-      >
-        <AnimatePresence>
-          {showShortcuts &&
-            FLYOUT_SHORTCUTS.map((item, index) => (
-              <ShortcutButton
-                key={item.type}
-                item={item}
+      <AnimatePresence>
+        {showNavDropdown && (
+          <motion.ul
+            id="safari-search-dropdown"
+            className="safari-search-bar__dropdown safari-search-bar__dropdown--nav"
+            role="listbox"
+            aria-label="Pages"
+            initial={{ opacity: 0, y: -6, scale: 0.98, filter: 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -6, scale: 0.98, filter: 'blur(6px)' }}
+            transition={{ type: 'spring', stiffness: 460, damping: 36, mass: 0.7 }}
+          >
+            {NAV_ITEMS.map((dest, index) => (
+              <DestinationOption
+                key={dest.type}
+                dest={dest}
                 index={index}
-                isHighlighted={!hasQuery && index === highlightedIndex}
+                isHighlighted={index === highlightedIndex}
                 onSelect={navigateTo}
-                onHoverChange={handleShortcutHover}
+                onHighlight={setHighlightedIndex}
               />
             ))}
-        </AnimatePresence>
-      </div>
+          </motion.ul>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showResults && filtered.length > 0 && (
           <motion.ul
             className="safari-search-bar__dropdown"
             role="listbox"
+            id="safari-search-dropdown"
             initial={{ opacity: 0, y: -6, scale: 0.98, filter: 'blur(6px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: -6, scale: 0.98, filter: 'blur(6px)' }}
             transition={{ type: 'spring', stiffness: 460, damping: 36, mass: 0.7 }}
           >
-            {filtered.map((dest, index) => {
-              const isHighlighted = index === highlightedIndex
-              const Icon = dest.icon
-              return (
-                <motion.li
-                  key={dest.type}
-                  role="presentation"
-                  layout
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{
-                    delay: index * 0.035,
-                    duration: 0.22,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
-                  <button
-                    id={`safari-search-option-${index}`}
-                    type="button"
-                    role="option"
-                    aria-selected={isHighlighted}
-                    className={cn(
-                      'safari-search-bar__option',
-                      isHighlighted && 'safari-search-bar__option--highlighted',
-                    )}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => navigateTo(dest)}
-                  >
-                    <span className="safari-search-bar__option-main">
-                      <Icon
-                        className="safari-search-bar__option-icon"
-                        size={15}
-                        strokeWidth={2}
-                        aria-hidden="true"
-                      />
-                      <span className="safari-search-bar__option-text">
-                        <span className="safari-search-bar__option-label">{dest.label}</span>
-                        <span className="safari-search-bar__option-desc">{dest.description}</span>
-                      </span>
-                    </span>
-                    <span className="safari-search-bar__option-trailing">
-                      <AnimatePresence initial={false}>
-                        {isHighlighted && (
-                          <motion.span
-                            className="safari-search-bar__option-chevron"
-                            initial={{ opacity: 0, x: -4 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -4 }}
-                            transition={{ duration: 0.16 }}
-                          >
-                            <ChevronRight size={14} strokeWidth={2.25} />
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </span>
-                  </button>
-                </motion.li>
-              )
-            })}
+            {filtered.map((dest, index) => (
+              <DestinationOption
+                key={dest.type}
+                dest={dest}
+                index={index}
+                isHighlighted={index === highlightedIndex}
+                onSelect={navigateTo}
+                onHighlight={setHighlightedIndex}
+              />
+            ))}
           </motion.ul>
         )}
       </AnimatePresence>

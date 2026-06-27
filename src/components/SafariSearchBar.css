@@ -107,76 +107,10 @@
   color: rgba(255, 255, 255, 0.38);
 }
 
-/* ---- Right-fanning shortcut cluster (Apple Spotlight style) -------------- */
-/* The cluster is anchored to the field's RIGHT edge and overlays the toolbar.
-   Its transparent left padding is a hover bridge so the cluster stays open
-   while the cursor crosses into it. pointer-events stay off until --open so a
-   collapsed cluster never blocks the toolbar drag area behind it. */
-.safari-search-bar__panel {
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  transform: translateY(-50%);
-  z-index: 60;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding-left: 0.5rem;
-  pointer-events: none;
-}
-
-.safari-search-bar__panel--open {
-  pointer-events: auto;
-}
-
-.safari-search-bar__shortcut {
-  pointer-events: auto;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.16),
-    0 1px 3px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: rgba(0, 0, 0, 0.72);
-  cursor: pointer;
-  will-change: transform;
-}
-
-[data-theme='dark'] .safari-search-bar__shortcut {
-  background: rgba(48, 48, 48, 0.98);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.82);
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.5),
-    0 1px 3px rgba(0, 0, 0, 0.35);
-}
-
-.safari-search-bar__shortcut:hover,
-.safari-search-bar__shortcut--active {
-  background: #007aff;
-  border-color: #007aff;
-  color: #ffffff;
-}
-
-[data-theme='dark'] .safari-search-bar__shortcut:hover,
-[data-theme='dark'] .safari-search-bar__shortcut--active {
-  background: #0a84ff;
-  border-color: #0a84ff;
-  color: #ffffff;
-}
-
+/* ---- Nav / search-results dropdown -------------------------------------- */
 .safari-search-bar__dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: 100%;
   left: 0;
   right: 0;
   z-index: 50;
@@ -196,6 +130,12 @@
   -webkit-backdrop-filter: blur(20px);
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* Transparent bridge so the dropdown stays open while crossing the gap. */
+.safari-search-bar__dropdown--nav {
+  padding-top: calc(0.3125rem + 6px);
+  margin-top: -6px;
 }
 
 .safari-search-bar__dropdown::-webkit-scrollbar {
